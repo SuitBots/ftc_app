@@ -1,4 +1,4 @@
-package com.qualcomm.ftcrobotcontroller.opmodes;
+package com.suitbots.kittenaround;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Isaac's hardware and convienence methods. If you write a custom start() or stop()
  * method, be sure to call Isaac5Basic's start() or stop() via super.
  */
-public abstract class Isaac5Basic extends OpMode {
+public abstract class Isaac5 extends OpMode {
     private DcMotor drive_left_front = null;
     private DcMotor drive_left_back = null;
     private DcMotor drive_right_front = null;
@@ -18,10 +18,11 @@ public abstract class Isaac5Basic extends OpMode {
 
     // stop everything!
     protected void allStop() {
-        setDriveMotorPowers(0.0f, 0.0f, 0.0f, 0.0f);
+        setDriveMotorPowers(0.0, 0.0);
     }
 
-    @Override public void start() {
+    @Override
+    public void start() {
         drive_left_front = hardwareMap.dcMotor.get("drivelf");
         drive_left_back = hardwareMap.dcMotor.get("drivelb");
         drive_right_front = hardwareMap.dcMotor.get("driverf");
@@ -39,7 +40,8 @@ public abstract class Isaac5Basic extends OpMode {
         allStop();
     }
 
-    @Override public void stop() {
+    @Override
+    public void stop() {
         allStop();
     }
 

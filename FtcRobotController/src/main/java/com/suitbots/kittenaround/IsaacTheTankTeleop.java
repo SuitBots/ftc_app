@@ -1,24 +1,12 @@
-package com.qualcomm.ftcrobotcontroller.opmodes;
-
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+package com.suitbots.kittenaround;
 
 /**
  * A very simple, single-joystick tank drive for Isaac 5.
  */
-public class IsaacTheTankTeleop extends Isaac5Basic {
+public class IsaacTheTankTeleop extends Isaac5 {
 
-
-
-    @Override public void start() {
-        super.start();
-    }
-
-    @Override public void stop() {
-        super.stop();
-    }
-
-    @Override public void loop() {
+    @Override
+    public void loop() {
         telemetry.addData("Text", "*** Robot Data***");
 
         float drive_x = gamepad1.left_stick_x;
@@ -31,4 +19,5 @@ public class IsaacTheTankTeleop extends Isaac5Basic {
 
         setDriveMotorPowers(left_speed, right_speed);
     }
+
 }
