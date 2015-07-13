@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Isaac's hardware and convienence methods. If you write a custom start() or stop()
  * method, be sure to call Isaac5Basic's start() or stop() via super.
  */
-public abstract class Isaac5 extends OpMode {
+public abstract class Isaac5i extends OpMode {
     private DcMotor drive_left_front = null;
     private DcMotor drive_left_back = null;
     private DcMotor drive_right_front = null;

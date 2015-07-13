@@ -3,7 +3,7 @@ package com.suitbots.kittenaround;
 /**
  * A very simple, single-joystick tank drive for Isaac 5.
  */
-public class IsaacTheTankTeleop extends Isaac5 {
+public class IsaacTheTankTeleop extends Isaac5i {
 
     @Override
     public void loop() {
