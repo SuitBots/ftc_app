@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
- * Isaac 5's hardware definition.
+ * Isaac 5i's hardware definition.
  *
  * Override this class to add a new OpMode on to Isaac 5. You'll have access to all of
  * Isaac's hardware and convienence methods. If you write a custom start() or stop()
