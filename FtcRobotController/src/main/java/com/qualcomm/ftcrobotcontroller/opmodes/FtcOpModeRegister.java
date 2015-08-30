@@ -56,12 +56,6 @@ public class FtcOpModeRegister implements OpModeRegister {
      * If two or more op modes are registered with the same name, the app will display an error.
      */
 
-
-    /*
-     * The NullOp op mode
-     */
-    manager.register("NullOp", NullOp.class);
-
     manager.register("Isaac the Tank (Teleop)", IsaacTheTankTeleop.class);
     manager.register("NullOp", NullOp.class);
 
