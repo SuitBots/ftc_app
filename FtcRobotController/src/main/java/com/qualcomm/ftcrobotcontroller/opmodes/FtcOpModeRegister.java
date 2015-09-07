@@ -33,6 +33,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister;
+import com.suitbots.kittenaround.Isaac5Diagnostic;
 import com.suitbots.kittenaround.IsaacTheTankTeleop;
 
 /**
@@ -57,6 +58,7 @@ public class FtcOpModeRegister implements OpModeRegister {
      */
 
     manager.register("Isaac the Tank (Teleop)", IsaacTheTankTeleop.class);
+    manager.register("Motors Diagnostic (Teleop)", Isaac5Diagnostic.class);
     manager.register("NullOp", NullOp.class);
 
   }
