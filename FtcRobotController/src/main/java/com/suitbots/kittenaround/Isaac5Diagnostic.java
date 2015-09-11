@@ -1,7 +1,7 @@
 package com.suitbots.kittenaround;
 
 /**
- * Created by cp on 9/7/15.
+ * Diagnostic OpMode. Run the motors when you press the buttons.
  */
 public class Isaac5Diagnostic extends Isaac5i {
         @Override
