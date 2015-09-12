@@ -56,7 +56,8 @@ public class FtcOpModeRegister implements OpModeRegister {
      * The first parameter is the name of the op mode
      * The second parameter is the op mode class property
      *
-     * If two or more op modes are registered with the same name, the app will display an error.
+     * If two or more op modes are registered with the same name,
+     * the app will display an error.
      */
 
     manager.register("Isaac the Tank (Teleop)", IsaacTheTankTeleop.class);
