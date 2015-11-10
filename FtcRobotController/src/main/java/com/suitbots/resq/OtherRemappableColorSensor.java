@@ -11,7 +11,7 @@ import java.util.concurrent.locks.Lock;
 /**
  * Created by cp on 11/9/15.
  */
-public class OtherRemappableColorSensor extends LinearOpMode {
+abstract public class OtherRemappableColorSensor extends LinearOpMode {
 
     public static final int ADDRESS_SET_NEW_I2C_ADDRESS = 0x70;
     // trigger bytes used to change I2C address on ModernRobotics sensors.
@@ -35,8 +35,8 @@ public class OtherRemappableColorSensor extends LinearOpMode {
     // you'll be able to change the I2C address of the ModernRoboticsColorSensor.
     // If the bytes you're expecting are different than what this op mode finds,
     // a comparison will be printed out into the logfile.
-    public static final byte FIRMWARE_REV = IR_SEEKER_V3_FIRMWARE_REV;
-    public static final byte SENSOR_ID = IR_SEEKER_V3_SENSOR_ID;
+    public static final byte FIRMWARE_REV = COLOR_SENSOR_FIRMWARE_REV;
+    public static final byte SENSOR_ID = COLOR_SENSOR_SENSOR_ID;
 
     // These byte values are common with most Modern Robotics sensors.
     public static final int READ_MODE = 0x80;
@@ -44,15 +44,12 @@ public class OtherRemappableColorSensor extends LinearOpMode {
     public static final int TOTAL_MEMORY_LENGTH = 0x0c;
     public static final int BUFFER_CHANGE_ADDRESS_LENGTH = 0x03;
 
-    // The port where your sensor is connected.
-    int port = 5;
-
     byte[] readCache;
     Lock readLock;
     byte[] writeCache;
     Lock writeLock;
 
-    int currentAddress = IR_SEEKER_V3_ORIGINAL_ADDRESS;
+    int currentAddress = COLOR_SENSOR_ORIGINAL_ADDRESS;
     // I2c addresses on Modern Robotics devices must be divisible by 2, and between 0x7e and 0x10
     // Different hardware may have different rules.
     // Be sure to read the requirements for the hardware you're using!
@@ -61,8 +58,7 @@ public class OtherRemappableColorSensor extends LinearOpMode {
 
     DeviceInterfaceModule dim;
 
-    @Override
-    public void runOpMode() throws InterruptedException {
+    public void remapColorSensor(int port) throws InterruptedException {
 
         // set up the hardware devices we are going to use
         dim = hardwareMap.deviceInterfaceModule.get("dim");
@@ -78,7 +74,7 @@ public class OtherRemappableColorSensor extends LinearOpMode {
         IrSeekerSensor.throwIfModernRoboticsI2cAddressIsInvalid(newAddress);
 
         // wait for the start button to be pressed
-        waitForStart();
+        // waitForStart();
 
         performAction("read", port, currentAddress, ADDRESS_MEMORY_START, TOTAL_MEMORY_LENGTH);
 

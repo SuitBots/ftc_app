@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 /**
  * A teleop-style class for testing sensor and encoder values.
  */
-public class I5Diagnostic extends RemappableColorSensor {
+public class I5Diagnostic extends OtherRemappableColorSensor {
     @Override
     public void runOpMode() throws InterruptedException {
 
