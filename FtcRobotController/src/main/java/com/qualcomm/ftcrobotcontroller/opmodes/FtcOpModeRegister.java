@@ -33,11 +33,7 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister;
-import com.suitbots.resq.ButtonAutonomous;
-import com.suitbots.resq.I5Diagnostic;
-import com.suitbots.resq.Isaac5;
-import com.suitbots.resq.Isaac5Teleop;
-import com.suitbots.resq.LeftAndRight;
+import com.suitbots.resq.*;
 
 /**
  * Register Op Modes
@@ -107,5 +103,6 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("Button Auto", ButtonAutonomous.class);
     manager.register("Diagnostic", I5Diagnostic.class);
     manager.register("Left/Right", LeftAndRight.class);
+    manager.register("FTC I2c Change", com.suitbots.resq.LinearI2cAddressChange.class);
   }
 }
