@@ -109,8 +109,11 @@ public class LinearI2cAddressChange extends LinearOpMode {
     // Be sure to read the requirements for the hardware you're using!
     IrSeekerSensor.throwIfModernRoboticsI2cAddressIsInvalid(newAddress);
 
+    hardwareMap.logDevices();
+
     // wait for the start button to be pressed
     waitForStart();
+
 
     performAction("read", port, currentAddress, ADDRESS_MEMORY_START, TOTAL_MEMORY_LENGTH);
 
@@ -133,13 +136,14 @@ public class LinearI2cAddressChange extends LinearOpMode {
       // if we go too long with failure, we probably are expecting the wrong bytes.
       if (count >= 10)  {
         telemetry.addData("I2cAddressChange", String.format("Looping too long with no change, probably have the wrong address. Current address: 0x%02x", currentAddress));
-        hardwareMap.irSeekerSensor.get(String.format("Looping too long with no change, probably have the wrong address. Current address: 0x%02x", currentAddress));
+        // hardwareMap.irSeekerSensor.get(String.format("Looping too long with no change, probably have the wrong address. Current address: 0x%02x", currentAddress));
       }
     }
 
     // Enable writes to the correct segment of the memory map.
     performAction("write", port, currentAddress, ADDRESS_SET_NEW_I2C_ADDRESS, BUFFER_CHANGE_ADDRESS_LENGTH);
 
+    telemetry.addData("Waiting", "One Cycle.");
     waitOneFullHardwareCycle();
 
     // Write out the trigger bytes, and the new desired address.
@@ -151,8 +155,12 @@ public class LinearI2cAddressChange extends LinearOpMode {
 
     // Changing the I2C address takes some time.
     for (int i = 0; i < 5000; i++) {
+      if (0 == i % 100) {
+        telemetry.addData("Waiting", i);
+      }
       waitOneFullHardwareCycle();
     }
+    telemetry.addData("Waiting", "Done!");
 
     // Query the new address and see if we can get the bytes we expect.
     dim.enableI2cReadMode(port, newAddress, ADDRESS_MEMORY_START, TOTAL_MEMORY_LENGTH);

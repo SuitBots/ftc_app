@@ -28,34 +28,38 @@ public  class Isaac5  {
 
         DeviceInterfaceModule cdim = hardwareMap.deviceInterfaceModule.get("dim");
         color_fore =  hardwareMap.colorSensor.get("colorfore");
-        color_fore.setI2cAddress(0x42);
-        color_bottom = hardwareMap.colorSensor.get("colorbottom");
+        // color_fore.setI2cAddress(0x42);
+        // color_bottom = hardwareMap.colorSensor.get("colorbottom");
         distance = hardwareMap.opticalDistanceSensor.get("distance");
         gyro = hardwareMap.gyroSensor.get("gyro");
-        gyro.calibrate();
 
         color_fore.enableLed(false);
-        color_bottom.enableLed(true);
+        // color_bottom.enableLed(true);
+
+        zeroMotorEncoders();
     }
 
     void activateSensors() {
-        color_bottom.enableLed(true);
+        // color_bottom.enableLed(true);
         color_fore.enableLed(true);
     }
 
     void deactivateSensors() {
-        color_bottom.enableLed(false);
+        // color_bottom.enableLed(false);
         color_fore.enableLed(true);
     }
 
     void calibrateGyro() {
+        gyro.calibrate();
         while(gyro.isCalibrating()) {
             try {
-                Thread.sleep(50);
+                telemetry.addData("Gyro", "Calibrating");
+                Thread.sleep(100);
             } catch(java.lang.InterruptedException ie) {
                 // pass
             }
         }
+        telemetry.addData("Gyro", "CalibratED");
     }
 
     void sendSensorTelemetry() {
@@ -63,16 +67,18 @@ public  class Isaac5  {
                 color_fore.getI2cAddress(),
                 color_fore.red(), color_fore.blue(),
                 color_fore.green(), color_fore.alpha()));
+        /*
         telemetry.addData("Color Down", String.format("%x %d %d %d %d",
                 color_bottom.getI2cAddress(),
                 color_bottom.red(), color_bottom.blue(),
                 color_bottom.green(), color_bottom.alpha()));
+        */
         telemetry.addData("Distance", distance.getLightDetected());
         telemetry.addData("Dist Raw", distance.getLightDetectedRaw());
         telemetry.addData("Encoders", String.format("L: %d, R: %d, A: %d",
-                leftmotor.getCurrentPosition(),
-                rightmotor.getCurrentPosition(),
-                armmotor.getCurrentPosition()));
+                getLeftEncoder(),
+                getRightEncoder(),
+                getArmEncoder()));
 
         telemetry.addData("Heading", String.format("%d", gyro.getHeading()));
         telemetry.addData("Calibrating", gyro.isCalibrating());
@@ -84,12 +90,37 @@ public  class Isaac5  {
     }
 
     int getHeading() { return gyro.getHeading(); }
+    int getDistance() { return distance.getLightDetectedRaw(); }
+
+    int left_motor_encoder;
+    int right_motor_encoder;
+    int arm_motor_encoer;
+
+    public int getLeftEncoder() {
+        return -(leftmotor.getCurrentPosition() - left_motor_encoder);
+    }
+
+    public int getRightEncoder() {
+        return -(rightmotor.getCurrentPosition() - right_motor_encoder);
+    }
+
+    public int getArmEncoder() {
+        return -(armmotor.getCurrentPosition() - arm_motor_encoer);
+    }
+
+    public void zeroMotorEncoders() {
+        left_motor_encoder = leftmotor.getCurrentPosition();
+        right_motor_encoder = rightmotor.getCurrentPosition();
+        arm_motor_encoer = armmotor.getCurrentPosition();
+    }
+
 
     void turnLeft() { setDriveMotorSpeeds(-1, 1); }
     void turnRight() { setDriveMotorSpeeds(1, -1); }
     void goForward() { setDriveMotorSpeeds(1, 1); }
     void goBackward() { setDriveMotorSpeeds(-1, -1); }
     void stop() { setDriveMotorSpeeds(0, 0); }
+    void slow() { setDriveMotorSpeeds(0.5, 0.5);}
 
 
     protected void setArmMotorSpeed(double power) {

@@ -103,6 +103,9 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("Button Auto", ButtonAutonomous.class);
     manager.register("Diagnostic", I5Diagnostic.class);
     manager.register("Left/Right", LeftAndRight.class);
-    manager.register("FTC I2c Change", com.suitbots.resq.LinearI2cAddressChange.class);
+    manager.register("Change Color Sensor Addr.",
+            com.suitbots.resq.LinearI2cAddressChange.class);
+    manager.register("Stopppppp", Stopppppp.class);
+    manager.register("Meter Dash", MeterDash.class );
   }
 }
