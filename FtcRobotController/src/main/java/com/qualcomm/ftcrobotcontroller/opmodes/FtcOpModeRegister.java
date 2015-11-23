@@ -76,7 +76,7 @@ public class FtcOpModeRegister implements OpModeRegister {
 
     //manager.register("IrSeekerOp", IrSeekerOp.class);
     //manager.register("CompassCalibration", CompassCalibration.class);
-    //manager.register("I2cAddressChangeExample", LinearI2cAddressChange.class);
+    //manager.register("I2cAddressChangeExample", XXXLinearI2cAddressChange.class);
 
 
     //manager.register("NxtTeleOp", NxtTeleOp.class);
@@ -99,13 +99,11 @@ public class FtcOpModeRegister implements OpModeRegister {
     //manager.register("PushBotSquare", PushBotSquare.java);
 
     // SUITBOTS BELOW THIS POINT
-    manager.register("Isaac 5 Teleop", Isaac5Teleop.class);
-    manager.register("Button Auto", ButtonAutonomous.class);
-    manager.register("Diagnostic", I5Diagnostic.class);
-    manager.register("Left/Right", LeftAndRight.class);
-    manager.register("Change Color Sensor Addr.",
-            com.suitbots.resq.LinearI2cAddressChange.class);
-    manager.register("Stopppppp", Stopppppp.class);
-    manager.register("Meter Dash", MeterDash.class );
+
+    manager.register("Teleop", Isaac5Teleop.class);
+    manager.register("Color", ColorOnly.class);
+    manager.register("LeftRight", LeftAndRight.class);
+    manager.register("Meter", MeterDash.class);
+    manager.register("Stop", Stopppppp.class);
   }
 }
