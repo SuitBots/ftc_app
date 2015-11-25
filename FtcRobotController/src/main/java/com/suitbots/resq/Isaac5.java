@@ -15,12 +15,14 @@ import com.qualcomm.robotcore.robocol.Telemetry;
 
 public  class Isaac5  {
     private DcMotor l1, l2, l3, r1, r2, r3;
-    private Servo climber_flipper;
+    private DcMotor tape;
+    private Servo Dumper_flipper;
 
     private ColorSensor color_fore;
     private GyroSensor gyro;
     private OpticalDistanceSensor distance;
     private Telemetry telemetry;
+    private Autonomus autonomus;
 
     // Encoders for the center motors, which should always be on the ground
     private int left_motor_encoder;
@@ -33,16 +35,16 @@ public  class Isaac5  {
         r1 = hardwareMap.dcMotor.get("r1");
         r2 = hardwareMap.dcMotor.get("r2");
         r3 = hardwareMap.dcMotor.get("r3");
+        tape = hardwareMap.dcMotor.get("tape");
 
         // Reverse the left motors
-        l1.setDirection(DcMotor.Direction.REVERSE);
-        l2.setDirection(DcMotor.Direction.REVERSE);
-        l3.setDirection(DcMotor.Direction.REVERSE);
+        r1.setDirection(DcMotor.Direction.REVERSE);
+        r2.setDirection(DcMotor.Direction.REVERSE);
+        r3.setDirection(DcMotor.Direction.REVERSE);
 
-        climber_flipper = hardwareMap.servo.get("flipper");
+        Dumper_flipper = hardwareMap.servo.get("flipper");
 
         telemetry = _telemetry;
-
         distance = hardwareMap.opticalDistanceSensor.get("distance");
         gyro = hardwareMap.gyroSensor.get("gyro");
 
@@ -194,11 +196,14 @@ public  class Isaac5  {
     /// The green value from the front color sensor
     public int getGreenFore() { return color_fore.green(); }
 
-    public void moveClimberArmToThrowPosition() {
-        climber_flipper.setPosition(1.0);
+    public void moveDumperArmToThrowPosition() {
+        Dumper_flipper.setPosition(1.0);
     }
 
-    public void resetClimberArm() {
-        climber_flipper.setPosition(0.0);
+    public void resetDumperArm() {
+        Dumper_flipper.setPosition(0.0);
     }
+
+    public void setTapeMotor (double x) {tape.setPower(clamp(x));}
+
 }
