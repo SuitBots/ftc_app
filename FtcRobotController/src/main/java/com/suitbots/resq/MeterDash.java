@@ -22,6 +22,8 @@ public class MeterDash extends BuildingBlocks {
             } else if (gamepad1.y) {
                 driveForwardMeters(isaac5, -0.5);
             }
+
+            isaac5.stop();
         }
     }
 }

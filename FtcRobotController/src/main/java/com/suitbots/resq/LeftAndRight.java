@@ -12,14 +12,16 @@ public class LeftAndRight extends BuildingBlocks {
         while (opModeIsActive()) {
             isaac5.sendSensorTelemetry();
             if (gamepad1.a) {
-                turnLeftDegrees(isaac5, 180);
+                turnLeftDegrees(isaac5, 45);
             } else if (gamepad1.b) {
-                turnRightDegrees(isaac5, 180);
+                turnRightDegrees(isaac5, 45);
             } else if (gamepad1.x) {
                 turnLeftDegrees(isaac5, 90);
             } else if (gamepad1.y) {
                 turnRightDegrees(isaac5, 90);
             }
+
+            isaac5.stop();
         }
     }
 }
