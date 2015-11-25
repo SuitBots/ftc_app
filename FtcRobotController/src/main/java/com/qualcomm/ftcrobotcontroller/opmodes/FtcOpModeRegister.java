@@ -101,9 +101,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     // SUITBOTS BELOW THIS POINT
 
     manager.register("Teleop", Isaac5Teleop.class);
-    manager.register("Color", ColorOnly.class);
-    manager.register("LeftRight", LeftAndRight.class);
-    manager.register("Meter", MeterDash.class);
-    manager.register("Stop", Stopppppp.class);
+    manager.register("Red Auto", RedAutonomous.class);
+    manager.register("Blue Auto", BlueAutonomous.class);
   }
 }
