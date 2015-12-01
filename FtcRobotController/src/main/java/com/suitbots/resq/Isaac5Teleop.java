@@ -23,12 +23,19 @@ public class Isaac5Teleop extends LinearOpMode {
                 isaac5.zeroMotorEncoders();
             }
 
+            if(gamepad1.a) {
+                isaac5.resetHeading();
+            }
 
             // nudge controls
-            if (gamepad1.left_bumper) {
-                isaac5.setDriveMotorSpeeds(0.1, 0.1);
-            } else if(gamepad1.right_bumper) {
-                isaac5.setDriveMotorSpeeds(-.3, -.3);
+            if (gamepad1.dpad_up) {
+                isaac5.setDriveMotorSpeeds(0.25, 0.25);
+            } else if (gamepad1.dpad_down) {
+                isaac5.setDriveMotorSpeeds(-0.25, -0.25);
+            } else if (gamepad1.dpad_left) {
+                isaac5.setDriveMotorSpeeds(-0.25, 0.25);
+            } else if (gamepad1.dpad_right) {
+                isaac5.setDriveMotorSpeeds(0.25, -0.25);
             }
 
             isaac5.setTapeMotor(gamepad1.left_trigger - gamepad1.right_trigger);

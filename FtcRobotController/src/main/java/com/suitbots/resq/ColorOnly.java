@@ -33,8 +33,11 @@ public class ColorOnly extends LinearOpMode {
 
 
             telemetry.addData("Led Enabled?", led_enabled ? "Yep" : "Nope");
-            telemetry.addData("Color", String.format("%03d %03d %03d",
+            telemetry.addData("Color Fore", String.format("%03d %03d %03d",
                     isaac5.getRedFore(), isaac5.getGreenFore(), isaac5.getBlueFore()));
+            telemetry.addData("Color Under", String.format("%03d %03d %03d %03d",
+                    isaac5.getRedUnder(), isaac5.getGreenUnder(),
+                    isaac5.getBlueUnder(), isaac5.getAlphaUnder()));
         }
     }
 }

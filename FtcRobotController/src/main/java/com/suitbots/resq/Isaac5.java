@@ -3,6 +3,7 @@ package com.suitbots.resq;
 import android.bluetooth.BluetoothClass;
 import android.graphics.Color;
 
+import com.qualcomm.hardware.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,18 +18,19 @@ public  class Isaac5  {
     private DcMotor l1, l2, l3, r1, r2, r3;
     private DcMotor tape;
     private Servo Dumper_flipper;
+    private DeviceInterfaceModule dim;
 
-    private ColorSensor color_fore;
-    private GyroSensor gyro;
+    private ColorSensor color_fore, color_under;
+    private ModernRoboticsI2cGyro gyro;
     private OpticalDistanceSensor distance;
     private Telemetry telemetry;
-    private Autonomus autonomus;
 
     // Encoders for the center motors, which should always be on the ground
     private int left_motor_encoder;
     private int right_motor_encoder;
 
     Isaac5(HardwareMap hardwareMap, Telemetry _telemetry) throws InterruptedException {
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
         l1 = hardwareMap.dcMotor.get("l1");
         l2 = hardwareMap.dcMotor.get("l2");
         l3 = hardwareMap.dcMotor.get("l3");
@@ -46,7 +48,7 @@ public  class Isaac5  {
 
         telemetry = _telemetry;
         distance = hardwareMap.opticalDistanceSensor.get("distance");
-        gyro = hardwareMap.gyroSensor.get("gyro");
+        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
 
         color_fore = hardwareMap.colorSensor.get("color");
         /***************************************
@@ -64,18 +66,44 @@ public  class Isaac5  {
          ***************************************/
         color_fore.setI2cAddress(0x70);
 
+
+        color_under = hardwareMap.colorSensor.get("linefollow");
+
         zeroMotorEncoders();
-        calibrateGyro();
+    }
+
+    public void enableBlueLED(boolean enabled) {
+        dim.setLED(0, enabled);
+    }
+
+    public void enableRedLED(boolean enabled) {
+        dim.setLED(1, enabled);
+    }
+
+
+    public void resetHeading() {
+        gyro.resetZAxisIntegrator();
     }
 
     /// Turn sensor lights on
     public void activateSensors() {
-        color_fore.enableLed(true);
+        color_under.enableLed(true);
     }
 
     /// Turn sensor lights off
     public void deactivateSensors() {
-        color_fore.enableLed(true);
+        color_under.enableLed(false);
+    }
+
+    /// The threshold that we're willing to consider a color "detected."
+    /// Note that this applies for active-mode only.
+    public static final int COLOR_THRESHOLD = 2;
+    /// Is Isaac5's color sensor over something white?
+    public boolean isOnWhiteLine() {
+        return color_under.red() >= COLOR_THRESHOLD &&
+                color_under.green() >= COLOR_THRESHOLD &&
+                color_under.blue() >= COLOR_THRESHOLD &&
+                color_under.alpha() >= COLOR_THRESHOLD;
     }
 
     /// Calibrate the gyro sensor
@@ -90,23 +118,21 @@ public  class Isaac5  {
 
     /// Sens some sensor-specific telemetry
     public void sendSensorTelemetry() {
-        telemetry.addData("Color Fore", String.format("%x %d %d %d %d",
-                color_fore.getI2cAddress(),
+        telemetry.addData("Color Fore", String.format("%02x %02x %02x %02x",
                 color_fore.red(), color_fore.blue(),
                 color_fore.green(), color_fore.alpha()));
 
-        telemetry.addData("Distance", distance.getLightDetected());
+        telemetry.addData("Color Bottom", String.format("%02x %02x %02x %02x",
+                color_under.red(), color_under.blue(),
+                color_under.green(), color_under.alpha()));
+
         telemetry.addData("Dist Raw", distance.getLightDetectedRaw());
         telemetry.addData("Encoders", String.format("L: %d, R: %d",
                 getLeftEncoder(),
                 getRightEncoder()));
 
-        telemetry.addData("Heading", gyro.getHeading());
-
-        telemetry.addData("MERaw", String.format("%d %d, %d %d, %d, %d",
-                l1.getCurrentPosition(), r1.getCurrentPosition(),
-                l2.getCurrentPosition(), r2.getCurrentPosition(),
-                l3.getCurrentPosition(), r3.getCurrentPosition()));
+        telemetry.addData("Heading", String.format("%d (%d)",
+                gyro.getHeading(), gyro.getIntegratedZValue()));
     }
 
     private double clamp(double x) {
@@ -135,6 +161,9 @@ public  class Isaac5  {
 
     /// Get the heading from the gyro sensor
     int getHeading() { return gyro.getHeading(); }
+    int getHeadingRaw() { return gyro.getIntegratedZValue(); }
+
+    String getGyroStatus() { return gyro.status(); }
 
     /// Get the "distance" (really light returned) from the optical distance sensor.
     int getDistance() { return distance.getLightDetectedRaw(); }
@@ -156,6 +185,9 @@ public  class Isaac5  {
         right_motor_encoder = r2.getCurrentPosition();
     }
 
+    public void setHeadingToZero() {
+        gyro.resetZAxisIntegrator();
+    }
 
     public static final double FULL_SPEED = 1.0;
     public static final double SLOW_SPEED = 0.2;
@@ -186,7 +218,8 @@ public  class Isaac5  {
     }
     /// Stop all drive motors
     public void stop() {
-        setDriveMotorSpeeds(0, 0);
+        setDriveMotorSpeeds(0.0, 0.0);
+        setTapeMotor(0.0);
     }
 
     /// The red value from the front color sensor
@@ -195,6 +228,11 @@ public  class Isaac5  {
     public int getBlueFore() { return color_fore.blue(); }
     /// The green value from the front color sensor
     public int getGreenFore() { return color_fore.green(); }
+
+    public int getRedUnder() { return color_under.red(); }
+    public int getGreenUnder() { return color_under.green(); }
+    public int getBlueUnder() { return color_under.blue(); }
+    public int getAlphaUnder() { return color_under.alpha(); }
 
     public void moveDumperArmToThrowPosition() {
         Dumper_flipper.setPosition(1.0);

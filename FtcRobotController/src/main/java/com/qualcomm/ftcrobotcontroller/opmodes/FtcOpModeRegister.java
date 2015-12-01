@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
+import android.graphics.Color;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister;
 import com.suitbots.resq.*;
@@ -103,5 +105,9 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("Teleop", Isaac5Teleop.class);
     manager.register("Red Auto", RedAutonomous.class);
     manager.register("Blue Auto", BlueAutonomous.class);
+    manager.register("Turning", LeftAndRight.class);
+    manager.register("Meter", MeterDash.class);
+    manager.register("Sensor Test", SensorsTest.class);
+    manager.register("Square", Square.class);
   }
 }
