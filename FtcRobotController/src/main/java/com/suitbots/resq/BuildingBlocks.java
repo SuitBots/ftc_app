@@ -1,24 +1,24 @@
 package com.suitbots.resq;
 
-import android.os.PowerManager;
-import android.text.InputFilter;
+import android.app.UiAutomation;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 abstract public class BuildingBlocks extends LinearOpMode {
 
-
     private static final int SLOW_DOWN_DISTANCE = 45;
     private static final int STOP_DISTANCE = 35;
-    private static final double SLOW_SPEED = 0.5;
-    private static final double SLIGHTLY_SLOWER_SPEED = 0.35;
+    private static final double SLOW_SPEED = 1.0;
+    private static final double SLIGHTLY_SLOWER_SPEED = 0.30;
 
     // Wait this many cycles for the gyro to reset
     private static final int MAX_HARDWARE_WAIT = 100;
+
     // The angle is close enough
-    private static final int CLOSE_ENOUGH_TO_ZERO = 2;
+    // TODO: THIS NEEDS TO BE TUNED FURTHER.
+    private static final int CLOSE_ENOUGH_TO_ZERO = 1;
     // Motor speed for turning
-    private static final double TURN_SPEED = 0.4;
+    private static final double TURN_SPEED = 0.3;
     private static final int ENCODER_TICKS_PER_METER = 2800; // Tuned 11/24
     // margin of error for motor tick similarity
     private static final int EPISLON_TICKS = ENCODER_TICKS_PER_METER / 100;
@@ -27,10 +27,23 @@ abstract public class BuildingBlocks extends LinearOpMode {
     private static final int ENCODER_TICKS_PER_DEGREE = 12; // TODO: TUNE
 
 
+    public void stopSleep(Isaac5 isaac5) throws InterruptedException {
+        isaac5.stop();
+        isaac5.setDriveMotorSpeeds(.0, .0);
+        waitOneFullHardwareCycle();
+        isaac5.enableRedLED(true);
+        Thread.sleep(1500);
+        isaac5.enableRedLED(false);
+    }
+
     // Stop before the distance sensor thinks you're too close.
     // From Stopppppp
-    void stopppppppp(Isaac5 isaac5)
+    void stopppppppp(Isaac5 isaac5, double max_meters)
     {
+        int target_ticks = Math.abs((int) (ENCODER_TICKS_PER_METER * max_meters));
+        isaac5.zeroMotorEncoders();
+        isaac5.resetHeading();
+
         boolean quit = false;
         while(opModeIsActive() && !quit)
         {
@@ -38,11 +51,18 @@ abstract public class BuildingBlocks extends LinearOpMode {
             if (distance > STOP_DISTANCE) {
                 quit = true;
                 isaac5.stop();
-            } else if (distance > SLOW_DOWN_DISTANCE) {
-                isaac5.setDriveMotorSpeeds(SLIGHTLY_SLOWER_SPEED, SLIGHTLY_SLOWER_SPEED);
             } else {
-                isaac5.setDriveMotorSpeeds(SLOW_SPEED, SLOW_SPEED);
+                correctTracking(isaac5, SLIGHTLY_SLOWER_SPEED);
             }
+
+            int LeftEncoder = Math.abs(isaac5.getLeftEncoder());
+            int RightEncoder = Math.abs(isaac5.getRightEncoder());
+
+            int ticks_remaining = target_ticks - Math.max(LeftEncoder, RightEncoder);
+
+
+            quit |= ticks_remaining <= ENCODER_TICKS_PER_METER / 50;
+
         }
         isaac5.stop();
     }
@@ -56,7 +76,7 @@ abstract public class BuildingBlocks extends LinearOpMode {
         }
     }
 
-
+/*
     private static int mod(int a, int n) {
         return (a % n + n) % n;
     }
@@ -65,32 +85,40 @@ abstract public class BuildingBlocks extends LinearOpMode {
         int diff = b - a;
         return mod(diff + 180, 360) - 180;
     }
+    */
 
-    // To make sure we don't drift off course, make sure the right motor and left
-    // motor are cycling roughly the same number of times.
-    // TODO: Use the gyro sensor for this problem.
-    private void equalizeEncoders(Isaac5 isaac5, double power) {
-        int LeftEncoder = Math.abs(isaac5.getLeftEncoder());
-        int RightEncoder = Math.abs(isaac5.getRightEncoder());
+    // To make sure we don't drift off course, make sure the raw heading is
+    // still at zero.
+    private void correctTracking(Isaac5 isaac5, double power) {
+        int heading = isaac5.getHeadingRaw();
 
-        double left_power = power, right_power = power;
+        double left_power = power;
+        double right_power = power;
 
-        if (LeftEncoder - RightEncoder > EPISLON_TICKS) {
-            right_power *= POWER_SCALE_UP;
-        } else if (RightEncoder - LeftEncoder > EPISLON_TICKS) {
+        /*
+        if (heading < 0) {
             left_power *= POWER_SCALE_UP;
+        } else if (heading > 0) {
+            right_power *= POWER_SCALE_UP;
         }
+        */
 
         isaac5.setDriveMotorSpeeds(left_power, right_power);
     }
 
+    public void driveMeters(Isaac5 isaac5, double meters) throws InterruptedException {
+        driveMeters(isaac5, meters, 10.0);
+    }
+
     // Drive forward some number of meters.
     // From MeterDash
-    public void driveMeters(Isaac5 isaac5, double meters) throws InterruptedException {
+    public void driveMeters(Isaac5 isaac5, double meters, double max_time) throws InterruptedException {
+        isaac5.resetHeading();
         isaac5.zeroMotorEncoders();
 
         int target_ticks = Math.abs((int) (ENCODER_TICKS_PER_METER * meters));
 
+        double start_time = getRuntime();
         boolean quit = false;
         while(opModeIsActive() && !quit){
             isaac5.sendSensorTelemetry();
@@ -100,30 +128,33 @@ abstract public class BuildingBlocks extends LinearOpMode {
 
             int ticks_remaining = target_ticks - Math.max(LeftEncoder, RightEncoder);
 
-            double power = signd(meters) *
-                    (ticks_remaining < (ENCODER_TICKS_PER_METER / 10) ?
-                            SLIGHTLY_SLOWER_SPEED : SLOW_SPEED);
-
-            telemetry.addData("Ticks", String.format("%d %d", ticks_remaining, target_ticks));
+            double power = signd(meters) * SLOW_SPEED;
 
             // Let's assume that it takes us a little bit to stop
             quit = ticks_remaining <= ENCODER_TICKS_PER_METER / 50;
+            quit |= max_time <= (getRuntime()- start_time);
 
-            telemetry.addData("Meter", String.format("%d %f %d %d",
-                    target_ticks, power, LeftEncoder, RightEncoder));
-
-            equalizeEncoders(isaac5, power);
+            correctTracking(isaac5, power);
         }
         isaac5.stop();
     }
 
-    public void driveForwardUntilWhiteTape(Isaac5 isaac5, double max_meters) {
+    public void driveForwardUntilWhiteTape(Isaac5 isaac5, double max_meters) throws InterruptedException {
+        driveForwardUntilWhiteTape(isaac5, max_meters, 10.0);
+    }
+
+    public void driveForwardUntilWhiteTape(Isaac5 isaac5, double max_meters, double max_time) {
         int target_ticks = Math.abs((int) (ENCODER_TICKS_PER_METER * max_meters));
 
         isaac5.activateSensors();
 
+        isaac5.resetHeading();
         isaac5.zeroMotorEncoders();
+
         boolean quit = false;
+
+        double start_time = getRuntime();
+
         while(opModeIsActive() && !quit) {
             isaac5.sendSensorTelemetry();
 
@@ -132,16 +163,14 @@ abstract public class BuildingBlocks extends LinearOpMode {
 
             int ticks_remaining = target_ticks - Math.max(LeftEncoder, RightEncoder);
 
-            double power = (ticks_remaining < (ENCODER_TICKS_PER_METER / 10) ?
-                            SLIGHTLY_SLOWER_SPEED : SLOW_SPEED);
+            double power = SLIGHTLY_SLOWER_SPEED;
 
             telemetry.addData("Ticks", String.format("%d %d", ticks_remaining, target_ticks));
 
-            equalizeEncoders(isaac5, power);
+            correctTracking(isaac5, power);
 
-            // Let's assume that it takes us a little bit to stop
-            quit = ticks_remaining <= ENCODER_TICKS_PER_METER / 50;
-            quit |= isaac5.isOnWhiteLine();
+            quit = ticks_remaining <= ENCODER_TICKS_PER_METER / 50 || isaac5.isOnWhiteLine();
+            quit |= max_time < (getRuntime() - start_time);
         }
         isaac5.stop();
         isaac5.deactivateSensors();
@@ -157,7 +186,6 @@ abstract public class BuildingBlocks extends LinearOpMode {
         }
 
         telemetry.addData("Hardware Wait", count);
-
     }
 
     // Rotate this many degrees and then stop.
@@ -177,15 +205,18 @@ abstract public class BuildingBlocks extends LinearOpMode {
 
         boolean quit = false;
         while(opModeIsActive() && !quit) {
-            waitOneFullHardwareCycle();
-            int heading = isaac5.getHeadingRaw();
-            int diff = Math.abs(degrees - heading);
-            quit = diff <= CLOSE_ENOUGH_TO_ZERO;
+            int heading = - isaac5.getHeadingRaw();
+
+            if (degrees > 0) {
+                quit = heading >= (degrees - 3);
+            } else {
+                quit = heading <= (degrees + 3);
+            }
 
             telemetry.addData("Heading", heading);
             telemetry.addData("Degrees", degrees);
 
-            double power = diff > 15 ? TURN_SPEED : (TURN_SPEED / 2.0);
+            double power = TURN_SPEED;
 
             if (0 < degrees) { // turning right, so heading should get smaller
                 isaac5.setDriveMotorSpeeds(power, -power);
@@ -193,22 +224,17 @@ abstract public class BuildingBlocks extends LinearOpMode {
                 isaac5.setDriveMotorSpeeds(-power, power);
             }
 
-            // fail safe: also stop if the encoders say to. In case the gyro misbhaves.
-            quit |= max_ticks <= Math.abs(isaac5.getLeftEncoder());
         }
 
         isaac5.stop();
-
-        telemetry.addData("Final", String.format("%d %d", degrees, -isaac5.getHeadingRaw()));
-
     }
 
-    public static final int CLIMBER_WAIT_TIME_MS = 500;
+    public static final int CLIMBER_WAIT_TIME_MS = 2000;
     /// Actuate the servo and wait appropriately for the climbers to fall
     public void dumpClimbers(Isaac5 isaac5) throws InterruptedException {
         isaac5.moveDumperArmToThrowPosition();
-        sleep(CLIMBER_WAIT_TIME_MS);
+        Thread.sleep(CLIMBER_WAIT_TIME_MS);
         isaac5.resetDumperArm();
-        sleep(CLIMBER_WAIT_TIME_MS);
+        Thread.sleep(CLIMBER_WAIT_TIME_MS);
     }
 }

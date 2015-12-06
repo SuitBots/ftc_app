@@ -31,26 +31,26 @@ public  class Isaac5  {
 
     Isaac5(HardwareMap hardwareMap, Telemetry _telemetry) throws InterruptedException {
         dim = hardwareMap.deviceInterfaceModule.get("dim");
-        l1 = hardwareMap.dcMotor.get("l1");
-        l2 = hardwareMap.dcMotor.get("l2");
-        l3 = hardwareMap.dcMotor.get("l3");
-        r1 = hardwareMap.dcMotor.get("r1");
-        r2 = hardwareMap.dcMotor.get("r2");
-        r3 = hardwareMap.dcMotor.get("r3");
-        tape = hardwareMap.dcMotor.get("tape");
+        l1 = hardwareMap.dcMotor.get("l1"); // y
+        l2 = hardwareMap.dcMotor.get("l2"); // y
+        l3 = hardwareMap.dcMotor.get("l3"); // y
+        r1 = hardwareMap.dcMotor.get("r1"); // y
+        r2 = hardwareMap.dcMotor.get("r2"); // y
+        r3 = hardwareMap.dcMotor.get("r3"); // y
+        tape = hardwareMap.dcMotor.get("tape"); // y
 
         // Reverse the left motors
         r1.setDirection(DcMotor.Direction.REVERSE);
         r2.setDirection(DcMotor.Direction.REVERSE);
         r3.setDirection(DcMotor.Direction.REVERSE);
 
-        Dumper_flipper = hardwareMap.servo.get("flipper");
+        Dumper_flipper = hardwareMap.servo.get("flipper"); // y
 
         telemetry = _telemetry;
-        distance = hardwareMap.opticalDistanceSensor.get("distance");
-        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
+        distance = hardwareMap.opticalDistanceSensor.get("distance"); // y
+        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro"); // y
 
-        color_fore = hardwareMap.colorSensor.get("color");
+        color_fore = hardwareMap.colorSensor.get("color"); // y
         /***************************************
          *  ____    _    _   _  ____ _____ ____
          * |  _ \  / \  | \ | |/ ___| ____|  _ \
@@ -67,7 +67,7 @@ public  class Isaac5  {
         color_fore.setI2cAddress(0x70);
 
 
-        color_under = hardwareMap.colorSensor.get("linefollow");
+        color_under = hardwareMap.colorSensor.get("linefollow");  // y
 
         zeroMotorEncoders();
     }
@@ -97,23 +97,23 @@ public  class Isaac5  {
 
     /// The threshold that we're willing to consider a color "detected."
     /// Note that this applies for active-mode only.
-    public static final int COLOR_THRESHOLD = 2;
+    public static final int COLOR_THRESHOLD = 1;
     /// Is Isaac5's color sensor over something white?
     public boolean isOnWhiteLine() {
-        return color_under.red() >= COLOR_THRESHOLD &&
-                color_under.green() >= COLOR_THRESHOLD &&
-                color_under.blue() >= COLOR_THRESHOLD &&
-                color_under.alpha() >= COLOR_THRESHOLD;
+        return 0 < color_under.red() + color_under.blue() +
+                color_under.green() + color_under.alpha();
     }
 
     /// Calibrate the gyro sensor
     public void calibrateGyro() throws InterruptedException {
+        enableRedLED(true);
         gyro.calibrate();
         while(gyro.isCalibrating()) {
             telemetry.addData("Gyro", "Calibrating");
             Thread.sleep(100);
         }
         telemetry.addData("Gyro", "CalibratED");
+        enableBlueLED(false);
     }
 
     /// Sens some sensor-specific telemetry
