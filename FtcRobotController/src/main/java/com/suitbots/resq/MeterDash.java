@@ -4,6 +4,7 @@ public class MeterDash extends BuildingBlocks {
     @Override
     public void runOpMode() throws InterruptedException {
         Isaac5 isaac5 = new Isaac5(hardwareMap, telemetry);
+        isaac5.calibrateGyro();
 
         waitForStart();
 

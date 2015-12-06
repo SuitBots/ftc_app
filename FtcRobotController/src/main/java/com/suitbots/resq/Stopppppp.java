@@ -9,7 +9,7 @@ public class Stopppppp extends BuildingBlocks {
 
         while (opModeIsActive()) {
             if (gamepad1.a) {
-                stopppppppp(isaac5);
+                stopppppppp(isaac5, 1.0);
             }
         }
     }

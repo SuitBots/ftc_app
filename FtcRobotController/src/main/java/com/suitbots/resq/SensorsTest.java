@@ -23,7 +23,8 @@ public class SensorsTest extends LinearOpMode {
                 isaac5.deactivateSensors();
             }
 
-            isaac5.setDriveMotorSpeeds(gamepad1.left_stick_y, gamepad1.right_stick_y);
+            isaac5.setDriveMotorSpeeds(- gamepad1.left_stick_y,
+                                       - gamepad1.right_stick_y);
         }
     }
 }
