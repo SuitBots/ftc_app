@@ -7,6 +7,7 @@ public class Isaac5Teleop extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         Isaac5 isaac5 = new Isaac5(hardwareMap, telemetry);
         isaac5.deactivateSensors();
+        boolean hasMovedArm = false;
         waitForStart();
         while (opModeIsActive()) {
             // Wheels
@@ -15,8 +16,10 @@ public class Isaac5Teleop extends LinearOpMode {
 
             if (gamepad1.x) {
                 isaac5.moveDumperArmToThrowPosition();
-            } else {
+                hasMovedArm = true;
+            } else if (hasMovedArm) {
                 isaac5.resetDumperArm();
+                hasMovedArm = false;
             }
 
             if (gamepad1.y) {

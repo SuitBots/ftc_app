@@ -109,5 +109,6 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("Turning", LeftAndRight.class);
     manager.register("Meter", MeterDash.class);
     manager.register("Sensor Test", SensorsTest.class);
+    manager.register("Prime", IsaacPrime.class);
   }
 }
