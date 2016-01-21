@@ -37,7 +37,7 @@ public  class Isaac5  {
         r1 = hardwareMap.dcMotor.get("r1"); // y
         r2 = hardwareMap.dcMotor.get("r2"); // y
         r3 = hardwareMap.dcMotor.get("r3"); // y
-        tape = hardwareMap.dcMotor.get("tape"); // y
+        // tape = hardwareMap.dcMotor.get("tape"); // y
 
         // Reverse the left motors
         r1.setDirection(DcMotor.Direction.REVERSE);
@@ -242,6 +242,8 @@ public  class Isaac5  {
         Dumper_flipper.setPosition(0.0);
     }
 
-    public void setTapeMotor (double x) {tape.setPower(clamp(x));}
+    public void setTapeMotor (double x) {
+        // tape.setPower(clamp(x));
+    }
 
 }
