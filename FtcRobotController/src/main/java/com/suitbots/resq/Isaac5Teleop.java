@@ -14,7 +14,7 @@ public class Isaac5Teleop extends LinearOpMode {
             isaac5.sendSensorTelemetry();
             isaac5.setDriveMotorSpeeds(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
 
-            if (gamepad1.x) {
+            if (gamepad1.x && !hasMovedArm) {
                 isaac5.moveDumperArmToThrowPosition();
                 hasMovedArm = true;
             } else if (hasMovedArm) {
@@ -22,26 +22,15 @@ public class Isaac5Teleop extends LinearOpMode {
                 hasMovedArm = false;
             }
 
-            if (gamepad1.y) {
-                isaac5.zeroMotorEncoders();
-            }
-
-            if(gamepad1.a) {
-                isaac5.resetHeading();
-            }
-
-            // nudge controls
-            if (gamepad1.dpad_up) {
-                isaac5.setDriveMotorSpeeds(0.25, 0.25);
-            } else if (gamepad1.dpad_down) {
-                isaac5.setDriveMotorSpeeds(-0.25, -0.25);
-            } else if (gamepad1.dpad_left) {
-                isaac5.setDriveMotorSpeeds(-0.25, 0.25);
-            } else if (gamepad1.dpad_right) {
-                isaac5.setDriveMotorSpeeds(0.25, -0.25);
-            }
-
             isaac5.setTapeMotor(gamepad1.left_trigger - gamepad1.right_trigger);
+
+            if (gamepad1.a) {
+                isaac5.setWinchMotor(1.0);
+            } else if (gamepad1.b) {
+                isaac5.setWinchMotor(-1.0);
+            } else {
+                isaac5.setWinchMotor(0.0);
+            }
         }
         isaac5.stop();
     }

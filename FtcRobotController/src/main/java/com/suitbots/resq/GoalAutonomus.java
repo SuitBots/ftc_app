@@ -44,43 +44,42 @@ public abstract class GoalAutonomus extends BuildingBlocks {
 
         // Start up against the wall to ensure angle. One square forward
 
-        state("Drive 1");
+        state("Drive forward one square");
         driveMeters(isaac5, SQUARE_SIZE);
-        stopSleep(isaac5);
+
         // Turn towards the beacon line
-        state("Rotate 1");
-        rotateDegrees(isaac5 ,turn_angle);
-        stopSleep(isaac5);
+        state("Turn towards the white line");
+        rotateDegrees(isaac5, turn_angle);
+
         // fast drive the first diagonal square
 
-        state("Drive 2");
+        state("Drive forward two diagonal squares");
         driveMeters(isaac5, 2.0 * SQUARE_SIZE * SQRT_2);
-        stopSleep(isaac5);
-        // then slow down and stop for the tape
-        state("Tape Search");
-        driveForwardUntilWhiteTape(isaac5, SQUARE_SIZE * SQRT_2);
-        stopSleep(isaac5);
-        // Face the beacon
 
-        state("Rotate 2");
-        rotateDegrees(isaac5, turn_angle);
-        stopSleep(isaac5);
+        // then slow down and stop for the tape
+        state("Drive until you see the white tape");
+        driveForwardUntilWhiteTape(isaac5, SQUARE_SIZE * SQRT_2);
+
+        // Face the beacon
+        state("Turn to face the beacon");
+        rotateOnWhiteLine(isaac5, turn_angle);
+
         // Drive just up to the beacon
-        state("Distance Stop");
+        state("Drive right up to the beacon");
         stopppppppp(isaac5, SQUARE_SIZE / 2.0);
-        stopSleep(isaac5);
+
         // Save on batteries?
         isaac5.deactivateSensors();
 
-        // Climbers out.
-        // NOTE: Move this inside the COLOR_THRESHOLD block if it turns out that
-        // we don't always get to the beacon exactly.
-        state("Climber Dump");
-        dumpClimbers(isaac5);
 
-        state("Button Press");
+        state("See if you're in front of the beacon");
         // If you see a light, figure out which button to press and press it
         if (COLOR_THRESHOLD <= isaac5.getRedFore() || COLOR_THRESHOLD < isaac5.getBlueFore()) {
+            // Climbers out.
+            state("Climber Dump");
+            dumpClimbers(isaac5);
+
+
             boolean left_is_red = COLOR_THRESHOLD <= isaac5.getRedFore();
 
             boolean go_left = (Alliance.RED == alliance) == left_is_red;
