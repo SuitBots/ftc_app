@@ -1,5 +1,7 @@
 package com.suitbots.resq;
 
+import com.qualcomm.robotcore.hardware.configuration.DeviceInfoAdapter;
+
 /**
  * Created by Samantha on 11/23/2015.
  */
@@ -28,7 +30,7 @@ public abstract class GoalAutonomus extends BuildingBlocks {
     public void runOpMode() throws InterruptedException {
 
         Alliance alliance = getAlliance();
-        Isaac5 isaac5 = new Isaac5(hardwareMap, telemetry);
+        Isaac5 isaac5 = new Isaac5(hardwareMap, telemetry, this);
         isaac5.enableBlueLED(alliance == Alliance.BLUE);
         isaac5.enableRedLED(alliance == Alliance.RED);
         isaac5.calibrateGyro();
@@ -44,40 +46,31 @@ public abstract class GoalAutonomus extends BuildingBlocks {
 
         // Start up against the wall to ensure angle. One square forward
 
-        state("Drive forward one square");
-        driveMeters(isaac5, SQUARE_SIZE);
+        state("Drive up to the square");
+        driveMeters(isaac5, 2.0);
 
-        // Turn towards the beacon line
-        state("Turn towards the white line");
+        state("Stop at the line");
+        driveForwardUntilWhiteTape(isaac5, 0.3);
+
+        // state("Back up a bit");
+        // driveMeters(isaac5, -.1);
+
+        state("Face the goal");
         rotateDegrees(isaac5, turn_angle);
 
-        // fast drive the first diagonal square
-
-        state("Drive forward two diagonal squares");
-        driveMeters(isaac5, 2.0 * SQUARE_SIZE * SQRT_2);
-
-        // then slow down and stop for the tape
-        state("Drive until you see the white tape");
-        driveForwardUntilWhiteTape(isaac5, SQUARE_SIZE * SQRT_2);
-
-        // Face the beacon
-        state("Turn to face the beacon");
-        rotateOnWhiteLine(isaac5, turn_angle);
-
-        // Drive just up to the beacon
-        state("Drive right up to the beacon");
-        stopppppppp(isaac5, SQUARE_SIZE / 2.0);
+        state("Approach the goal");
+        stopppppppp(isaac5, 0.2);
 
         // Save on batteries?
         isaac5.deactivateSensors();
 
+        state("Climber Dump");
+        dumpClimbers(isaac5);
 
         state("See if you're in front of the beacon");
         // If you see a light, figure out which button to press and press it
         if (COLOR_THRESHOLD <= isaac5.getRedFore() || COLOR_THRESHOLD < isaac5.getBlueFore()) {
             // Climbers out.
-            state("Climber Dump");
-            dumpClimbers(isaac5);
 
 
             boolean left_is_red = COLOR_THRESHOLD <= isaac5.getRedFore();
@@ -100,12 +93,6 @@ public abstract class GoalAutonomus extends BuildingBlocks {
         }
 
         // Now roll on over to the parking zone.
-        state("Back up");
-        driveMeters(isaac5, -0.2);
-        state("Rotate 3");
-        rotateDegrees(isaac5, 2 * turn_angle);
-        state("Parking drive.");
-        driveMeters(isaac5, SQUARE_SIZE);
         isaac5.stop();
         isaac5.enableBlueLED(false);
         isaac5.enableRedLED(false);

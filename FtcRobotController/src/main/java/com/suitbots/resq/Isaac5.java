@@ -1,6 +1,7 @@
 package com.suitbots.resq;
 
 import com.qualcomm.hardware.ModernRoboticsI2cGyro;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -21,11 +22,10 @@ public  class Isaac5  {
     private OpticalDistanceSensor distance;
     private Telemetry telemetry;
 
-    // Encoders for the center motors, which should always be on the ground
-    private int left_motor_encoder;
-    private int right_motor_encoder;
+    LinearOpMode opmode;
 
-    Isaac5(HardwareMap hardwareMap, Telemetry _telemetry) throws InterruptedException {
+    Isaac5(HardwareMap hardwareMap, Telemetry _telemetry, LinearOpMode op) throws InterruptedException {
+        opmode = op;
         dim = hardwareMap.deviceInterfaceModule.get("dim");
         l1 = hardwareMap.dcMotor.get("l1");
         l2 = hardwareMap.dcMotor.get("l2");
@@ -34,9 +34,13 @@ public  class Isaac5  {
         tape = hardwareMap.dcMotor.get("tape");
         winch = hardwareMap.dcMotor.get("winch");
 
-        // Reverse the left motors
+        encoder_values = new int[4];
+
+        // Reverse the right motors
         r1.setDirection(DcMotor.Direction.REVERSE);
         r2.setDirection(DcMotor.Direction.REVERSE);
+        // Also the tape motor
+        tape.setDirection(DcMotor.Direction.REVERSE);
 
         dumper_flipper = hardwareMap.servo.get("flipper"); // y
 
@@ -91,23 +95,25 @@ public  class Isaac5  {
 
     /// The threshold that we're willing to consider a color "detected."
     /// Note that this applies for active-mode only.
-    public static final int COLOR_THRESHOLD = 1;
+    public static final int COLOR_THRESHOLD = 3;
     /// Is Isaac5's color sensor over something white?
     public boolean isOnWhiteLine() {
-        return 0 < color_under.red() + color_under.blue() +
-                color_under.green() + color_under.alpha();
-    }
+        return COLOR_THRESHOLD < color_under.red() &&
+                COLOR_THRESHOLD < color_under.blue() &&
+                COLOR_THRESHOLD < color_under.green() &&
+                COLOR_THRESHOLD < color_under.alpha();
 
+    }
     /// Calibrate the gyro sensor
     public void calibrateGyro() throws InterruptedException {
         enableRedLED(true);
         gyro.calibrate();
         while(gyro.isCalibrating()) {
             telemetry.addData("Gyro", "Calibrating");
-            Thread.sleep(100);
+            opmode.waitOneFullHardwareCycle();
         }
         telemetry.addData("Gyro", "CalibratED");
-        enableBlueLED(false);
+        enableRedLED(false);
     }
 
     /// Sens some sensor-specific telemetry
@@ -121,12 +127,18 @@ public  class Isaac5  {
                 color_under.green(), color_under.alpha()));
 
         telemetry.addData("Dist Raw", distance.getLightDetectedRaw());
-        telemetry.addData("Encoders", String.format("L: %d, R: %d",
-                getLeftEncoder(),
-                getRightEncoder()));
 
         telemetry.addData("Heading", String.format("%d (%d)",
                 gyro.getHeading(), gyro.getIntegratedZValue()));
+
+        telemetry.
+                `addData("Encoders", String.format("%d/%d %d/%d %d/%d %d/%d",
+                l1.getCurrentPosition(), l1.getTargetPosition(),
+                l2.getCurrentPosition(), l2.getTargetPosition(),
+                r1.getCurrentPosition(), r1.getTargetPosition(),
+                r2.getCurrentPosition(), r2.getTargetPosition()));
+
+        telemetry.addData("Servo Pos", dumper_flipper.getPosition());
     }
 
     private double clamp(double x) {
@@ -141,53 +153,6 @@ public  class Isaac5  {
         r2.setPower(clamp(right));
     }
 
-    protected void diagnosticSetDriveMotorSpeeds(double _l1, double _l2,
-                                                 double _r1, double _r2) {
-        l1.setPower(_l1);
-        l2.setPower(_l2);
-        r1.setPower(_r1);
-        r2.setPower(_r2);
-    }
-
-    public void resetEncoders() {
-        l1.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        l2.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        r1.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        r2.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-    }
-
-    public void setEncoderTargets(int x) {
-        l1.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-        l2.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-        r1.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-        r2.setMode(DcMotorController.RunMode.RUN_TO_POSITION);
-        l1.setTargetPosition(x);
-        l2.setTargetPosition(x);
-        r1.setTargetPosition(x);
-        r2.setTargetPosition(x);
-    }
-
-    public void reetEncoderMode() {
-        l1.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        l2.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        r1.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        r2.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-    }
-
-    public boolean encodersAreZero() {
-        return l1.getCurrentPosition() == 0 &&
-                l2.getCurrentPosition() == 0 &&
-                r1.getCurrentPosition() == 0 &&
-                r2.getCurrentPosition() == 0;
-    }
-
-    public boolean motorsAreBusy() {
-        return l1.isBusy() || l2.isBusy() ||
-                r1.isBusy() || r2.isBusy();
-    }
-
-
-
     /// Get the heading from the gyro sensor
     int getHeading() { return gyro.getHeading(); }
     int getHeadingRaw() { return gyro.getIntegratedZValue(); }
@@ -197,21 +162,25 @@ public  class Isaac5  {
     /// Get the "distance" (really light returned) from the optical distance sensor.
     int getDistance() { return distance.getLightDetectedRaw(); }
 
+    int[] encoder_values;
 
-    /// Get the change in the left encoder value since last reset
-    public int getLeftEncoder() {
-        return -(l2.getCurrentPosition() - left_motor_encoder);
-    }
-
-    /// Get the change in the right encoder value since last reset
-    public int getRightEncoder() {
-        return -(r2.getCurrentPosition() - right_motor_encoder);
+    public int getEncoderAverage() {
+        int sum = l1.getCurrentPosition() +
+                l2.getCurrentPosition() +
+                r1.getCurrentPosition() +
+                r2.getCurrentPosition();
+        for (int i = 0; i < encoder_values.length; ++i) {
+            sum -= encoder_values[i];
+        }
+        return sum / encoder_values.length;
     }
 
     /// Reset both left and right encoders
-    public void zeroMotorEncoders() {
-        left_motor_encoder = l2.getCurrentPosition();
-        right_motor_encoder = r2.getCurrentPosition();
+    public void zeroMotorEncoders() throws InterruptedException {
+        encoder_values[0] = l1.getCurrentPosition();
+        encoder_values[1] = l2.getCurrentPosition();
+        encoder_values[2] = r1.getCurrentPosition();
+        encoder_values[3] = r2.getCurrentPosition();
     }
 
     public void setHeadingToZero() {
@@ -255,6 +224,7 @@ public  class Isaac5  {
     public void stop() {
         setDriveMotorSpeeds(0.0, 0.0);
         setTapeMotor(0.0);
+        setWinchMotor(0.0);
     }
 
     /// The red value from the front color sensor
@@ -270,17 +240,13 @@ public  class Isaac5  {
     public int getAlphaUnder() { return color_under.alpha(); }
 
     public void moveDumperArmToThrowPosition() {
-        dumper_flipper.setPosition(1.0);
+        dumper_flipper.setPosition(Servo.MAX_POSITION);
     }
-
-    public void resetDumperArm() {
-        dumper_flipper.setPosition(0.0);
-    }
+    public void resetDumperArm() { dumper_flipper.setPosition(Servo.MIN_POSITION); }
 
     public void setTapeMotor (double x) {
         tape.setPower(clamp(x));
     }
-
     public void setWinchMotor (double x) {
         winch.setPower(clamp(x));
     }
