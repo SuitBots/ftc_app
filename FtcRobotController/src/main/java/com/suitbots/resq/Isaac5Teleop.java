@@ -45,8 +45,13 @@ public class Isaac5Teleop extends LinearOpMode {
             }
 
             if (gamepad1.y) {
-                isaac5.sendSensorTelemetry();
+                isaac5.moveFlapUp();
+            } else if(gamepad1.x){
+                isaac5.moveFlapDown();
+            } else{
+                isaac5.stopFlap();  
             }
+
         }
         isaac5.stop();
     }

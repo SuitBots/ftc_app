@@ -1,11 +1,11 @@
 package com.suitbots.resq;
 
-import com.qualcomm.hardware.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -14,11 +14,11 @@ import com.qualcomm.robotcore.robocol.Telemetry;
 public  class Isaac5  {
     private DcMotor l1, l2, r1, r2;
     private DcMotor tape, winch;
-    private Servo dumper_flipper;
+    private Servo dumper_flipper, flap;
     private DeviceInterfaceModule dim;
 
     private ColorSensor color_fore, color_under;
-    private ModernRoboticsI2cGyro gyro;
+    private GyroSensor gyro;
     private OpticalDistanceSensor distance;
     private Telemetry telemetry;
 
@@ -42,11 +42,12 @@ public  class Isaac5  {
         // Also the tape motor
         tape.setDirection(DcMotor.Direction.REVERSE);
 
+        flap = hardwareMap.servo.get("scoop");
         dumper_flipper = hardwareMap.servo.get("flipper"); // y
 
         telemetry = _telemetry;
         distance = hardwareMap.opticalDistanceSensor.get("distance"); // y
-        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro"); // y
+        gyro = hardwareMap.gyroSensor.get("gyro"); // y
 
         color_fore = hardwareMap.colorSensor.get("color"); // y
         /***************************************
@@ -129,14 +130,14 @@ public  class Isaac5  {
         telemetry.addData("Dist Raw", distance.getLightDetectedRaw());
 
         telemetry.addData("Heading", String.format("%d (%d)",
-                gyro.getHeading(), gyro.getIntegratedZValue()));
+                gyro.getHeading(), gyro.rawZ()));
 
         telemetry.
-                `addData("Encoders", String.format("%d/%d %d/%d %d/%d %d/%d",
-                l1.getCurrentPosition(), l1.getTargetPosition(),
-                l2.getCurrentPosition(), l2.getTargetPosition(),
-                r1.getCurrentPosition(), r1.getTargetPosition(),
-                r2.getCurrentPosition(), r2.getTargetPosition()));
+                addData("Encoders", String.format("%d/%d %d/%d %d/%d %d/%d",
+                        l1.getCurrentPosition(), l1.getTargetPosition(),
+                        l2.getCurrentPosition(), l2.getTargetPosition(),
+                        r1.getCurrentPosition(), r1.getTargetPosition(),
+                        r2.getCurrentPosition(), r2.getTargetPosition()));
 
         telemetry.addData("Servo Pos", dumper_flipper.getPosition());
     }
@@ -155,7 +156,7 @@ public  class Isaac5  {
 
     /// Get the heading from the gyro sensor
     int getHeading() { return gyro.getHeading(); }
-    int getHeadingRaw() { return gyro.getIntegratedZValue(); }
+    int getHeadingRaw() { return gyro.rawZ(); }
 
     String getGyroStatus() { return gyro.status(); }
 
@@ -250,5 +251,9 @@ public  class Isaac5  {
     public void setWinchMotor (double x) {
         winch.setPower(clamp(x));
     }
+
+    public void moveFlapUp() {flap.setPosition(1.0);}
+    public void moveFlapDown() {flap.setPosition(0.0);}
+    public void stopFlap() {flap.setPosition(0.5);}
 
 }
