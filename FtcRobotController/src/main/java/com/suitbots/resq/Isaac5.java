@@ -1,5 +1,6 @@
 package com.suitbots.resq;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,7 +19,7 @@ public  class Isaac5  {
     private DeviceInterfaceModule dim;
 
     private ColorSensor color_fore, color_under;
-    private GyroSensor gyro;
+    private ModernRoboticsI2cGyro gyro;
     private OpticalDistanceSensor distance;
     private Telemetry telemetry;
 
@@ -47,7 +48,7 @@ public  class Isaac5  {
 
         telemetry = _telemetry;
         distance = hardwareMap.opticalDistanceSensor.get("distance"); // y
-        gyro = hardwareMap.gyroSensor.get("gyro"); // y
+        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro"); // y
 
         color_fore = hardwareMap.colorSensor.get("color"); // y
         /***************************************
@@ -156,7 +157,7 @@ public  class Isaac5  {
 
     /// Get the heading from the gyro sensor
     int getHeading() { return gyro.getHeading(); }
-    int getHeadingRaw() { return gyro.rawZ(); }
+    int getHeadingRaw() { return gyro.getIntegratedZValue(); }
 
     String getGyroStatus() { return gyro.status(); }
 

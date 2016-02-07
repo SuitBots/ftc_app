@@ -49,7 +49,7 @@ public class Isaac5Teleop extends LinearOpMode {
             } else if(gamepad1.x){
                 isaac5.moveFlapDown();
             } else{
-                isaac5.stopFlap();  
+                isaac5.stopFlap();
             }
 
         }

@@ -32,7 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import android.graphics.Color;
+import android.media.MediaActionSound;
 
+import com.longhorns.resq.LHTeleop;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister;
 import com.suitbots.resq.*;
@@ -107,5 +109,6 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("BLUE AUTO", BlueAutonomous.class);
     manager.register("BB Diag.", BBTest.class);
     manager.register("On Blocks", UpOnBlocks.class);
+    manager.register("Longhorn", LHTeleop.class);
   }
 }

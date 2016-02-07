@@ -1,5 +1,6 @@
 package com.suitbots.resq;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 abstract public class BuildingBlocks extends LinearOpMode {
@@ -120,13 +121,11 @@ abstract public class BuildingBlocks extends LinearOpMode {
                 CLOSE_ENOUGH_TO_ZERO < Math.abs(isaac5.getHeadingRaw())) {
             waitOneFullHardwareCycle();
         }
-
-        telemetry.addData("Hardware Wait", count);
     }
 
     // Motor speed for turning
     private static final double TURN_SPEED = 0.5;
-    private static final int TURN_TOLEARANCE = 10;
+    private static final int TURN_TOLEARANCE = 5;
     // Rotate this many degrees and then stop.
     public void rotateDegrees(Isaac5 isaac5, int desiredDegrees) throws InterruptedException {
         // Sorry. You can't just spin around.
@@ -137,7 +136,6 @@ abstract public class BuildingBlocks extends LinearOpMode {
         }
 
         resetGyro(isaac5);
-
 
         double power = TURN_SPEED;
 
@@ -152,7 +150,10 @@ abstract public class BuildingBlocks extends LinearOpMode {
             final int currentHeading = - isaac5.getHeadingRaw();
             final int headingDiff = Math.abs(desiredDegrees - currentHeading);
 
+            telemetry.addData("Headings", String.format("Target: %d, Current: %d", desiredDegrees, currentHeading));
+
             quit = headingDiff <= TURN_TOLEARANCE;
+            waitOneFullHardwareCycle();
         }
 
         isaac5.stop();

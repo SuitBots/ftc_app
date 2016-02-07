@@ -50,7 +50,7 @@ public abstract class GoalAutonomus extends BuildingBlocks {
         driveMeters(isaac5, 2.0);
 
         state("Stop at the line");
-        driveForwardUntilWhiteTape(isaac5, 0.3);
+        driveForwardUntilWhiteTape(isaac5, 1.0);
 
         // state("Back up a bit");
         // driveMeters(isaac5, -.1);
