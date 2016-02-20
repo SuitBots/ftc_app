@@ -51,6 +51,7 @@ public  class Isaac5  {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro"); // y
 
         color_fore = hardwareMap.colorSensor.get("color"); // y
+        color_under = hardwareMap.colorSensor.get("linefollow");  // y
         /***************************************
          *  ____    _    _   _  ____ _____ ____
          * |  _ \  / \  | \ | |/ ___| ____|  _ \
@@ -64,10 +65,7 @@ public  class Isaac5  {
          * sensor to its original state, please get rid of this noise.
          *
          ***************************************/
-        color_fore.setI2cAddress(0x70);
-
-
-        color_under = hardwareMap.colorSensor.get("linefollow");  // y
+        color_under.setI2cAddress(0x70);
 
         zeroMotorEncoders();
     }
@@ -87,11 +85,13 @@ public  class Isaac5  {
 
     /// Turn sensor lights on
     public void activateSensors() {
+        color_fore.enableLed(true);
         color_under.enableLed(true);
     }
 
     /// Turn sensor lights off
     public void deactivateSensors() {
+        color_fore.enableLed(false);
         color_under.enableLed(false);
     }
 

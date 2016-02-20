@@ -37,14 +37,6 @@ public class BBTest extends BuildingBlocks {
             } else if (gamepad1.y) {
                 act("Stop!");
                 stopppppppp(isaac5, .6);
-            } else if (gamepad1.a) {
-                act("Sensors on");
-                isaac5.activateSensors();
-            } else if (gamepad1.b) {
-                act("Sensors off");
-                isaac5.deactivateSensors();
-            } else if (gamepad1.right_bumper) {
-                isaac5.resetHeading();
             }
 
             if (gamepad1.right_bumper) {
@@ -57,6 +49,12 @@ public class BBTest extends BuildingBlocks {
                     isaac5.resetDumperArm();
                     arm_up = false;
                 }
+            }
+
+            if (gamepad1.a) {
+                isaac5.activateSensors();
+            } else {
+                isaac5.deactivateSensors();
             }
 
             isaac5.sendSensorTelemetry();

@@ -109,6 +109,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("BLUE AUTO", BlueAutonomous.class);
     manager.register("BB Diag.", BBTest.class);
     manager.register("On Blocks", UpOnBlocks.class);
-    manager.register("Longhorn", LHTeleop.class);
+    manager.register("Headless", Headless.class);
+    manager.register("Pushbot", Pushbot.class);
   }
 }
