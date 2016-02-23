@@ -71,8 +71,6 @@ public abstract class GoalAutonomus extends BuildingBlocks {
         // If you see a light, figure out which button to press and press it
         if (COLOR_THRESHOLD <= isaac5.getRedFore() || COLOR_THRESHOLD < isaac5.getBlueFore()) {
             // Climbers out.
-
-
             boolean left_is_red = COLOR_THRESHOLD <= isaac5.getRedFore();
 
             boolean go_left = (Alliance.RED == alliance) == left_is_red;
@@ -80,19 +78,19 @@ public abstract class GoalAutonomus extends BuildingBlocks {
             // To make sure we actually hit the button, give it a few good whacks.
             final int NUM_WHACKS = 3;
             final int CYCLE_TIME_MS = 500;
+            final double DRIVE_POWER = 0.25;
             for (int i = 0; i < NUM_WHACKS; ++i) {
-                isaac5.setDriveMotorSpeeds(go_left ? 0.5 : 0.0,
-                                           go_left ? 0.0 : 0.5);
+                isaac5.setDriveMotorSpeeds(go_left ? DRIVE_POWER: 0.0,
+                                           go_left ? 0.0 : DRIVE_POWER);
                 Thread.sleep(CYCLE_TIME_MS);
-                isaac5.setDriveMotorSpeeds(go_left ? -.5 : 0.0,
-                        go_left ? 0.0 : -.5);
+                isaac5.setDriveMotorSpeeds(go_left ? -DRIVE_POWER : 0.0,
+                        go_left ? 0.0 : -DRIVE_POWER);
                 Thread.sleep(CYCLE_TIME_MS / 2);
             }
 
             isaac5.stop();
         }
 
-        // Now roll on over to the parking zone.
         isaac5.stop();
         isaac5.enableBlueLED(false);
         isaac5.enableRedLED(false);

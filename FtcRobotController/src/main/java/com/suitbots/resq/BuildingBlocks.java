@@ -70,15 +70,19 @@ abstract public class BuildingBlocks extends LinearOpMode {
         telemetry.addData("Debug", msg);
     }
 
-    // Drive forward some number of meters.
     public void driveMeters(Isaac5 isaac5, double meters) throws InterruptedException {
+        driveMeters(isaac5, meters, 0.5);
+    }
+
+    // Drive forward some number of meters.
+    public void driveMeters(Isaac5 isaac5, double meters, double power) throws InterruptedException {
         isaac5.zeroMotorEncoders();
 
         int target_ticks = ticksForDistance(meters);
 
         boolean quit = false;
         // RUN_TO_POSITION always ignores sign in power.
-        final double power = .5 * signd(meters);
+        power *= signd(meters);
         waitOneFullHardwareCycle();
         while(opModeIsActive() && !quit) {
             isaac5.setDriveMotorSpeeds(power, power);
@@ -96,17 +100,16 @@ abstract public class BuildingBlocks extends LinearOpMode {
 
         boolean quit = false;
 
-        final double power = signd(max_meters) * 0.35;
+        final double power = signd(max_meters) * 0.25;
 
         debug("Driving");
 
+        isaac5.setDriveMotorSpeeds(power, power);
         while(opModeIsActive() && !quit) {
-            isaac5.activateSensors();
-            isaac5.setDriveMotorSpeeds(power, power);
             int ticks = Math.abs(isaac5.getEncoderAverage());
             int ticks_remaining = target_ticks - ticks;
-
             quit = (ticks_remaining <= 0) || isaac5.isOnWhiteLine();
+            waitOneFullHardwareCycle();
         }
         debug("Done.");
         isaac5.stop();

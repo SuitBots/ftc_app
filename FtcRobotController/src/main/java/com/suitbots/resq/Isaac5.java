@@ -1,5 +1,6 @@
 package com.suitbots.resq;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -12,16 +13,24 @@ import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.robocol.Telemetry;
 
+import org.usfirst.FTC5866.Wire;
+
+import java.util.concurrent.locks.Lock;
+
 public  class Isaac5  {
     private DcMotor l1, l2, r1, r2;
     private DcMotor tape, winch;
     private Servo dumper_flipper, flap;
     private DeviceInterfaceModule dim;
 
-    private ColorSensor color_fore, color_under;
+    private ModernRoboticsI2cColorSensor color_fore, color_under;
     private ModernRoboticsI2cGyro gyro;
     private OpticalDistanceSensor distance;
     private Telemetry telemetry;
+
+    // Egregious kluge to work around the FTC color sensor library not being able
+    // to turn on the LED reliably.
+    private Wire under_wire;
 
     LinearOpMode opmode;
 
@@ -50,8 +59,8 @@ public  class Isaac5  {
         distance = hardwareMap.opticalDistanceSensor.get("distance"); // y
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro"); // y
 
-        color_fore = hardwareMap.colorSensor.get("color"); // y
-        color_under = hardwareMap.colorSensor.get("linefollow");  // y
+        color_fore = (ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color"); // y
+        color_under = (ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("linefollow");  // y
         /***************************************
          *  ____    _    _   _  ____ _____ ____
          * |  _ \  / \  | \ | |/ ___| ____|  _ \
@@ -66,6 +75,7 @@ public  class Isaac5  {
          *
          ***************************************/
         color_under.setI2cAddress(0x70);
+        under_wire = new Wire(hardwareMap, "under", color_under.getI2cAddress());
 
         zeroMotorEncoders();
     }
@@ -85,26 +95,40 @@ public  class Isaac5  {
 
     /// Turn sensor lights on
     public void activateSensors() {
-        color_fore.enableLed(true);
-        color_under.enableLed(true);
+        under_wire.beginWrite(0x03);
+        under_wire.write(0);
+        under_wire.endWrite();
     }
 
     /// Turn sensor lights off
     public void deactivateSensors() {
-        color_fore.enableLed(false);
-        color_under.enableLed(false);
+        under_wire.beginWrite(0x03);
+        under_wire.write(1);
+        under_wire.endWrite();
     }
 
     /// The threshold that we're willing to consider a color "detected."
     /// Note that this applies for active-mode only.
-    public static final int COLOR_THRESHOLD = 3;
+    public static final int COLOR_THRESHOLD = 1;
     /// Is Isaac5's color sensor over something white?
     public boolean isOnWhiteLine() {
-        return COLOR_THRESHOLD < color_under.red() &&
-                COLOR_THRESHOLD < color_under.blue() &&
-                COLOR_THRESHOLD < color_under.green() &&
-                COLOR_THRESHOLD < color_under.alpha();
+        int r = color_under.red();
+        int g = color_under.green();
+        int b = color_under.blue();
+        int a = color_under.alpha();
 
+        int color_tot = r - COLOR_THRESHOLD +
+                g - COLOR_THRESHOLD +
+                b - COLOR_THRESHOLD +
+                a - COLOR_THRESHOLD;
+
+        // Make sure we have some light
+        if(3 > color_tot) {
+            return false;
+        }
+
+        // If red and blue are more than one off, we're probably on colored tape.
+        return 2 > Math.abs(r - b);
     }
     /// Calibrate the gyro sensor
     public void calibrateGyro() throws InterruptedException {
@@ -131,7 +155,7 @@ public  class Isaac5  {
         telemetry.addData("Dist Raw", distance.getLightDetectedRaw());
 
         telemetry.addData("Heading", String.format("%d (%d)",
-                gyro.getHeading(), gyro.rawZ()));
+                gyro.getHeading(), gyro.getIntegratedZValue()));
 
         telemetry.
                 addData("Encoders", String.format("%d/%d %d/%d %d/%d %d/%d",
