@@ -9,8 +9,6 @@ public class Headless extends BuildingBlocks {
 
         waitForStart();
 
-        driveForwardUntilWhiteTape(isaac5, .25);
-
-        isaac5.deactivateSensors();
+        dumpClimbers(isaac5);
     }
 }

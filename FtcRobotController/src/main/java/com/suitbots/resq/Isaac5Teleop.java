@@ -13,19 +13,41 @@ public class Isaac5Teleop extends LinearOpMode {
     // l bumper:  tape out
     // r bumper:  tape back
     // triggers:  tape out/back (left/right)
+
+    public static final double DEAD_ZONE = .2;
+
     @Override
     public void runOpMode() throws InterruptedException {
         Isaac5 isaac5 = new Isaac5(hardwareMap, telemetry, this);
         isaac5.deactivateSensors();
         boolean hasMovedArm = false;
+
+        boolean arm_is_enabled = false;
+
         waitForStart();
         while (opModeIsActive()) {
             // Wheels
-            isaac5.setDriveMotorSpeeds(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
+
+
+            if (DEAD_ZONE < Math.abs(gamepad1.left_stick_y) || DEAD_ZONE < Math.abs(gamepad1.right_stick_y)) {
+                isaac5.setDriveMotorSpeeds(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
+            }
 
             // For hill climbing.
             if (gamepad1.dpad_up) {
                 isaac5.setDriveMotorSpeeds(1.0, 1.0);
+            }
+
+            if (gamepad1.dpad_down) {
+                if (! arm_is_enabled) {
+                    arm_is_enabled = true;
+                    isaac5.moveDumperArmToThrowPosition();
+                }
+            } else {
+                if (arm_is_enabled) {
+                    arm_is_enabled = false;
+                    isaac5.resetDumperArm();
+                }
             }
 
             if (gamepad1.left_bumper) {

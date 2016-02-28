@@ -111,5 +111,6 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("On Blocks", UpOnBlocks.class);
     manager.register("Headless", Headless.class);
     manager.register("Pushbot", Pushbot.class);
+    manager.register("Derp", Derp.class);
   }
 }

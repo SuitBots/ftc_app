@@ -109,7 +109,7 @@ public  class Isaac5  {
 
     /// The threshold that we're willing to consider a color "detected."
     /// Note that this applies for active-mode only.
-    public static final int COLOR_THRESHOLD = 1;
+    public static final int COLOR_THRESHOLD = 3;
     /// Is Isaac5's color sensor over something white?
     public boolean isOnWhiteLine() {
         int r = color_under.red();
@@ -117,18 +117,8 @@ public  class Isaac5  {
         int b = color_under.blue();
         int a = color_under.alpha();
 
-        int color_tot = r - COLOR_THRESHOLD +
-                g - COLOR_THRESHOLD +
-                b - COLOR_THRESHOLD +
-                a - COLOR_THRESHOLD;
-
-        // Make sure we have some light
-        if(3 > color_tot) {
-            return false;
-        }
-
-        // If red and blue are more than one off, we're probably on colored tape.
-        return 2 > Math.abs(r - b);
+        int color_total = r+b+a;
+        return color_total >= COLOR_THRESHOLD;
     }
     /// Calibrate the gyro sensor
     public void calibrateGyro() throws InterruptedException {
@@ -198,6 +188,7 @@ public  class Isaac5  {
         for (int i = 0; i < encoder_values.length; ++i) {
             sum -= encoder_values[i];
         }
+
         return sum / encoder_values.length;
     }
 
@@ -259,6 +250,7 @@ public  class Isaac5  {
     public int getBlueFore() { return color_fore.blue(); }
     /// The green value from the front color sensor
     public int getGreenFore() { return color_fore.green(); }
+    public int getAlphaFore() { return color_fore.alpha(); }
 
     public int getRedUnder() { return color_under.red(); }
     public int getGreenUnder() { return color_under.green(); }

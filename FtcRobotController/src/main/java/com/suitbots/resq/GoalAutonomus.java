@@ -36,7 +36,7 @@ public abstract class GoalAutonomus extends BuildingBlocks {
         isaac5.calibrateGyro();
         isaac5.activateSensors();
 
-        int turn_angle = alliance == Alliance.BLUE ? 45 : -45;
+        int turn_angle = alliance == Alliance.BLUE ? 38™™ : -38;
 
         telemetry.addData("Alliance", Alliance.RED == alliance ? "RED" : "BLUE");
         telemetry.addData("Turn Angle", turn_angle);
@@ -46,50 +46,36 @@ public abstract class GoalAutonomus extends BuildingBlocks {
 
         // Start up against the wall to ensure angle. One square forward
 
-        state("Drive up to the square");
-        driveMeters(isaac5, 2.0);
+        driveMeters(isaac5, 2.4, 0.5);
 
-        state("Stop at the line");
-        driveForwardUntilWhiteTape(isaac5, 1.0);
+        driveForwardUntilWhiteTape(isaac5, 0.25);
 
-        // state("Back up a bit");
-        // driveMeters(isaac5, -.1);
+        // We don't go forward *quite* enough, so go a little more.
+        //driveMeters(isaac5, 0.05, 0.5);
 
-        state("Face the goal");
         rotateDegrees(isaac5, turn_angle);
 
         state("Approach the goal");
-        stopppppppp(isaac5, 0.2);
+        stopppppppp(isaac5, 0.1);
 
         // Save on batteries?
         isaac5.deactivateSensors();
 
-        state("Climber Dump");
-        dumpClimbers(isaac5);
+        if (0 < isaac5.getAlphaFore()) {
+            dumpClimbers(isaac5);
 
-        state("See if you're in front of the beacon");
-        // If you see a light, figure out which button to press and press it
-        if (COLOR_THRESHOLD <= isaac5.getRedFore() || COLOR_THRESHOLD < isaac5.getBlueFore()) {
-            // Climbers out.
-            boolean left_is_red = COLOR_THRESHOLD <= isaac5.getRedFore();
-
+            boolean left_is_red = isaac5.getRedFore() > Math.max(isaac5.getGreenFore(), isaac5.getBlueFore());
             boolean go_left = (Alliance.RED == alliance) == left_is_red;
 
-            // To make sure we actually hit the button, give it a few good whacks.
-            final int NUM_WHACKS = 3;
-            final int CYCLE_TIME_MS = 500;
-            final double DRIVE_POWER = 0.25;
-            for (int i = 0; i < NUM_WHACKS; ++i) {
-                isaac5.setDriveMotorSpeeds(go_left ? DRIVE_POWER: 0.0,
-                                           go_left ? 0.0 : DRIVE_POWER);
-                Thread.sleep(CYCLE_TIME_MS);
-                isaac5.setDriveMotorSpeeds(go_left ? -DRIVE_POWER : 0.0,
-                        go_left ? 0.0 : -DRIVE_POWER);
-                Thread.sleep(CYCLE_TIME_MS / 2);
-            }
+            double left_speed = go_left ? -1.0 : 1.0;
+            double right_speed = go_left ? 1.0 : -1.0;
 
+            isaac5.setDriveMotorSpeeds(left_speed, right_speed);
+            Thread.sleep(1000);
             isaac5.stop();
+
         }
+
 
         isaac5.stop();
         isaac5.enableBlueLED(false);

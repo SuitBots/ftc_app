@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 abstract public class BuildingBlocks extends LinearOpMode {
 
-    private static final int STOP_DISTANCE = 45;
+    private static final int STOP_DISTANCE = 50;
     private static final double SLOW_SPEED = 1.0;
     private static final double SLIGHTLY_SLOWER_SPEED = 0.30;
 
@@ -19,7 +19,7 @@ abstract public class BuildingBlocks extends LinearOpMode {
     private static final double WHEEL_DIAMETER_INCH = 4.25;
     private static final double METERS_PER_INCH = 0.0254;
     private static final double WHEEL_RADIUS_M = (WHEEL_DIAMETER_INCH * METERS_PER_INCH) * Math.PI;
-    private static final double GEAR_REDUCTION = 16.0 / 22.0;
+    private static final double GEAR_REDUCTION = 1.0;
     private static final double EFFECTIVE_WHEEL_RADIUS_M = WHEEL_RADIUS_M * GEAR_REDUCTION;
     private static final double ENCODER_TICKS_PER_REVOLUTION = 1120.0;
 
@@ -31,9 +31,11 @@ abstract public class BuildingBlocks extends LinearOpMode {
         int target_ticks = Math.abs(ticksForDistance(max_meters));
         isaac5.zeroMotorEncoders();
 
-        final double power = .5;
+        final double power = .4;
 
         debug("Driving");
+
+        int last_ticks = Math.abs(isaac5.getEncoderAverage());
 
         boolean quit = false;
         while(opModeIsActive() && !quit)
@@ -44,6 +46,7 @@ abstract public class BuildingBlocks extends LinearOpMode {
             quit = distance > STOP_DISTANCE;
 
             int ticks = Math.abs(isaac5.getEncoderAverage());
+
             int ticks_remaining = target_ticks - ticks;
 
             quit |= ticks_remaining < 0;
@@ -79,6 +82,7 @@ abstract public class BuildingBlocks extends LinearOpMode {
         isaac5.zeroMotorEncoders();
 
         int target_ticks = ticksForDistance(meters);
+        int last_ticks = Math.abs(isaac5.getEncoderAverage());
 
         boolean quit = false;
         // RUN_TO_POSITION always ignores sign in power.
@@ -88,7 +92,14 @@ abstract public class BuildingBlocks extends LinearOpMode {
             isaac5.setDriveMotorSpeeds(power, power);
             isaac5.sendSensorTelemetry();
             final int ticks = isaac5.getEncoderAverage();
+            if(Math.abs(ticks) < last_ticks) {
+                quit = true;
+            }
+            last_ticks = ticks;
+
             quit = Math.abs(target_ticks) <= Math.abs(ticks);
+            isaac5.sendSensorTelemetry();
+            waitOneFullHardwareCycle();
         }
         isaac5.stop();
     }
@@ -100,7 +111,7 @@ abstract public class BuildingBlocks extends LinearOpMode {
 
         boolean quit = false;
 
-        final double power = signd(max_meters) * 0.25;
+        final double power = signd(max_meters) * 0.1;
 
         debug("Driving");
 
@@ -127,8 +138,8 @@ abstract public class BuildingBlocks extends LinearOpMode {
     }
 
     // Motor speed for turning
-    private static final double TURN_SPEED = 0.5;
-    private static final int TURN_TOLEARANCE = 5;
+    private static final double TURN_SPEED = 0.6;
+    private static final int TURN_TOLEARANCE = 3;
     // Rotate this many degrees and then stop.
     public void rotateDegrees(Isaac5 isaac5, int desiredDegrees) throws InterruptedException {
         // Sorry. You can't just spin around.
@@ -177,7 +188,9 @@ abstract public class BuildingBlocks extends LinearOpMode {
     /// Actuate the servo and wait appropriately for the climbers to fall
     public void dumpClimbers(Isaac5 isaac5) throws InterruptedException {
         isaac5.moveDumperArmToThrowPosition();
+        isaac5.stopFlap();
         Thread.sleep(CLIMBER_WAIT_TIME_MS);
         isaac5.resetDumperArm();
+        isaac5.stopFlap();
     }
 }
