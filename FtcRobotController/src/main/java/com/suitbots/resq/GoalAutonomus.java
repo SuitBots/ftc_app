@@ -36,7 +36,7 @@ public abstract class GoalAutonomus extends BuildingBlocks {
         isaac5.calibrateGyro();
         isaac5.activateSensors();
 
-        int turn_angle = alliance == Alliance.BLUE ? 38™™ : -38;
+        int turn_angle = alliance == Alliance.BLUE ? 38 : -38;
 
         telemetry.addData("Alliance", Alliance.RED == alliance ? "RED" : "BLUE");
         telemetry.addData("Turn Angle", turn_angle);
@@ -75,7 +75,6 @@ public abstract class GoalAutonomus extends BuildingBlocks {
             isaac5.stop();
 
         }
-
 
         isaac5.stop();
         isaac5.enableBlueLED(false);
