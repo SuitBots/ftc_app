@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 
+@Disabled
 @TeleOp(name = "Teleop: Tank", group = "Teleops")
 public class TankTeleop extends OpMode {
     private TankRobot robot;
