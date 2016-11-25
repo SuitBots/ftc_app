@@ -17,16 +17,13 @@ import java.util.Locale;
         "half Dogron")
 public class MecanumTeleop extends OpMode {
     private MecanumRobot robot = null;
-    private Controller g1;
-    private ModernRoboticsI2cGyro gyro;
-    private ModernRoboticsI2cRangeSensor range;
-    private OpticalDistanceSensor line;
-    private ColorSensor color;
+    private Controller g1, g2;
 
     @Override
     public void init() {
         robot = new MecanumRobot(hardwareMap, telemetry);
         g1 = new Controller(gamepad1);
+        g2 = new Controller(gamepad2);
     }
 
     @Override
@@ -37,7 +34,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void start() {
-
+        robot.onStart();
     }
 
     @Override
@@ -45,34 +42,51 @@ public class MecanumTeleop extends OpMode {
         robot.stop();
     }
 
-    @Override
-    public void loop() {
+    protected void g1Loop() {
         g1.update();
 
         final double lx = g1.left_stick_x;
         final double ly = - g1.left_stick_y;
         final double rx = g1.right_stick_x;
 
-        telemetry.addData("Input", String.format(Locale.US, "%.2f\t%.2f\t%.2f", lx, ly, rx));
-        telemetry.addData("Gyro1", String.format(Locale.US, "%.2f", gyro));
-        telemetry.addData("Range1", String.format(Locale.US, "%.2f", range));
-        telemetry.addData("Line1", String.format(Locale.US, "%.2f", line));
-        telemetry.addData("Color1", String.format(Locale.US, "%.2f", color));
-
         final double speed = Math.sqrt(lx * lx + ly * ly);
         final double translation = Math.atan2(lx, ly);
-        final double rotation = rx;
 
-        robot.drive(translation, speed, rotation);
+        robot.drive(translation, speed, rx);
         robot.setHarvesterPower(g1.left_trigger - g1.right_trigger);
-        robot.setFlipperPower(g1.A()? 1 : 0);
 
         if (g1.XOnce()) {
             robot.toggleBackServo();
         }
 
-        if (g1.BOnce()) {
+        if (g1.YOnce()) {
             robot.toggleFrontServo();
         }
+    }
+
+    protected void g2Loop() {
+        g2.update();
+
+        double flipper = g2.left_trigger - g2.right_trigger;
+        if (0.1 < Math.abs(flipper)) {
+            robot.setFlipperPower(flipper);
+        } else {
+            robot.stopFlipperIfItIsNotFlipping();
+        }
+
+        if (g2.rightBumperOnce()) {
+            robot.fire();
+        }
+
+        robot.setDispenser(! g2.leftBumper());
+    }
+
+    @Override
+    public void loop() {
+        robot.loop();
+        robot.updateSensorTelemetry();
+        g1Loop();
+        g2Loop();
+        telemetry.update();
     }
 }
