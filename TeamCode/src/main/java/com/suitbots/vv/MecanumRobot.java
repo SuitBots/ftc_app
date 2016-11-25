@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
-import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -19,7 +18,7 @@ import java.util.Locale;
 
 public class MecanumRobot {
     private DcMotor lf, lr, rf, rr, harvester, flipper;
-    private ToggleableServo bf, br;
+    private ToggleableServo bf, br, dispenser;
     private ModernRoboticsI2cGyro gyro;
     private ModernRoboticsI2cRangeSensor range;
     private OpticalDistanceSensor line;
@@ -35,6 +34,7 @@ public class MecanumRobot {
         flipper = hardwareMap.dcMotor.get("flipper");
         bf = new ToggleableServo(hardwareMap .servo.get("pf"), 0.0, 1.0);
         br = new ToggleableServo(hardwareMap.servo.get("pr"), 1.0, 0.0);
+        dispenser = new ToggleableServo(hardwareMap.servo.get("dispenser"), 0.0, 0.5);
         harvester = hardwareMap.dcMotor.get("harvester");
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
         range = (ModernRoboticsI2cRangeSensor)
@@ -44,19 +44,74 @@ public class MecanumRobot {
         rr.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         gyro.calibrate();
+
+        lf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flipper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    public void onStart() {
+        bf.set(0.0);
+        br.set(0.0);
+        dispenser.set(0.0);
+        bf.onStart();
+        br.onStart();
+        dispenser.onStart();
+    }
+
+
+    // Things that need to happen in the teleop loop to accommodate long-running
+    // tasks like running the flipper one at a time.
+    public void loop() {
+        if (isDoneFlipping()) {
+            setFlipperPower(0.0);
+        }
+    }
+
+    public void updateSensorTelemetry() {
+        telemetry.addData("Flipping", flipping ? "Yes" : "No");
+        telemetry.addData("Gyro",  gyro.getIntegratedZValue());
+        telemetry.addData("Range", String.format(Locale.US, "%.2f", range.getDistance(DistanceUnit.CM)));
+        telemetry.addData("Line", String.format(Locale.US, "%.2f", line.getRawLightDetected()));
+        telemetry.addData("Color", String.format(Locale.US, "r: %d\td: %d", color.red(), color.blue()));
+        telemetry.addData("Flipper", flipper.getCurrentPosition());
+        telemetry.addData("FM", flipper.getMode().toString());
+    }
+
+    public static final int ONE_FILPPER_REVOLUTION = 1540; // 1120 * 22 / 16
+    private boolean flipping = false;
+    public void fire() {
+        if (flipping) {
+            return;
+        }
+        flipper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipper.setTargetPosition(ONE_FILPPER_REVOLUTION);
+        flipper.setPower(1.0);
+        flipping = true;
+    }
+
+    public static final int FLIPPER_CLOSE_ENOUGH = 10;
+    public boolean isDoneFlipping() {
+        return flipping
+            && ! flipper.isBusy()
+            || FLIPPER_CLOSE_ENOUGH >= Math.abs(ONE_FILPPER_REVOLUTION - flipper.getCurrentPosition());
+    }
+
+    public void stopFlipperIfItIsNotFlipping() {
+        if (! flipping) {
+            flipper.setPower(0.0);
+        }
     }
 
     public double distanceToWallCM() {
         return range.getDistance(DistanceUnit.CM);
     }
 
-    public static final double LINE_LIGHT_THRESHOLD = 3.0;
-    public boolean isOnWhiteLine() {
-        return line.getRawLightDetected() > LINE_LIGHT_THRESHOLD;
-    }
-
-    public boolean isNotOnWhiteLine() {
-        return line.getRawLightDetected() < LINE_LIGHT_THRESHOLD;
+    public double getLineLightReading() {
+        return line.getRawLightDetected();
     }
 
     public boolean isCalibrating(){
@@ -65,6 +120,10 @@ public class MecanumRobot {
 
     public void resetGyro() {
         gyro.resetZAxisIntegrator();
+    }
+
+    public int getHeading() {
+        return gyro.getIntegratedZValue();
     }
 
     public void gyro1(){
@@ -79,8 +138,7 @@ public class MecanumRobot {
         return Math.min(Math.max(-1.0, x), 1.0);
     }
 
-
-    public static double GYRO_HEADING_REDUCE = 15.0;
+    public static double GYRO_HEADING_REDUCE = 30.0;
     public void drivePreservingDirection(double translationRadians, double velocity) {
         drive(translationRadians, velocity, ((double) gyro.getIntegratedZValue()) / GYRO_HEADING_REDUCE);
     }
@@ -106,15 +164,6 @@ public class MecanumRobot {
         rf.setPower(clip(v2));
         lr.setPower(clip(v3));
         rr.setPower(clip(v4));
-
-        telemetry.addData("MecInput", String.format(Locale.US, "%.2f, %.2f, %.2f",
-                Math.toDegrees(translationRadians), translationVelocity, rotationRight));
-        telemetry.addData("Mecanum", String.format(Locale.US, "%.2f, %.2f, %.2f, %.2f", v1, v2, v3, v4));
-        telemetry.addData("Gyro1",  gyro.getIntegratedZValue());
-        telemetry.addData("Range1", range.getDistance(DistanceUnit.CM));
-        telemetry.addData("Line1", line.getRawLightDetected());
-        telemetry.addData("Color1", String.format(Locale.US, "%d\t%d", color.red(), color.blue()));
-        telemetry.update();
     }
 
     public static final int COLOR_THRESHOLD = 2;
@@ -130,6 +179,10 @@ public class MecanumRobot {
         harvester.setPower(p);
     }
     public void setFlipperPower(double p) {
+        if (flipping) {
+            flipper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            flipping = false;
+        }
         flipper.setPower(p);
     }
 
@@ -139,6 +192,14 @@ public class MecanumRobot {
 
     public void toggleBackServo() {
         br.toggle();
+    }
+
+    public void toggleDispenser() {
+        dispenser.toggle();
+    }
+
+    public void setDispenser(boolean x) {
+        dispenser.setFirst(x);
     }
 
     public void stop() {
