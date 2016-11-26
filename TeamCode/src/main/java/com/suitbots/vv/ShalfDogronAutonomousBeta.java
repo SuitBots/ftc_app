@@ -9,23 +9,23 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     private MecanumRobot robot;
 
-    public enum Alliance {
+    private enum Alliance {
         RED, BLUE
     }
 
-    public abstract Alliance getAlliance();
+    protected abstract Alliance getAlliance();
 
     @Autonomous(name = "Shalf RED")
     public static class Red extends ShalfDogronAutonomousBeta {
-        public Alliance getAlliance() { return Alliance.RED; }
+        protected Alliance getAlliance() { return Alliance.RED; }
     }
 
     @Autonomous(name = "Shalf BLUE")
     public static class Blue extends ShalfDogronAutonomousBeta {
-        public Alliance getAlliance() { return Alliance.BLUE; }
+        protected Alliance getAlliance() { return Alliance.BLUE; }
     }
 
-    protected double forwardDir() {
+    private double forwardDir() {
         if(Alliance.RED == getAlliance()) {
             return Math.PI * 2.0;
         } else {
@@ -33,10 +33,10 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         }
     }
 
-    public double leftDir() {
+    private double leftDir() {
         return 3.0 * Math.PI / 2.0;
     }
-    public double diagonalDirection() {
+    private double diagonalDirection() {
         return (leftDir() + forwardDir()) / 2.0;
     }
 
@@ -81,8 +81,8 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         setPhase("Done");
     }
 
-    public static double DISTANCE_TO_WALL_CM = 15.0;
-    protected void driveDiagonalToTheWall() throws InterruptedException {
+    private static double DISTANCE_TO_WALL_CM = 15.0;
+    private void driveDiagonalToTheWall() throws InterruptedException {
         while(DISTANCE_TO_WALL_CM < robot.distanceToWallCM()) {
             robot.drivePreservingDirection(diagonalDirection(), 1.0);
             idle();
@@ -90,13 +90,13 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         robot.stop();
     }
 
-    public static final double WHITE_LINE_SPEED = 1.0;
-    protected void driveToWhiteLine(double dir) throws InterruptedException {
+    private static final double WHITE_LINE_SPEED = 1.0;
+    private void driveToWhiteLine(double dir) throws InterruptedException {
         driveToWhiteLine(dir, WHITE_LINE_SPEED);
     }
 
-    public static final double LINE_LIGHT_READING_MIN = 3.0;
-    protected void driveToWhiteLine(double dir, double speed) throws InterruptedException {
+    private static final double LINE_LIGHT_READING_MIN = 3.0;
+    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
         while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
             double direction = dir;
             double distance = robot.distanceToWallCM();
@@ -119,7 +119,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         driveToWhiteLine(forwardDir() - Math.PI, .3);
     }
 
-    public static final long INITIAL_BACKUP_TIME = 1000;
+    private static final long INITIAL_BACKUP_TIME = 1000;
     protected void driveBackToWhiteLine() throws InterruptedException {
         // Before we start looking for the white line, let's get off the one we're currently on.
         long t0 = System.currentTimeMillis();
@@ -133,12 +133,12 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         driveToWhiteLine(forwardDir(), .3);
     }
 
-    Alliance getBeaconColor() {
+    private Alliance getBeaconColor() {
         return robot.colorSensorIsBlue() ? Alliance.BLUE : Alliance.RED;
     }
 
-    public static final double FUDGE_FACTOR = .5;
-    protected void achieveWallDistance(double distance, long timeout_ms) {
+    private static final double FUDGE_FACTOR = .5;
+    private void achieveWallDistance(double distance, long timeout_ms) {
         final long t0 = System.currentTimeMillis();
         while (opModeIsActive() && timeout_ms > (System.currentTimeMillis() - t0)) {
             double diff = distance - robot.distanceToWallCM();
@@ -153,8 +153,8 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         robot.stop();
     }
 
-    public static final double BEACON_PRESSING_MOVE_CM = 4.0;
-    protected void pressButton() throws InterruptedException {
+    private static final double BEACON_PRESSING_MOVE_CM = 4.0;
+    private void pressButton() throws InterruptedException {
         final boolean back_button = getBeaconColor() == getAlliance();
 
         if (back_button) {
@@ -175,23 +175,24 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     }
 
     // Correct for any heading drift during a previous stage
-    public static final int ALLOWABLE_HEADING_DRIFT = 2;
-    protected void trueUp() {
+    private static final int ALLOWABLE_HEADING_DRIFT = 2;
+    private void trueUp() {
         while (ALLOWABLE_HEADING_DRIFT < Math.abs(robot.getHeading())) {
             robot.drivePreservingDirection(0.0, 0.0);
         }
         robot.stop();
     }
 
-    public static final int DESIRED_RELATIVE_HEADING = -90;
-    protected void rotate() throws InterruptedException {
+    private static final int DESIRED_RELATIVE_HEADING = -90;
+    private static final double SAFE_ROTATION_SPEED = - 0.4;
+    private void rotate() throws InterruptedException {
         while (opModeIsActive() && ALLOWABLE_HEADING_DRIFT < Math.abs(DESIRED_RELATIVE_HEADING - robot.getHeading())) {
-            robot.drive(0.0, 0.0, -.4);
+            robot.drive(0.0, 0.0, SAFE_ROTATION_SPEED);
         }
         robot.stop();
     }
 
-    protected void shoot() throws InterruptedException {
+    private void shoot() throws InterruptedException {
         robot.fire();
         robot.toggleDispenser();
         while (! robot.isDoneFlipping()) {
@@ -204,7 +205,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         telemetry.update();
     }
 
-    protected void setPhase(String phase) {
+    private void setPhase(String phase) {
         telemetry.addData("Phase", phase);
         telemetry.update();
     }

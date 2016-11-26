@@ -68,6 +68,8 @@ public class MecanumRobot {
         if (isDoneFlipping()) {
             setFlipperPower(0.0);
         }
+        // TODO: Use Vuforia to do a target lock system for the shooter
+
     }
 
     public void updateSensorTelemetry() {
@@ -126,27 +128,26 @@ public class MecanumRobot {
         return gyro.getIntegratedZValue();
     }
 
-    public void gyro1(){
-        double gyro1 = gyro.getIntegratedZValue();
+    private static double ma(double... xs) {
+        double ret = 0.0;
+        for (double x : xs) {
+            ret = Math.max(ret, Math.abs(x));
+        }
+        return ret;
     }
 
-    private static double ma(double a, double b) {
-        return Math.max(Math.abs(a), Math.abs(b));
-    }
-
-    private static double clip(double x) {
-        return Math.min(Math.max(-1.0, x), 1.0);
-    }
-
-    public static double GYRO_HEADING_REDUCE = 30.0;
     public void drivePreservingDirection(double translationRadians, double velocity) {
-        drive(translationRadians, velocity, ((double) gyro.getIntegratedZValue()) / GYRO_HEADING_REDUCE);
+        final int angle = gyro.getIntegratedZValue();
+        if (0 != angle) {
+            final double rotSpeed = Math.log((double) Math.abs(angle)) * (angle < 0 ? -1.0 : 1.0);
+            drive(translationRadians, velocity, rotSpeed);
+        }
     }
 
-    public void drive(double translationRadians, double translationVelocity, double rotationRight) {
-        final double vd = translationVelocity;
-        final double td = translationRadians;
-        final double vt = rotationRight;
+    public void drive(double direction, double velocity, double rotationVelocity) {
+        final double vd = velocity;
+        final double td = direction;
+        final double vt = rotationVelocity;
 
         double s =  Math.sin(td + Math.PI / 4.0);
         double c = Math.cos(td + Math.PI / 4.0);
@@ -159,11 +160,12 @@ public class MecanumRobot {
         final double v3 = vd * c + vt;
         final double v4 = vd * s - vt;
 
+        double scale = Math.max(1.0, ma(v1, v2, v3, v4));
 
-        lf.setPower(clip(v1));
-        rf.setPower(clip(v2));
-        lr.setPower(clip(v3));
-        rr.setPower(clip(v4));
+        lf.setPower(v1 / scale);
+        rf.setPower(v2 / scale);
+        lr.setPower(v3 / scale);
+        rr.setPower(v4 / scale);
     }
 
     public static final int COLOR_THRESHOLD = 2;
