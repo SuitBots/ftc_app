@@ -61,6 +61,13 @@ public class MecanumRobot {
         dispenser.onStart();
     }
 
+    public void onStop() {
+        stopDriveMotors();
+        flipper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipper.setPower(0.0);
+        harvester.setPower(0.0);
+    }
+
 
     // Things that need to happen in the teleop loop to accommodate long-running
     // tasks like running the flipper one at a time.
@@ -81,6 +88,8 @@ public class MecanumRobot {
         telemetry.addData("Flipper", flipper.getCurrentPosition());
         telemetry.addData("FM", flipper.getMode().toString());
     }
+
+    // The Flipper
 
     public static final int ONE_FILPPER_REVOLUTION = 1540; // 1120 * 22 / 16
     private boolean flipping = false;
@@ -108,6 +117,40 @@ public class MecanumRobot {
         }
     }
 
+    public void setFlipperPower(double p) {
+        if (flipping) {
+            flipper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            flipping = false;
+        }
+        flipper.setPower(p);
+    }
+
+    // Harvesting
+
+    public void setHarvesterPower(double p) {
+        harvester.setPower(p);
+    }
+
+    // Servo Control
+
+    public void toggleFrontServo() {
+        bf.toggle();
+    }
+
+    public void toggleBackServo() {
+        br.toggle();
+    }
+
+    public void toggleDispenser() {
+        dispenser.toggle();
+    }
+
+    public void setDispenser(boolean x) {
+        dispenser.setFirst(x);
+    }
+
+    // Sensors
+
     public double distanceToWallCM() {
         return range.getDistance(DistanceUnit.CM);
     }
@@ -128,13 +171,16 @@ public class MecanumRobot {
         return gyro.getIntegratedZValue();
     }
 
-    private static double ma(double... xs) {
-        double ret = 0.0;
-        for (double x : xs) {
-            ret = Math.max(ret, Math.abs(x));
-        }
-        return ret;
+    public static final int COLOR_THRESHOLD = 2;
+    public boolean colorSensorIsRed() {
+        return color.red() > COLOR_THRESHOLD && color.red() > color.blue();
     }
+
+    public boolean colorSensorIsBlue() {
+        return color.blue() > COLOR_THRESHOLD && color.blue() > color.red();
+    }
+
+    // Driving
 
     public void drivePreservingDirection(double translationRadians, double velocity) {
         final int angle = gyro.getIntegratedZValue();
@@ -142,6 +188,15 @@ public class MecanumRobot {
             final double rotSpeed = Math.log((double) Math.abs(angle)) * (angle < 0 ? -1.0 : 1.0);
             drive(translationRadians, velocity, rotSpeed);
         }
+    }
+
+    /// Maximum absolute value of some number of arguments
+    private static double ma(double... xs) {
+        double ret = 0.0;
+        for (double x : xs) {
+            ret = Math.max(ret, Math.abs(x));
+        }
+        return ret;
     }
 
     public void drive(double direction, double velocity, double rotationVelocity) {
@@ -160,7 +215,9 @@ public class MecanumRobot {
         final double v3 = vd * c + vt;
         final double v4 = vd * s - vt;
 
-        double scale = Math.max(1.0, ma(v1, v2, v3, v4));
+        // Ensure that none of the values go over 1.0. If none of the provided values are
+        // over 1.0, just scale by 1.0 and keep all values.
+        double scale = ma(1.0, v1, v2, v3, v4);
 
         lf.setPower(v1 / scale);
         rf.setPower(v2 / scale);
@@ -168,47 +225,67 @@ public class MecanumRobot {
         rr.setPower(v4 / scale);
     }
 
-    public static final int COLOR_THRESHOLD = 2;
-    public boolean colorSensorIsRed() {
-        return color.red() > COLOR_THRESHOLD && color.red() > color.blue();
-    }
-
-    public boolean colorSensorIsBlue() {
-        return color.blue() > COLOR_THRESHOLD && color.blue() > color.red();
-    }
-
-    public void setHarvesterPower(double p) {
-        harvester.setPower(p);
-    }
-    public void setFlipperPower(double p) {
-        if (flipping) {
-            flipper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            flipping = false;
-        }
-        flipper.setPower(p);
-    }
-
-    public void toggleFrontServo() {
-        bf.toggle();
-    }
-
-    public void toggleBackServo() {
-        br.toggle();
-    }
-
-    public void toggleDispenser() {
-        dispenser.toggle();
-    }
-
-    public void setDispenser(boolean x) {
-        dispenser.setFirst(x);
-    }
-
-    public void stop() {
-        harvester.setPower(0.0);
+    /// Shut down all motors
+    public void stopDriveMotors() {
         lf.setPower(0.0);
         lr.setPower(0.0);
         rr.setPower(0.0);
         rf.setPower(0.0);
+    }
+
+    // Encoder Driving
+
+    // Assuming 4" wheels
+    private static final double TICKS_PER_CM = 1140 / (Math.PI * 4.0 * 2.54);
+    private static final double ENCODER_DRIVE_POWER = .5;
+
+    private void setMode(DcMotor.RunMode mode, DcMotor... ms) {
+        for (DcMotor m : ms) {
+            m.setMode(mode);
+        }
+    }
+
+    private void setPower(double p, DcMotor... ms) {
+        for (DcMotor m : ms) {
+            m.setPower(p);
+        }
+    }
+
+    private void setTargetPosition(int pos, DcMotor... ms) {
+        for (DcMotor m : ms) {
+            m.setTargetPosition(pos);
+        }
+    }
+
+    public boolean driveMotorsBusy() {
+        return lf.isBusy() || lr.isBusy() || rf.isBusy() || rr.isBusy();
+    }
+
+    public void encoderDriveForward(int cm) {
+        final int ticks = (int)(cm * TICKS_PER_CM);
+        setPower(0.0, lf, lr, rf, rr);
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
+        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rf, rr);
+        setTargetPosition(ticks, lf, lr, rf, rr);
+        setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
+    }
+
+    public void encoderDriveBackward(int cm) {
+        encoderDriveForward(- cm);
+    }
+
+    private static double STRAFE_TICKS_PER_CM = TICKS_PER_CM;
+    public void encoderDriveLeft(int cm) {
+        final int ticks = (int)(cm * STRAFE_TICKS_PER_CM);
+        setPower(0.0, lf, lr, rf, rr);
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
+        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rf, rr);
+        setTargetPosition(- ticks, lf, rr);
+        setTargetPosition(ticks, rf, lr);
+        setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
+    }
+
+    public void encoderDriveRight(int cm) {
+        encoderDriveLeft(- cm);
     }
 }
