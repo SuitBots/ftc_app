@@ -15,12 +15,12 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
 
     protected abstract Alliance getAlliance();
 
-    @Autonomous(name = "Shalf RED")
+    @Autonomous(name = "Shalf RED", group = "Tournament")
     public static class Red extends ShalfDogronAutonomousBeta {
         protected Alliance getAlliance() { return Alliance.RED; }
     }
 
-    @Autonomous(name = "Shalf BLUE")
+    @Autonomous(name = "Shalf BLUE", group = "Tournament")
     public static class Blue extends ShalfDogronAutonomousBeta {
         protected Alliance getAlliance() { return Alliance.BLUE; }
     }
