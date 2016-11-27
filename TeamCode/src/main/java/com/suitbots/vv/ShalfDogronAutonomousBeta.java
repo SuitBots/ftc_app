@@ -57,6 +57,13 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
 
         robot.onStart();
 
+        /*
+        if (Alliance.BLUE == getAlliance()) {
+            setPhase("Shoot");
+            shoot();
+        }
+        */
+
         setPhase("Diag to wall");
         driveDiagonalToTheWall();
         trueUp();
@@ -73,12 +80,18 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         achieveWallDistance(DISTANCE_TO_WALL_CM, 500);
         setPhase("Press buttons 2");
         pressButton();
-        setPhase("Rotate");
-        rotate();
-        setPhase("Shoot");
-        shoot();
+
+        if (Alliance.RED == getAlliance()) {
+            setPhase("Rotate");
+            rotate();
+            setPhase("Shoot");
+            shoot();
+
+        }
         */
         setPhase("Done");
+
+        robot.onStop();
     }
 
     private static double DISTANCE_TO_WALL_CM = 15.0;
@@ -87,7 +100,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             robot.drivePreservingDirection(diagonalDirection(), 1.0);
             idle();
         }
-        robot.stop();
+        robot.stopDriveMotors();
     }
 
     private static final double WHITE_LINE_SPEED = 1.0;
@@ -126,7 +139,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         while(opModeIsActive() && INITIAL_BACKUP_TIME > (System.currentTimeMillis() - t0)) {
             robot.drivePreservingDirection(forwardDir() - Math.PI, .5);
         }
-        robot.stop();
+        robot.stopDriveMotors();
         trueUp();
         // Let's assume that we're going to overshoot the first time
         driveToWhiteLine(forwardDir() - Math.PI);
@@ -150,7 +163,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
 
             robot.drivePreservingDirection(direction, 0.4);
         }
-        robot.stop();
+        robot.stopDriveMotors();
     }
 
     private static final double BEACON_PRESSING_MOVE_CM = 4.0;
@@ -171,7 +184,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         } else {
             robot.toggleFrontServo();
         }
-        robot.stop();
+        robot.stopDriveMotors();
     }
 
     // Correct for any heading drift during a previous stage
@@ -180,7 +193,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         while (ALLOWABLE_HEADING_DRIFT < Math.abs(robot.getHeading())) {
             robot.drivePreservingDirection(0.0, 0.0);
         }
-        robot.stop();
+        robot.stopDriveMotors();
     }
 
     private static final int DESIRED_RELATIVE_HEADING = -90;
@@ -189,7 +202,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         while (opModeIsActive() && ALLOWABLE_HEADING_DRIFT < Math.abs(DESIRED_RELATIVE_HEADING - robot.getHeading())) {
             robot.drive(0.0, 0.0, SAFE_ROTATION_SPEED);
         }
-        robot.stop();
+        robot.stopDriveMotors();
     }
 
     private void shoot() throws InterruptedException {
@@ -199,10 +212,9 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             idle();
         }
         robot.fire();
-        while (robot.isDoneFlipping()) {
+        while (! robot.isDoneFlipping()) {
             idle();
         }
-        telemetry.update();
     }
 
     private void setPhase(String phase) {
