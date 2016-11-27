@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "Arcade Teleop (Test)")
+@TeleOp(name = "Arcade Teleop", group = "Test")
 public class ArcadeTeleop extends OpMode {
     private MecanumRobot robot;
     private Controller g1;

@@ -1,9 +1,11 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.configuration.ConfigurationType;
 
 
+@TeleOp(name = "Encoders Test", group = "Test")
 public class EncodersTest extends OpMode {
     private MecanumRobot robot;
     private Controller g1;

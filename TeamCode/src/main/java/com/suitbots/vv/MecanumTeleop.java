@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  */
 
 @TeleOp(name = "S" + // Why, Kevin? Why?
-        "half Dogron")
+        "half Dogron", group = "Tournament")
 public class MecanumTeleop extends OpMode {
     private MecanumRobot robot = null;
     private Controller g1, g2;
