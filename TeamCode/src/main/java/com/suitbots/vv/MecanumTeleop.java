@@ -1,11 +1,7 @@
 package com.suitbots.vv;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 /**
  * Created by Suit Bots on 11/11/2016.
@@ -46,7 +42,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void stop() {
-        robot.stop();
+        robot.stopDriveMotors();
     }
 
     private void drive(Controller g) {
