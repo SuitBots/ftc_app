@@ -69,9 +69,7 @@ public class MecanumTeleop extends OpMode {
             v_rotation = g.right_stick_x;
         }
 
-        if (0.05 < (v_theta + Math.abs(v_rotation))) {
-            robot.drive(theta, v_theta, v_rotation);
-        }
+        robot.drive(theta, v_theta, v_rotation);
     }
 
     private void g1Loop() {
