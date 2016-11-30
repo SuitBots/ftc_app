@@ -4,28 +4,45 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@Disabled
-@TeleOp(name = "Teleop: Arcade", group = "Teleops")
+@TeleOp(name = "Arcade Teleop", group = "Test")
 public class ArcadeTeleop extends OpMode {
-    private TankRobot robot;
+    private MecanumRobot robot;
     private Controller g1;
 
+    @Override
     public void init() {
-        robot = new TankRobot();
-        robot.initHardware(hardwareMap);
+        robot = new MecanumRobot(hardwareMap, telemetry);
         g1 = new Controller(gamepad1);
     }
 
+    @Override
+    public void init_loop() {
+        telemetry.addData("Gyro", robot.isCalibrating() ? "Calibrating" : "CalibratED");
+        telemetry.update();
+    }
+
+    @Override
+    public void start() {
+        robot.onStart();
+        robot.resetGyro();
+    }
+
+    @Override
     public void loop() {
         g1.update();
 
-        double scale = 1.0 * (g1.leftBumper() ? .5 : 1.) * (g1.rightBumper() ? .5 : 1.);
+        if (g1.A() && g1.B()) {
+            robot.resetGyro();
+        }
 
-        double lp = - g1.left_stick_y + g1.left_stick_x - g1.right_stick_y + g1.right_stick_x;
-        double rp = - g1.left_stick_y - g1.left_stick_x - g1.right_stick_y - g1.right_stick_x;
-        double m = Math.max(1.0, Math.max(Math.abs(lp), Math.abs(rp)));
+        double lx = g1.left_stick_x, ly = - g1.left_stick_y;
+        double v = Math.sqrt(lx * lx + ly * ly);
+        double theta = Math.atan2(lx, ly);
+        double current = Math.toRadians(robot.getHeading());
 
-        robot.setDriveMotors(lp * scale / m, rp * scale / m);
-        robot.setSpinner(g1.left_trigger - g1.right_trigger);
+        if (0.05 < (v + Math.abs(g1.right_stick_x))) {
+            robot.drive(theta - current, v, g1.right_stick_x);
+        }
     }
+
 }

@@ -15,11 +15,25 @@ public class ToggleableServo {
         servo = s;
         a = _a;
         b = _b;
+    }
+
+    public void onStart() {
         servo.setPosition(a);
+        at_a = true;
     }
 
     public void toggle() {
         servo.setPosition(at_a ? b : a);
         at_a = ! at_a;
+    }
+
+    public void set(double p) {
+        servo.setPosition(p);
+    }
+
+    public void setFirst(boolean x) {
+        if (x != at_a) {
+            toggle();
+        }
     }
 }
