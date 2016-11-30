@@ -64,9 +64,13 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         }
         */
 
+        /*
         setPhase("Diag to wall");
         driveDiagonalToTheWall();
         trueUp();
+        */
+        setPhase("Safety Forward");
+        driveForwardCM(60);
         /*
         setPhase("To white line");
         driveForwardToWhiteLine();
@@ -94,10 +98,12 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         robot.onStop();
     }
 
-    private static double DISTANCE_TO_WALL_CM = 15.0;
+    private static double DISTANCE_TO_WALL_CM = 20.0;
     private void driveDiagonalToTheWall() throws InterruptedException {
         while(DISTANCE_TO_WALL_CM < robot.distanceToWallCM()) {
-            robot.drivePreservingDirection(diagonalDirection(), 1.0);
+            telemetry.addData("Distance", robot.distanceToWallCM());
+            telemetry.update();
+            robot.drive(diagonalDirection(), 1.0, 0.0);
             idle();
         }
         robot.stopDriveMotors();
@@ -113,17 +119,18 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
             double direction = dir;
             double distance = robot.distanceToWallCM();
-
-            // While we're driving to the line, make sure we preserve our distance to the wall.
-            if (distance > DISTANCE_TO_WALL_CM) {
-                direction = (2.0 * direction + leftDir()) / 3.0;
-            } else if (distance < DISTANCE_TO_WALL_CM) {
-                direction = (2.0 * direction - leftDir()) / 3.0;
-            }
-
-            robot.drivePreservingDirection(direction, speed);
+            robot.drive(direction, speed, 0.0);
             idle();
         }
+    }
+
+    protected void driveForwardCM(int cm) {
+        robot.encoderDriveDirection(forwardDir(), cm);
+        while (robot.driveMotorsBusy()) {
+            idle();
+        }
+        robot.stopDriveMotors();
+        robot.resetDriveMotorModes();
     }
 
     protected void driveForwardToWhiteLine() throws InterruptedException {
@@ -137,7 +144,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         // Before we start looking for the white line, let's get off the one we're currently on.
         long t0 = System.currentTimeMillis();
         while(opModeIsActive() && INITIAL_BACKUP_TIME > (System.currentTimeMillis() - t0)) {
-            robot.drivePreservingDirection(forwardDir() - Math.PI, .5);
+            robot.drive(forwardDir() - Math.PI, .5, 0.0);
         }
         robot.stopDriveMotors();
         trueUp();
@@ -161,9 +168,15 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
 
             double direction = diff > 0.0 ? leftDir() : leftDir() - Math.PI;
 
-            robot.drivePreservingDirection(direction, 0.4);
+            robot.drive(direction, 0.4, 0.0);
         }
         robot.stopDriveMotors();
+    }
+
+    private void waitForEncoderDriveToFinish() throws InterruptedException {
+        while (robot.driveMotorsBusy()) {
+            idle();
+        }
     }
 
     private static final double BEACON_PRESSING_MOVE_CM = 4.0;
@@ -176,8 +189,10 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             robot.toggleFrontServo();
         }
 
-        achieveWallDistance(DISTANCE_TO_WALL_CM - BEACON_PRESSING_MOVE_CM, 1000);
-        achieveWallDistance(DISTANCE_TO_WALL_CM, 2000);
+        robot.encoderDriveLeft(5);
+        waitForEncoderDriveToFinish();
+        robot.encoderDriveRight(5);
+        waitForEncoderDriveToFinish();
 
         if (back_button) {
             robot.toggleBackServo();
@@ -190,8 +205,11 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     // Correct for any heading drift during a previous stage
     private static final int ALLOWABLE_HEADING_DRIFT = 2;
     private void trueUp() {
-        while (ALLOWABLE_HEADING_DRIFT < Math.abs(robot.getHeading())) {
-            robot.drivePreservingDirection(0.0, 0.0);
+        int diff = 0;
+        while (Math.abs(diff) > ALLOWABLE_HEADING_DRIFT) {
+            robot.drive(0.0, 0.0, 0 < diff ? - SAFE_ROTATION_SPEED : SAFE_ROTATION_SPEED);
+            idle();
+            diff = robot.getHeading();
         }
         robot.stopDriveMotors();
     }
