@@ -1,13 +1,12 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 /**
  * Created by Suit Bots on 11/22/2016.
  */
-public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
-    private MecanumRobot robot;
+public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
+    private int particles_to_shoot = 2;
 
     private enum Alliance {
         RED, BLUE
@@ -44,29 +43,35 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new MecanumRobot(hardwareMap, telemetry);
 
-        while (robot.isCalibrating()) {
-            telemetry.addData("Gyro", "Calibrating");
+        Controller c = new Controller(gamepad1);
+        while (! isStarted()) {
+            c.update();
+            if (c.AOnce()) {
+                particles_to_shoot = (1 + particles_to_shoot) % 3;
+            }
+            telemetry.addData("Gyro", robot.isCalibrating() ? "Calibrating" : "CALIBRATED");
+            telemetry.addData("Particles to shoot", particles_to_shoot);
             telemetry.update();
             idle();
         }
-        telemetry.addData("Gyro", "CalibratED");
-        telemetry.update();
+
         robot.resetGyro();
-
-        waitForStart();
-
         robot.onStart();
 
         /*
         if (Alliance.BLUE == getAlliance()) {
             setPhase("Shoot");
-            shoot();
+            shoot(particles_to_shoot);
         }
         */
 
+        /*
         setPhase("Diag to wall");
         driveDiagonalToTheWall();
         trueUp();
+        */
+        setPhase("Safety Forward");
+        driveDirectionCM(forwardDir(), 60);
         /*
         setPhase("To white line");
         driveForwardToWhiteLine();
@@ -85,7 +90,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             setPhase("Rotate");
             rotate();
             setPhase("Shoot");
-            shoot();
+            shoot(particles_to_shoot);
 
         }
         */
@@ -94,10 +99,12 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         robot.onStop();
     }
 
-    private static double DISTANCE_TO_WALL_CM = 15.0;
+    private static double DISTANCE_TO_WALL_CM = 20.0;
     private void driveDiagonalToTheWall() throws InterruptedException {
         while(DISTANCE_TO_WALL_CM < robot.distanceToWallCM()) {
-            robot.drivePreservingDirection(diagonalDirection(), 1.0);
+            telemetry.addData("Distance", robot.distanceToWallCM());
+            telemetry.update();
+            robot.drive(diagonalDirection(), 1.0, 0.0);
             idle();
         }
         robot.stopDriveMotors();
@@ -113,15 +120,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
             double direction = dir;
             double distance = robot.distanceToWallCM();
-
-            // While we're driving to the line, make sure we preserve our distance to the wall.
-            if (distance > DISTANCE_TO_WALL_CM) {
-                direction = (2.0 * direction + leftDir()) / 3.0;
-            } else if (distance < DISTANCE_TO_WALL_CM) {
-                direction = (2.0 * direction - leftDir()) / 3.0;
-            }
-
-            robot.drivePreservingDirection(direction, speed);
+            robot.drive(direction, speed, 0.0);
             idle();
         }
     }
@@ -135,11 +134,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     private static final long INITIAL_BACKUP_TIME = 1000;
     protected void driveBackToWhiteLine() throws InterruptedException {
         // Before we start looking for the white line, let's get off the one we're currently on.
-        long t0 = System.currentTimeMillis();
-        while(opModeIsActive() && INITIAL_BACKUP_TIME > (System.currentTimeMillis() - t0)) {
-            robot.drivePreservingDirection(forwardDir() - Math.PI, .5);
-        }
-        robot.stopDriveMotors();
+        driveDirectionCM(forwardDir() - Math.PI, 60);
         trueUp();
         // Let's assume that we're going to overshoot the first time
         driveToWhiteLine(forwardDir() - Math.PI);
@@ -161,7 +156,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
 
             double direction = diff > 0.0 ? leftDir() : leftDir() - Math.PI;
 
-            robot.drivePreservingDirection(direction, 0.4);
+            robot.drive(direction, 0.4, 0.0);
         }
         robot.stopDriveMotors();
     }
@@ -176,8 +171,8 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             robot.toggleFrontServo();
         }
 
-        achieveWallDistance(DISTANCE_TO_WALL_CM - BEACON_PRESSING_MOVE_CM, 1000);
-        achieveWallDistance(DISTANCE_TO_WALL_CM, 2000);
+        driveDirectionCM(3.0 * Math.PI / 2.0, 5);
+        driveDirectionCM(Math.PI / 2.0, 5);
 
         if (back_button) {
             robot.toggleBackServo();
@@ -190,32 +185,15 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     // Correct for any heading drift during a previous stage
     private static final int ALLOWABLE_HEADING_DRIFT = 2;
     private void trueUp() {
-        while (ALLOWABLE_HEADING_DRIFT < Math.abs(robot.getHeading())) {
-            robot.drivePreservingDirection(0.0, 0.0);
-        }
-        robot.stopDriveMotors();
+        turnToHeading(0);
     }
 
     private static final int DESIRED_RELATIVE_HEADING = -90;
     private static final double SAFE_ROTATION_SPEED = - 0.4;
     private void rotate() throws InterruptedException {
-        while (opModeIsActive() && ALLOWABLE_HEADING_DRIFT < Math.abs(DESIRED_RELATIVE_HEADING - robot.getHeading())) {
-            robot.drive(0.0, 0.0, SAFE_ROTATION_SPEED);
-        }
-        robot.stopDriveMotors();
+        turnToHeading(DESIRED_RELATIVE_HEADING);
     }
 
-    private void shoot() throws InterruptedException {
-        robot.fire();
-        robot.toggleDispenser();
-        while (! robot.isDoneFlipping()) {
-            idle();
-        }
-        robot.fire();
-        while (! robot.isDoneFlipping()) {
-            idle();
-        }
-    }
 
     private void setPhase(String phase) {
         telemetry.addData("Phase", phase);

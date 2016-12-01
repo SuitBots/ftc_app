@@ -33,7 +33,7 @@ public class MecanumRobot {
         rr = hardwareMap.dcMotor.get("rr");
         flipper = hardwareMap.dcMotor.get("flipper");
         bf = new ToggleableServo(hardwareMap .servo.get("pf"), 0.0, 1.0);
-        br = new ToggleableServo(hardwareMap.servo.get("pr"), 1.0, 0.0);
+        br = new ToggleableServo(hardwareMap.servo.get("pr"), 0.0, 1.0);
         dispenser = new ToggleableServo(hardwareMap.servo.get("dispenser"), 0.0, 0.5);
         harvester = hardwareMap.dcMotor.get("harvester");
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
@@ -63,7 +63,6 @@ public class MecanumRobot {
 
     public void onStop() {
         stopDriveMotors();
-        flipper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipper.setPower(0.0);
         harvester.setPower(0.0);
     }
@@ -219,6 +218,9 @@ public class MecanumRobot {
         // over 1.0, just scale by 1.0 and keep all values.
         double scale = ma(1.0, v1, v2, v3, v4);
 
+        telemetry.addData("Drive", String.format(Locale.US, "%.2f %.2f %.2f %.2f %.2f",
+                v1, v2, v3, v4, scale));
+
         lf.setPower(v1 / scale);
         rf.setPower(v2 / scale);
         lr.setPower(v3 / scale);
@@ -229,8 +231,8 @@ public class MecanumRobot {
     public void stopDriveMotors() {
         lf.setPower(0.0);
         lr.setPower(0.0);
-        rr.setPower(0.0);
         rf.setPower(0.0);
+        rr.setPower(0.0);
     }
 
     // Encoder Driving
@@ -257,8 +259,32 @@ public class MecanumRobot {
         }
     }
 
+    private boolean busy(DcMotor... ms) {
+        for (DcMotor m : ms) {
+            if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && m.isBusy()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean driveMotorsBusy() {
-        return lf.isBusy() || lr.isBusy() || rf.isBusy() || rr.isBusy();
+        return busy(lf, lr, rf, rr);
+    }
+
+    // only does front/back/left/right.
+    public void encoderDriveDirection(double direction, int cm) {
+        direction %= Math.PI * 2.0;
+        final double epsilon = 1.0;
+        if (epsilon > Math.abs(direction)) {
+            encoderDriveForward(cm);
+        } else if (epsilon > Math.abs(direction - Math.PI / 2.0)) {
+            encoderDriveRight(cm);
+        } else if (epsilon > Math.abs(direction - Math.PI)) {
+            encoderDriveBackward(cm);
+        } else if (epsilon > Math.abs(direction - 3.0 * Math.PI / 2.0)) {
+            encoderDriveLeft(cm);
+        }
     }
 
     public void encoderDriveForward(int cm) {
@@ -287,5 +313,9 @@ public class MecanumRobot {
 
     public void encoderDriveRight(int cm) {
         encoderDriveLeft(- cm);
+    }
+
+    public void resetDriveMotorModes() {
+        setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
 }
