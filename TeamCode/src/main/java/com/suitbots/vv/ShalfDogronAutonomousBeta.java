@@ -1,13 +1,12 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 /**
  * Created by Suit Bots on 11/22/2016.
  */
-public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
-    private MecanumRobot robot;
+public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
+    private int particles_to_shoot = 2;
 
     private enum Alliance {
         RED, BLUE
@@ -44,23 +43,25 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new MecanumRobot(hardwareMap, telemetry);
 
-        while (robot.isCalibrating()) {
-            telemetry.addData("Gyro", "Calibrating");
+        Controller c = new Controller(gamepad1);
+        while (! isStarted()) {
+            c.update();
+            if (c.AOnce()) {
+                particles_to_shoot = (1 + particles_to_shoot) % 3;
+            }
+            telemetry.addData("Gyro", robot.isCalibrating() ? "Calibrating" : "CALIBRATED");
+            telemetry.addData("Particles to shoot", particles_to_shoot);
             telemetry.update();
             idle();
         }
-        telemetry.addData("Gyro", "CalibratED");
-        telemetry.update();
+
         robot.resetGyro();
-
-        waitForStart();
-
         robot.onStart();
 
         /*
         if (Alliance.BLUE == getAlliance()) {
             setPhase("Shoot");
-            shoot();
+            shoot(particles_to_shoot);
         }
         */
 
@@ -70,7 +71,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         trueUp();
         */
         setPhase("Safety Forward");
-        driveForwardCM(60);
+        driveDirectionCM(forwardDir(), 60);
         /*
         setPhase("To white line");
         driveForwardToWhiteLine();
@@ -89,7 +90,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             setPhase("Rotate");
             rotate();
             setPhase("Shoot");
-            shoot();
+            shoot(particles_to_shoot);
 
         }
         */
@@ -124,15 +125,6 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         }
     }
 
-    protected void driveForwardCM(int cm) {
-        robot.encoderDriveDirection(forwardDir(), cm);
-        while (robot.driveMotorsBusy()) {
-            idle();
-        }
-        robot.stopDriveMotors();
-        robot.resetDriveMotorModes();
-    }
-
     protected void driveForwardToWhiteLine() throws InterruptedException {
         // Let's assume that we're going to overshoot the first time
         driveToWhiteLine(forwardDir());
@@ -142,11 +134,7 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     private static final long INITIAL_BACKUP_TIME = 1000;
     protected void driveBackToWhiteLine() throws InterruptedException {
         // Before we start looking for the white line, let's get off the one we're currently on.
-        long t0 = System.currentTimeMillis();
-        while(opModeIsActive() && INITIAL_BACKUP_TIME > (System.currentTimeMillis() - t0)) {
-            robot.drive(forwardDir() - Math.PI, .5, 0.0);
-        }
-        robot.stopDriveMotors();
+        driveDirectionCM(forwardDir() - Math.PI, 60);
         trueUp();
         // Let's assume that we're going to overshoot the first time
         driveToWhiteLine(forwardDir() - Math.PI);
@@ -173,12 +161,6 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
         robot.stopDriveMotors();
     }
 
-    private void waitForEncoderDriveToFinish() throws InterruptedException {
-        while (robot.driveMotorsBusy()) {
-            idle();
-        }
-    }
-
     private static final double BEACON_PRESSING_MOVE_CM = 4.0;
     private void pressButton() throws InterruptedException {
         final boolean back_button = getBeaconColor() == getAlliance();
@@ -189,10 +171,8 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
             robot.toggleFrontServo();
         }
 
-        robot.encoderDriveLeft(5);
-        waitForEncoderDriveToFinish();
-        robot.encoderDriveRight(5);
-        waitForEncoderDriveToFinish();
+        driveDirectionCM(3.0 * Math.PI / 2.0, 5);
+        driveDirectionCM(Math.PI / 2.0, 5);
 
         if (back_button) {
             robot.toggleBackServo();
@@ -205,35 +185,15 @@ public abstract class ShalfDogronAutonomousBeta extends LinearOpMode {
     // Correct for any heading drift during a previous stage
     private static final int ALLOWABLE_HEADING_DRIFT = 2;
     private void trueUp() {
-        int diff = 0;
-        while (Math.abs(diff) > ALLOWABLE_HEADING_DRIFT) {
-            robot.drive(0.0, 0.0, 0 < diff ? - SAFE_ROTATION_SPEED : SAFE_ROTATION_SPEED);
-            idle();
-            diff = robot.getHeading();
-        }
-        robot.stopDriveMotors();
+        turnToHeading(0);
     }
 
     private static final int DESIRED_RELATIVE_HEADING = -90;
     private static final double SAFE_ROTATION_SPEED = - 0.4;
     private void rotate() throws InterruptedException {
-        while (opModeIsActive() && ALLOWABLE_HEADING_DRIFT < Math.abs(DESIRED_RELATIVE_HEADING - robot.getHeading())) {
-            robot.drive(0.0, 0.0, SAFE_ROTATION_SPEED);
-        }
-        robot.stopDriveMotors();
+        turnToHeading(DESIRED_RELATIVE_HEADING);
     }
 
-    private void shoot() throws InterruptedException {
-        robot.fire();
-        robot.toggleDispenser();
-        while (! robot.isDoneFlipping()) {
-            idle();
-        }
-        robot.fire();
-        while (! robot.isDoneFlipping()) {
-            idle();
-        }
-    }
 
     private void setPhase(String phase) {
         telemetry.addData("Phase", phase);
