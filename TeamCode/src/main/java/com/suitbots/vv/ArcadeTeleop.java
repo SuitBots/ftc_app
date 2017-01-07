@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+@Disabled
 @TeleOp(name = "Arcade Teleop", group = "Test")
 public class ArcadeTeleop extends OpMode {
     private MecanumRobot robot;
@@ -39,10 +40,7 @@ public class ArcadeTeleop extends OpMode {
         double v = Math.sqrt(lx * lx + ly * ly);
         double theta = Math.atan2(lx, ly);
         double current = Math.toRadians(robot.getHeading());
-
-        if (0.05 < (v + Math.abs(g1.right_stick_x))) {
-            robot.drive(theta - current, v, g1.right_stick_x);
-        }
+        robot.drive(theta + current, v, g1.right_stick_x);
     }
 
 }
