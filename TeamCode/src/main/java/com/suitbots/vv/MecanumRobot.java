@@ -1,14 +1,14 @@
 package com.suitbots.vv;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Locale;
 
@@ -20,27 +20,30 @@ public class MecanumRobot {
     private DcMotor lf, lr, rf, rr, harvester, flipper;
     private ToggleableServo bf, br, dispenser;
     private ModernRoboticsI2cGyro gyro;
-    private ModernRoboticsI2cRangeSensor range;
     private OpticalDistanceSensor line;
     private ColorSensor color;
     private Telemetry telemetry;
+    private DeviceInterfaceModule dim;
 
     public MecanumRobot(HardwareMap hardwareMap, Telemetry _telemetry) {
         telemetry = _telemetry;
+        dim = hardwareMap.deviceInterfaceModule.get("dim");
         lf = hardwareMap.dcMotor.get("lf");
         lr = hardwareMap.dcMotor.get("lr");
         rf = hardwareMap.dcMotor.get("rf");
         rr = hardwareMap.dcMotor.get("rr");
         flipper = hardwareMap.dcMotor.get("flipper");
+        harvester = hardwareMap.dcMotor.get("harvester");
+
         bf = new ToggleableServo(hardwareMap .servo.get("pf"), 0.0, 1.0);
         br = new ToggleableServo(hardwareMap.servo.get("pr"), 0.0, 1.0);
-        dispenser = new ToggleableServo(hardwareMap.servo.get("dispenser"), 0.0, 0.5);
-        harvester = hardwareMap.dcMotor.get("harvester");
+        dispenser = new ToggleableServo(hardwareMap.servo.get("dispenser"), 0.0, .3);
+
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
-        range = (ModernRoboticsI2cRangeSensor)
-                hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
         line = hardwareMap.opticalDistanceSensor.get("line");
         color = hardwareMap.colorSensor.get("color");
+        color.enableLed(false);
+
         rr.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         gyro.calibrate();
@@ -67,30 +70,29 @@ public class MecanumRobot {
         harvester.setPower(0.0);
     }
 
-
     // Things that need to happen in the teleop loop to accommodate long-running
     // tasks like running the flipper one at a time.
     public void loop() {
         if (isDoneFlipping()) {
             setFlipperPower(0.0);
         }
-        // TODO: Use Vuforia to do a target lock system for the shooter
-
     }
 
     public void updateSensorTelemetry() {
         telemetry.addData("Flipping", flipping ? "Yes" : "No");
         telemetry.addData("Gyro",  gyro.getIntegratedZValue());
-        telemetry.addData("Range", String.format(Locale.US, "%.2f", range.getDistance(DistanceUnit.CM)));
         telemetry.addData("Line", String.format(Locale.US, "%.2f", line.getRawLightDetected()));
         telemetry.addData("Color", String.format(Locale.US, "r: %d\td: %d", color.red(), color.blue()));
-        telemetry.addData("Flipper", flipper.getCurrentPosition());
-        telemetry.addData("FM", flipper.getMode().toString());
+        telemetry.addData("Encoders", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
+                lf.getCurrentPosition(),
+                lr.getCurrentPosition(),
+                rf.getCurrentPosition(),
+                rr.getCurrentPosition(),
+                flipper.getCurrentPosition()));
     }
 
     // The Flipper
-
-    public static final int ONE_FILPPER_REVOLUTION = 1540; // 1120 * 22 / 16
+    public static final int ONE_FILPPER_REVOLUTION = (1120 * 22) / 16;
     private boolean flipping = false;
     public void fire() {
         if (flipping) {
@@ -103,7 +105,9 @@ public class MecanumRobot {
         flipping = true;
     }
 
-    public static final int FLIPPER_CLOSE_ENOUGH = 10;
+    public boolean isFlipping() { return flipping; }
+
+    public static final int FLIPPER_CLOSE_ENOUGH = 2;
     public boolean isDoneFlipping() {
         return flipping
             && ! flipper.isBusy()
@@ -135,39 +139,28 @@ public class MecanumRobot {
     public void toggleFrontServo() {
         bf.toggle();
     }
-
     public void toggleBackServo() {
         br.toggle();
     }
-
     public void toggleDispenser() {
         dispenser.toggle();
     }
-
     public void setDispenser(boolean x) {
         dispenser.setFirst(x);
     }
 
     // Sensors
 
-    public double distanceToWallCM() {
-        return range.getDistance(DistanceUnit.CM);
-    }
-
     public double getLineLightReading() {
         return line.getRawLightDetected();
     }
-
-    public boolean isCalibrating(){
-        return gyro.isCalibrating();
-    }
-
+    public boolean isCalibrating(){  return gyro.isCalibrating(); }
     public void resetGyro() {
         gyro.resetZAxisIntegrator();
     }
-
     public int getHeading() {
-        return gyro.getIntegratedZValue();
+        int angle = gyro.getIntegratedZValue() % 360;
+        return angle;
     }
 
     public static final int COLOR_THRESHOLD = 2;
@@ -175,8 +168,17 @@ public class MecanumRobot {
         return color.red() > COLOR_THRESHOLD && color.red() > color.blue();
     }
 
+    public AllianceColor getColor() {
+        AllianceColor c = color.red() > color.blue() ? AllianceColor.RED : AllianceColor.BLUE;
+        return c;
+    }
+
     public boolean colorSensorIsBlue() {
         return color.blue() > COLOR_THRESHOLD && color.blue() > color.red();
+    }
+
+    public int getColorAlpha() {
+        return color.alpha();
     }
 
     // Driving
@@ -198,7 +200,18 @@ public class MecanumRobot {
         return ret;
     }
 
-    public void drive(double direction, double velocity, double rotationVelocity) {
+    private static class Wheels {
+        public double lf, lr, rf, rr;
+
+        public Wheels(double lf, double rf, double lr, double rr) {
+            this.lf = lf;
+            this.rf = rf;
+            this.lr = lr;
+            this.rr = rr;
+        }
+    }
+
+    private Wheels getWheels(double direction, double velocity, double rotationVelocity) {
         final double vd = velocity;
         final double td = direction;
         final double vt = rotationVelocity;
@@ -218,13 +231,15 @@ public class MecanumRobot {
         // over 1.0, just scale by 1.0 and keep all values.
         double scale = ma(1.0, v1, v2, v3, v4);
 
-        telemetry.addData("Drive", String.format(Locale.US, "%.2f %.2f %.2f %.2f %.2f",
-                v1, v2, v3, v4, scale));
+        return new Wheels(v1 / scale, v2 / scale, v3 / scale, v4 / scale);
+    }
 
-        lf.setPower(v1 / scale);
-        rf.setPower(v2 / scale);
-        lr.setPower(v3 / scale);
-        rr.setPower(v4 / scale);
+    public void drive(double direction, double velocity, double rotationVelocity) {
+        Wheels w = getWheels(direction, velocity, rotationVelocity);
+        lf.setPower(w.lf);
+        rf.setPower(w.rf);
+        lr.setPower(w.lr);
+        rr.setPower(w.rr);
     }
 
     /// Shut down all motors
@@ -238,8 +253,9 @@ public class MecanumRobot {
     // Encoder Driving
 
     // Assuming 4" wheels
-    private static final double TICKS_PER_CM = 1140 / (Math.PI * 4.0 * 2.54);
-    private static final double ENCODER_DRIVE_POWER = .5;
+    private static final double TICKS_PER_INCH = 1140 / (Math.PI * 4.0);
+    private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
+    private static final double ENCODER_DRIVE_POWER = .35;
 
     private void setMode(DcMotor.RunMode mode, DcMotor... ms) {
         for (DcMotor m : ms) {
@@ -260,62 +276,54 @@ public class MecanumRobot {
     }
 
     private boolean busy(DcMotor... ms) {
+        int count = 0;
         for (DcMotor m : ms) {
             if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && m.isBusy()) {
-                return true;
+                ++count;
             }
         }
-        return false;
+        return count == ms.length;
     }
 
     public boolean driveMotorsBusy() {
         return busy(lf, lr, rf, rr);
     }
 
-    // only does front/back/left/right.
-    public void encoderDriveDirection(double direction, int cm) {
+    public void encoderDriveTiles(double direction, double tiles) {
+        encoderDriveInches(direction, (int)(24.0 * tiles));
+    }
+
+    public void encoderDriveInches(double direction, double inches) {
         direction %= Math.PI * 2.0;
-        final double epsilon = 1.0;
-        if (epsilon > Math.abs(direction)) {
-            encoderDriveForward(cm);
-        } else if (epsilon > Math.abs(direction - Math.PI / 2.0)) {
-            encoderDriveRight(cm);
-        } else if (epsilon > Math.abs(direction - Math.PI)) {
-            encoderDriveBackward(cm);
-        } else if (epsilon > Math.abs(direction - 3.0 * Math.PI / 2.0)) {
-            encoderDriveLeft(cm);
-        }
+        final Wheels w = getWheels(direction, 1.0, 0.0);
+        final int ticks = (int)(inches * TICKS_PER_INCH);
+        encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
     }
 
-    public void encoderDriveForward(int cm) {
+    public void encoderDriveCM(double direction, double cm) {
+        direction %= Math.PI * 2.0;
+        final Wheels w = getWheels(direction, 1.0, 0.0);
         final int ticks = (int)(cm * TICKS_PER_CM);
+        encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
+    }
+
+    private void encoderDrive(double lft, double rft, double lrt, double rrt) {
+        encoderDrive((int) lft, (int) rft, (int) lrt, (int) rrt);
+    }
+
+    private void encoderDrive(int lft, int rft, int lrt, int rrt) {
         setPower(0.0, lf, lr, rf, rr);
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
-        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rf, rr);
-        setTargetPosition(ticks, lf, lr, rf, rr);
+        setTargetPosition(lft, lf);
+        setTargetPosition(rft, rf);
+        setTargetPosition(lrt, lr);
+        setTargetPosition(rrt, rr);
+        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lr, rr);
         setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
-    }
-
-    public void encoderDriveBackward(int cm) {
-        encoderDriveForward(- cm);
-    }
-
-    private static double STRAFE_TICKS_PER_CM = TICKS_PER_CM;
-    public void encoderDriveLeft(int cm) {
-        final int ticks = (int)(cm * STRAFE_TICKS_PER_CM);
-        setPower(0.0, lf, lr, rf, rr);
-        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
-        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rf, rr);
-        setTargetPosition(- ticks, lf, rr);
-        setTargetPosition(ticks, rf, lr);
-        setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
-    }
-
-    public void encoderDriveRight(int cm) {
-        encoderDriveLeft(- cm);
     }
 
     public void resetDriveMotorModes() {
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
 }

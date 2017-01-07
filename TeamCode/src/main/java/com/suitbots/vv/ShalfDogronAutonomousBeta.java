@@ -1,56 +1,204 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.robocol.PeerApp;
+
+import java.util.Locale;
 
 /**
  * Created by Suit Bots on 11/22/2016.
  */
 public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
     private int particles_to_shoot = 2;
+    private Controller c1;
+    private Controller c2;
 
-    private enum Alliance {
-        RED, BLUE
+    protected abstract AllianceColor getAlliance();
+
+
+    // Correct for any heading drift during a previous stage
+    protected void trueUp() throws InterruptedException {
+        turnToAngle(AllianceColor.BLUE == getAlliance() ? 0 : 180);
     }
 
-    protected abstract Alliance getAlliance();
 
     @Autonomous(name = "Shalf RED", group = "Tournament")
     public static class Red extends ShalfDogronAutonomousBeta {
-        protected Alliance getAlliance() { return Alliance.RED; }
+        protected AllianceColor getAlliance() { return AllianceColor.RED; }
     }
 
     @Autonomous(name = "Shalf BLUE", group = "Tournament")
     public static class Blue extends ShalfDogronAutonomousBeta {
-        protected Alliance getAlliance() { return Alliance.BLUE; }
+        protected AllianceColor getAlliance() { return AllianceColor.BLUE; }
     }
 
-    private double forwardDir() {
-        if(Alliance.RED == getAlliance()) {
+    @Override
+    protected double forwardDir() {
+        if(AllianceColor.RED == getAlliance()) {
             return Math.PI * 2.0;
         } else {
             return Math.PI;
         }
     }
 
-    private double leftDir() {
-        return 3.0 * Math.PI / 2.0;
+    // Shalf Dogron Autonomous Building Blocks
+
+    private void backUp() throws InterruptedException {
+        driveDirectionInches(forwardDir() + Math.PI, 6.0);
     }
-    private double diagonalDirection() {
-        return (leftDir() + forwardDir()) / 2.0;
+
+    private void initialForward() throws InterruptedException {
+        // This is always going to be backwards, as we shoot first and hit buttons later
+        driveDirectionTiles(Math.PI, .6);
+    }
+
+    private void leftToWall() throws InterruptedException {
+        driveDirectionTiles(leftDir(), 3.0);
+    }
+
+    private void safetyForward() throws InterruptedException {
+        driveDirectionTiles(forwardDir(), 1.8);
+    }
+
+    private void shooterInitialBackup() throws InterruptedException {
+        driveDirectionTiles(forwardDir() + Math.PI, 2.0);
+    }
+
+    private void shooterToGoalBackup() throws InterruptedException {
+        driveDirectionTiles(forwardDir() + Math.PI, .5);
+    }
+
+    private void reverse() throws InterruptedException {
+        turn(180);
+        robot.resetGyro();
+    }
+
+    private void fullAutonomous() throws InterruptedException {
+        final AllianceColor a = getAlliance();
+        initialForward();
+        turnToAngle(0);
+
+        shoot(particles_to_shoot);
+
+        driveDiagonalToTheWall();
+        trueUp();
+
+        driveForwardToWhiteLine();
+        trueUp();
+
+        achieveWallDistance();
+        trueUp();
+
+        pressButton();
+        trueUp();
+
+        safetyForward();
+        trueUp();
+
+        driveForwardToWhiteLine();
+        trueUp();
+
+        achieveWallDistance();
+        trueUp();
+
+        pressButton();
+    }
+
+    private void debugLoop() throws InterruptedException {
+        while(opModeIsActive()) {
+            c1.update();
+            c2.update();
+
+            if (c1.rightBumperOnce() || c1.leftBumperOnce()) {
+                int task = 0;
+
+                if (c1.A()) task |= 1;
+                if (c1.B()) task |= 2;
+                if (c1.X()) task |= 4;
+                if (c1.Y()) task |= 8;
+                if (c1.dpadUp()) task |= 16;
+                if (c1.dpadDown()) task |= 32;
+                if (c1.dpadLeft()) task |= 64;
+                if (c1.dpadRight()) task |= 128;
+
+                switch(task) {
+                    case 1: // A
+                        leftToWall();
+                        break;
+                    case 2: // B
+                        driveDiagonalToTheWall();
+                        break;
+                    case 3: // A and B
+                        achieveWallDistance();
+                        break;
+                    case 4: // X
+                        initialForward();
+                        break;
+                    case 5: // A and X
+                        pressButton();
+                        break;
+                    case 8: // Y
+                        shoot(2);
+                        break;
+                    case 12: // X and Y
+                        trueUp();
+                        break;
+                    case 6: // B and X
+                        robot.toggleBackServo();
+                        break;
+                    case 10: // B and Y
+                        robot.toggleFrontServo();
+                        break;
+                    case 16: // dpad up
+                        driveForwardToWhiteLine();
+                        break;
+                    case 32: // dpad down
+                        backUp();
+                        break;
+                    case 64: // dpad left
+                        reverse();
+                        break;
+                    case 128:
+                        safetyForward();
+                        break;
+                    default:
+                        robot.updateSensorTelemetry();
+                        telemetry.addData("Wall",
+                                String.format(Locale.US, "%s %.2f %.2f",
+                                        vision.canSeeWall() ? "Y" : "N",
+                                        vision.getXOffset(),
+                                        vision.getOrientation()));
+                        break;
+
+                }
+            }
+
+            DriveHelper.drive(c1, robot);
+            telemetry.update();
+        }
     }
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new MecanumRobot(hardwareMap, telemetry);
+        c1 = new Controller(gamepad1);
+        c2 = new Controller(gamepad2);
 
-        Controller c = new Controller(gamepad1);
+        initRobot();
+        // TODO: default this to off for the real deal
+        boolean debug_loop = true;
+
         while (! isStarted()) {
-            c.update();
-            if (c.AOnce()) {
+            c1.update();
+            if (c1.AOnce()) {
                 particles_to_shoot = (1 + particles_to_shoot) % 3;
+            }
+            if (c1.BOnce()) {
+                debug_loop = ! debug_loop;
             }
             telemetry.addData("Gyro", robot.isCalibrating() ? "Calibrating" : "CALIBRATED");
             telemetry.addData("Particles to shoot", particles_to_shoot);
+            telemetry.addData("Debug Mode", debug_loop ? "*** ON ***" : "Off");
             telemetry.update();
             idle();
         }
@@ -58,112 +206,29 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
         robot.resetGyro();
         robot.onStart();
 
-        /*
-        if (Alliance.BLUE == getAlliance()) {
-            setPhase("Shoot");
-            shoot(particles_to_shoot);
+        if (debug_loop) {
+            debugLoop();
+        } else {
+            fullAutonomous();
         }
-        */
-
-        /*
-        setPhase("Diag to wall");
-        driveDiagonalToTheWall();
-        trueUp();
-        */
-        setPhase("Safety Forward");
-        driveDirectionCM(forwardDir(), 60);
-        /*
-        setPhase("To white line");
-        driveForwardToWhiteLine();
-        trueUp();
-        achieveWallDistance(DISTANCE_TO_WALL_CM, 500);
-        setPhase("Press buttons 1");
-        pressButton();
-        setPhase("Back to line");
-        driveBackToWhiteLine();
-        trueUp();
-        achieveWallDistance(DISTANCE_TO_WALL_CM, 500);
-        setPhase("Press buttons 2");
-        pressButton();
-
-        if (Alliance.RED == getAlliance()) {
-            setPhase("Rotate");
-            rotate();
-            setPhase("Shoot");
-            shoot(particles_to_shoot);
-
-        }
-        */
-        setPhase("Done");
 
         robot.onStop();
     }
 
-    private static double DISTANCE_TO_WALL_CM = 20.0;
-    private void driveDiagonalToTheWall() throws InterruptedException {
-        while(DISTANCE_TO_WALL_CM < robot.distanceToWallCM()) {
-            telemetry.addData("Distance", robot.distanceToWallCM());
-            telemetry.update();
-            robot.drive(diagonalDirection(), 1.0, 0.0);
-            idle();
-        }
-        robot.stopDriveMotors();
-    }
-
-    private static final double WHITE_LINE_SPEED = 1.0;
-    private void driveToWhiteLine(double dir) throws InterruptedException {
-        driveToWhiteLine(dir, WHITE_LINE_SPEED);
-    }
-
-    private static final double LINE_LIGHT_READING_MIN = 3.0;
-    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
-        while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
-            double direction = dir;
-            double distance = robot.distanceToWallCM();
-            robot.drive(direction, speed, 0.0);
-            idle();
-        }
-    }
-
-    protected void driveForwardToWhiteLine() throws InterruptedException {
-        // Let's assume that we're going to overshoot the first time
-        driveToWhiteLine(forwardDir());
-        driveToWhiteLine(forwardDir() - Math.PI, .3);
-    }
-
-    private static final long INITIAL_BACKUP_TIME = 1000;
-    protected void driveBackToWhiteLine() throws InterruptedException {
-        // Before we start looking for the white line, let's get off the one we're currently on.
-        driveDirectionCM(forwardDir() - Math.PI, 60);
+    protected void driveDiagonalToTheWall() throws InterruptedException {
+        turnToAngle(getAlliance() == AllianceColor.RED ? -120 : -60);
+        driveDirectionTiles(forwardDir(), 2.5);
         trueUp();
-        // Let's assume that we're going to overshoot the first time
-        driveToWhiteLine(forwardDir() - Math.PI);
-        driveToWhiteLine(forwardDir(), .3);
     }
 
-    private Alliance getBeaconColor() {
-        return robot.colorSensorIsBlue() ? Alliance.BLUE : Alliance.RED;
+    protected static double DISTANCE_TO_WALL_CM = 18.0;
+    private void achieveWallDistance() throws InterruptedException {
+        achieveWallDistance(DISTANCE_TO_WALL_CM, getAlliance());
     }
 
-    private static final double FUDGE_FACTOR = .5;
-    private void achieveWallDistance(double distance, long timeout_ms) {
-        final long t0 = System.currentTimeMillis();
-        while (opModeIsActive() && timeout_ms > (System.currentTimeMillis() - t0)) {
-            double diff = distance - robot.distanceToWallCM();
-            if (FUDGE_FACTOR < Math.abs(diff)) {
-                break;
-            }
-
-            double direction = diff > 0.0 ? leftDir() : leftDir() - Math.PI;
-
-            robot.drive(direction, 0.4, 0.0);
-        }
-        robot.stopDriveMotors();
-    }
-
-    private static final double BEACON_PRESSING_MOVE_CM = 4.0;
+    private static final int BEACON_PRESSING_MOVE_CM = 15;
     private void pressButton() throws InterruptedException {
-        final boolean back_button = getBeaconColor() == getAlliance();
+        final boolean back_button = robot.getColor() == getAlliance();
 
         if (back_button) {
             robot.toggleBackServo();
@@ -171,29 +236,23 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
             robot.toggleFrontServo();
         }
 
-        driveDirectionCM(3.0 * Math.PI / 2.0, 5);
-        driveDirectionCM(Math.PI / 2.0, 5);
+        sleep(250);
+
+        driveDirectionCM(3.0 * Math.PI / 2.0, BEACON_PRESSING_MOVE_CM);
+        driveDirectionCM(Math.PI / 2.0, BEACON_PRESSING_MOVE_CM);
 
         if (back_button) {
             robot.toggleBackServo();
         } else {
             robot.toggleFrontServo();
         }
-        robot.stopDriveMotors();
     }
 
-    // Correct for any heading drift during a previous stage
-    private static final int ALLOWABLE_HEADING_DRIFT = 2;
-    private void trueUp() {
-        turnToHeading(0);
-    }
 
-    private static final int DESIRED_RELATIVE_HEADING = -90;
-    private static final double SAFE_ROTATION_SPEED = - 0.4;
+    private static final int DESIRED_RELATIVE_HEADING = 90;
     private void rotate() throws InterruptedException {
-        turnToHeading(DESIRED_RELATIVE_HEADING);
+        turn(DESIRED_RELATIVE_HEADING);
     }
-
 
     private void setPhase(String phase) {
         telemetry.addData("Phase", phase);
