@@ -18,6 +18,7 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void init() {
         robot = new MecanumRobot(hardwareMap, telemetry);
+        // robot.disableEncoders();
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
     }
@@ -45,62 +46,19 @@ public class MecanumTeleop extends OpMode {
         robot.stopDriveMotors();
     }
 
-    private void drive(Controller g) {
-        double theta = 0.0, v_theta = 0.0, v_rotation = 0.0;
-
-        if (g.dpadUp()) {
-            theta = 0.0;
-            v_theta = 0.5;
-        } else if (g.dpadDown()) {
-            theta = Math.PI;
-            v_theta = 0.5;
-        } else if (g.dpadLeft()) {
-            theta = 3.0 * Math.PI / 2.0;
-            v_theta = 0.5;
-        } else if (g.dpadRight()) {
-            theta = Math.PI / 2.0;
-            v_theta = 0.5;
-        } else {
-            final double lx = g.left_stick_x;
-            final double ly = - g.left_stick_y;
-
-            theta = Math.atan2(lx, ly);
-            v_theta = Math.sqrt(lx * lx + ly * ly);
-            v_rotation = g.right_stick_x;
-        }
-
-        robot.drive(theta, v_theta, v_rotation);
-    }
-
     private void g1Loop() {
         g1.update();
+        DriveHelper.drive(g1, robot);
 
-        drive(g1);
+        robot.setHarvesterPower(g1.left_trigger - g1.right_trigger);
 
-        if (single_player_mode && g1.A()) {
-            robot.setFlipperPower(g1.left_trigger - g1.right_trigger);
-        } else {
-            robot.setHarvesterPower(g1.left_trigger - g1.right_trigger);
+        if (g1.XOnce()) {
+            robot.toggleBackServo();
+        }
+        if (g1.YOnce()) {
+            robot.toggleFrontServo();
         }
 
-        if (single_player_mode) {
-            if (g1.rightBumperOnce()) {
-                robot.fire();
-            }
-            robot.setDispenser(! g1.leftBumperOnce());
-            if (g1.XOnce()) {
-                robot.toggleBackServo();
-            }
-            if (g1.YOnce()) {
-                robot.toggleFrontServo();
-            }
-            if (g1.A()) {
-                robot.setFlipperPower(0.5);
-            } else if (g1.B()) {
-                robot.setFlipperPower(-0.5);
-            }
-
-        }
     }
 
     private void g2Loop() {
@@ -113,7 +71,7 @@ public class MecanumTeleop extends OpMode {
             robot.toggleFrontServo();
         }
 
-        double flipper = g2.left_trigger - g2.right_trigger;
+        double flipper = Math.pow(g2.left_trigger - g2.right_trigger, 3.0);
         if (0.1 < Math.abs(flipper)) {
             robot.setFlipperPower(flipper);
         } else {
