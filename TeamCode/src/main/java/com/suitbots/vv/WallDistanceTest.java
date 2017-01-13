@@ -1,7 +1,9 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
+@Disabled
 @Autonomous(name = "Wall Test")
 public class WallDistanceTest extends AutonomousBase {
     @Override

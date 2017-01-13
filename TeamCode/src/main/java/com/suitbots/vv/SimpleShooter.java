@@ -26,13 +26,14 @@ public class SimpleShooter extends AutonomousBase {
             telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
             telemetry.addData("(a) Shooting", shoot_particles);
             telemetry.addData("(b) Wait seconds", wait / 1000);
+            telemetry.addData("Remember", "Diagonal, along the center tape");
             telemetry.update();
         }
         robot.onStart();
         sleep(wait);
-        driveDirectionTiles(forwardDir(), 1.5 * Math.sqrt(2.0));
+        driveDirectionTiles(forwardDir(), 1.2 * Math.sqrt(2.0), .7);
         shoot(shoot_particles);
-        driveDirectionTiles(forwardDir(), 1.5 * Math.sqrt(2.0));
+        driveDirectionTiles(forwardDir(),  Math.sqrt(2.0), .7);
         robot.onStop();
     }
 }

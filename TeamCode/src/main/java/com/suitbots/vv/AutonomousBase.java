@@ -1,14 +1,7 @@
 package com.suitbots.vv;
 
-import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import java.util.Locale;
 import java.util.concurrent.Callable;
 
 
@@ -48,7 +41,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
 
     private static final int MAX_HEADING_SLOP = 1;
     private static final double SAFE_TURN_SPEED = .1;
-    private static final double FAST_TURN_SPEED = .3;
+    private static final double FAST_TURN_SPEED = .4;
     private static final double STUPID_TURN_SPEED = .7;
     private static final int FAST_TURN_THRESHOLD = 30;
 
@@ -84,9 +77,6 @@ public abstract class AutonomousBase extends LinearOpMode  {
             if (MAX_HEADING_SLOP >= Math.abs(diff)) break;
             double speed = speedForTurnDistance(diff);
             robot.drive(0.0, 0.0, diff > 0 ? -speed : speed);
-            telemetry.addData("Heading", robot.getHeading());
-            telemetry.addData("Diff", diff);
-            telemetry.update();
             idle();
         }
         robot.stopDriveMotors();
@@ -94,32 +84,27 @@ public abstract class AutonomousBase extends LinearOpMode  {
 
     protected void turn(int degrees) throws InterruptedException {
         robot.resetGyro();
-        turnToAngle(degrees);
-    }
-
-    private void setState(String msg) {
-        telemetry.addData("Base State", msg);
-        telemetry.update();
+        turnToAngle(- degrees);
     }
 
     protected void driveDirectionTiles(double directionRadians, double tiles) throws InterruptedException {
-        driveDirectionInches(directionRadians, tiles * 24.0);
+        driveDirectionTiles(directionRadians, tiles, .35);
     }
 
-    protected void driveDirectionInches(double directionRadians, double inches) throws InterruptedException {
-        driveDirectionCM(directionRadians, 2.54 * inches);
+    protected void driveDirectionTilesFast(double directionRadians, double tiles) throws InterruptedException {
+        driveDirectionTiles(directionRadians, tiles, .75);
     }
 
-    protected void driveDirectionCM(double directionRadians, double cm) throws InterruptedException {
-        robot.encoderDriveCM(directionRadians, cm);
+    protected void driveDirectionTiles(double directionRadians, double tiles, double power) throws InterruptedException {
+        robot.setEncoderDrivePower(power);
+        robot.encoderDriveTiles(directionRadians, tiles);
         while (opModeIsActive() && robot.driveMotorsBusy()) {
-            telemetry.update();
             idle();
         }
         robot.stopDriveMotors();
         robot.resetDriveMotorModes();
+        robot.clearEncoderDrivePower();
     }
-
 
     protected void waitTimeout(long ms, Callable<Boolean> test) throws InterruptedException {
         long done = System.currentTimeMillis() + ms;
@@ -135,9 +120,9 @@ public abstract class AutonomousBase extends LinearOpMode  {
         }
     }
 
-    private void fire() throws InterruptedException {
+    private void fire(long timeout) throws InterruptedException {
         robot.fire();
-        waitTimeout(1000, new Callable<Boolean>() {
+        waitTimeout(timeout, new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 robot.loop();
@@ -151,23 +136,24 @@ public abstract class AutonomousBase extends LinearOpMode  {
         if (1 > n) {
             return;
         }
-        fire();
+        fire(800);
         if (2 > n) {
             return;
         }
         robot.toggleDispenser();
-        Thread.sleep(500);
-        fire();
+        sleep(500);
         robot.toggleDispenser();
+        fire(800);
     }
 
     // Let's make some autonomous routines orientation-agnostic.
     protected abstract double forwardDir();
-    protected double leftDir() {
+    protected double pressersDir() {
         return 3.0 * Math.PI / 2.0;
     }
+    protected double antiPressersDir() { return Math.PI / 2.0; }
     protected double leftForwardDir() {
-        return (leftDir() + forwardDir()) / 2.0;
+        return (pressersDir() + forwardDir()) / 2.0;
     }
 
     private static final double WHITE_LINE_SPEED = .3;
@@ -202,7 +188,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
             if (.5 >= Math.abs(d - distance)) {
                 break;
             }
-            final double direction = d > distance ? leftDir() : (leftDir() + Math.PI);
+            final double direction = d > distance ? pressersDir() : (pressersDir() + Math.PI);
             robot.drive(direction, 0.1, 0.0);
             idle();
         }
@@ -217,5 +203,10 @@ public abstract class AutonomousBase extends LinearOpMode  {
             finder = new BeaconFinder(robot, vision, telemetry);
         }
         return finder.loop();
+    }
+
+    public void alignToVisionTarget() throws InterruptedException {
+        int rot = (int) vision.getOrientation();
+        turn(rot);
     }
 }

@@ -2,7 +2,6 @@ package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.robocol.PeerApp;
 
 import java.util.Locale;
 
@@ -23,11 +22,13 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
     }
 
 
+    @Disabled
     @Autonomous(name = "Shalf RED", group = "Tournament")
     public static class Red extends ShalfDogronAutonomousBeta {
         protected AllianceColor getAlliance() { return AllianceColor.RED; }
     }
 
+    @Disabled
     @Autonomous(name = "Shalf BLUE", group = "Tournament")
     public static class Blue extends ShalfDogronAutonomousBeta {
         protected AllianceColor getAlliance() { return AllianceColor.BLUE; }
@@ -45,7 +46,7 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
     // Shalf Dogron Autonomous Building Blocks
 
     private void backUp() throws InterruptedException {
-        driveDirectionInches(forwardDir() + Math.PI, 6.0);
+        driveDirectionTiles(forwardDir() + Math.PI, .25);
     }
 
     private void initialForward() throws InterruptedException {
@@ -54,7 +55,7 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
     }
 
     private void leftToWall() throws InterruptedException {
-        driveDirectionTiles(leftDir(), 3.0);
+        driveDirectionTiles(pressersDir(), 3.0);
     }
 
     private void safetyForward() throws InterruptedException {
@@ -238,6 +239,7 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
 
         sleep(250);
 
+
         driveDirectionCM(3.0 * Math.PI / 2.0, BEACON_PRESSING_MOVE_CM);
         driveDirectionCM(Math.PI / 2.0, BEACON_PRESSING_MOVE_CM);
 
@@ -246,6 +248,10 @@ public abstract class ShalfDogronAutonomousBeta extends AutonomousBase {
         } else {
             robot.toggleFrontServo();
         }
+    }
+
+    protected void driveDirectionCM(double d, double cm) throws InterruptedException {
+        driveDirectionTiles(d, cm / (24.0 * 2.54));
     }
 
 
