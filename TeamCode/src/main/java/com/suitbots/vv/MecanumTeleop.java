@@ -12,13 +12,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 public class MecanumTeleop extends OpMode {
     private MecanumRobot robot = null;
     private Controller g1, g2;
-    // Single driver mode.
-    private boolean single_player_mode = false;
+    private boolean debug_mode = false;
 
     @Override
     public void init() {
         robot = new MecanumRobot(hardwareMap, telemetry);
-        // robot.disableEncoders();
+
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
     }
@@ -26,13 +25,11 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void init_loop() {
         g1.update();
-        if (g1.A() && g1.B()) {
-            if (g1.dpadUpOnce()) {
-                single_player_mode = ! single_player_mode;
-            }
+        if (g1.AOnce()) {
+            debug_mode = ! debug_mode;
         }
-        telemetry.addData("Gyro", robot.isCalibrating() ? "Calibrating" : "CalibratED");
-        telemetry.addData("Single Player Mode", single_player_mode ? "On" : "Off");
+        telemetry.addData("Debug? (a)", debug_mode ? "on" : "off");
+        telemetry.addData("Ready?", "YES.");
         telemetry.update();
     }
 
@@ -43,56 +40,56 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void stop() {
-        robot.stopDriveMotors();
+        robot.onStop();
     }
 
-    private void g1Loop() {
+    private void g1Loop(Controller g) {
         g1.update();
-        DriveHelper.drive(g1, robot);
+        DriveHelper.drive(g, robot);
 
-        robot.setHarvesterPower(g1.left_trigger - g1.right_trigger);
+        robot.setHarvesterPower(g.left_trigger - g.right_trigger);
 
-        if (g1.XOnce()) {
+        if (g.XOnce()) {
             robot.toggleBackServo();
         }
-        if (g1.YOnce()) {
+        if (g.YOnce()) {
             robot.toggleFrontServo();
         }
 
     }
 
-    private void g2Loop() {
-        g2.update();
-        if (g2.XOnce()) {
+    private void g2Loop(Controller g) {
+        g.update();
+        if (g.XOnce()) {
             robot.toggleBackServo();
         }
 
-        if (g2.YOnce()) {
+        if (g.YOnce()) {
             robot.toggleFrontServo();
         }
 
-        double flipper = Math.pow(g2.left_trigger - g2.right_trigger, 3.0);
+        double flipper = Math.pow(g.left_trigger - g.right_trigger, 3.0);
         if (0.1 < Math.abs(flipper)) {
             robot.setFlipperPower(flipper);
         } else {
             robot.stopFlipperIfItIsNotFlipping();
         }
 
-        if (g2.rightBumperOnce()) {
+        if (g.rightBumperOnce()) {
             robot.fire();
         }
 
-        robot.setDispenser(!g2.leftBumper());
+        robot.setDispenser(!g.leftBumper());
     }
 
     @Override
     public void loop() {
         robot.loop();
-        robot.updateSensorTelemetry();
-        g1Loop();
-        if (! single_player_mode) {
-            g2Loop();
+        g1Loop(g1);
+        g2Loop(g2);
+        if (debug_mode) {
+            robot.updateSensorTelemetry();
+            telemetry.update();
         }
-        telemetry.update();
     }
 }

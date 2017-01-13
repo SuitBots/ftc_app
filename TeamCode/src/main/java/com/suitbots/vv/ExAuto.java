@@ -1,19 +1,21 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 //@Autonomous(name = "thing1(for driving seconds)")
-
 public abstract class ExAuto extends AutonomusBaseTwo {
 
     protected abstract boolean IsRED();
 
+    @Disabled
     @Autonomous (name = "ExAuto RED")
     public static class Red extends ExAuto {
         protected boolean IsRED() { return true; }
     }
-
+    
+    @Disabled
     @Autonomous (name = "ExAuto BLUE")
     public static class Blue extends ExAuto {
         protected boolean IsRED() { return false; }
