@@ -1,5 +1,6 @@
 package com.suitbots.vv;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -45,7 +46,7 @@ public class BeaconFinder {
         return 0.0;
     }
 
-    private static final float DESIRED_X_DISTANCE_CM = 25f;
+    private static final float DESIRED_X_DISTANCE_CM = 15f;
 
     public Status loop(boolean testing) {
         if (! vision.canSeeWall()) {
@@ -88,7 +89,11 @@ public class BeaconFinder {
         return Status.CONTINUE;
     }
 
-    @TeleOp(name = "Beacon Finder", group = "Test")
+    public double getOrientation() {
+        return vision.canSeeWall() ? vision.getOrientation() : 0.0;
+    }
+
+    @TeleOp(name = "Beacon Finder Test", group = "Test")
     public static class TestTeleop extends AutonomousBase {
         private BeaconFinder beacons;
         private Controller g1;
