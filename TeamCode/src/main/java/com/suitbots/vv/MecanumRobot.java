@@ -1,5 +1,6 @@
 package com.suitbots.vv;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -35,8 +36,8 @@ public class MecanumRobot {
         flipper = hardwareMap.dcMotor.get("flipper");
         harvester = hardwareMap.dcMotor.get("harvester");
 
-        bf = new ToggleableServo(hardwareMap .servo.get("pf"), 0.0, 1.0);
-        br = new ToggleableServo(hardwareMap.servo.get("pr"), 0.0, 1.0);
+        bf = new ToggleableServo(hardwareMap .servo.get("pf"), 0.3, 1.0);
+        br = new ToggleableServo(hardwareMap.servo.get("pr"), 0.3, 1.0);
         dispenser = new ToggleableServo(hardwareMap.servo.get("dispenser"), 0.0, .3);
 
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
@@ -257,6 +258,16 @@ public class MecanumRobot {
     private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
     private static final double ENCODER_DRIVE_POWER = .35;
 
+    private double encoder_drive_power = -1.0;
+
+    void setEncoderDrivePower(double p) {
+        encoder_drive_power = p;
+    }
+
+    void clearEncoderDrivePower() {
+        encoder_drive_power = -1.0;
+    }
+
     private void setMode(DcMotor.RunMode mode, DcMotor... ms) {
         for (DcMotor m : ms) {
             m.setMode(mode);
@@ -290,7 +301,7 @@ public class MecanumRobot {
     }
 
     public void encoderDriveTiles(double direction, double tiles) {
-        encoderDriveInches(direction, (int)(24.0 * tiles));
+        encoderDriveInches(direction, 24.0 * tiles);
     }
 
     public void encoderDriveInches(double direction, double inches) {
@@ -319,11 +330,19 @@ public class MecanumRobot {
         setTargetPosition(lrt, lr);
         setTargetPosition(rrt, rr);
         setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lr, rr);
-        setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
+        if (0.0 < encoder_drive_power) {
+            setPower(encoder_drive_power, lf, lr, rf, rr);
+        } else {
+            setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
+        }
     }
 
     public void resetDriveMotorModes() {
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
+    }
+
+    public void disableEncoders() {
+        setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER, lf, lr, rf, rr);
     }
 }
