@@ -71,9 +71,9 @@ public abstract class AutonomiaRapida extends AutonomousBase {
                 @Override
                 public void act() throws InterruptedException {
                     if (AllianceColor.RED == allianceColor()) {
-                        turn(60);
+                        turnUntilBeaconIsVisible(60);
                     } else {
-                        turn(-50);
+                        turnUntilBeaconIsVisible(-50);
                     }
                 }
             },
