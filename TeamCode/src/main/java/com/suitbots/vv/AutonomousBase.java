@@ -39,11 +39,6 @@ public abstract class AutonomousBase extends LinearOpMode  {
         }
     }
 
-    private static final int MAX_HEADING_SLOP = 1;
-    private static final double SAFE_TURN_SPEED = .1;
-    private static final double FAST_TURN_SPEED = .4;
-    private static final double STUPID_TURN_SPEED = .7;
-    private static final int FAST_TURN_THRESHOLD = 30;
 
     private int angleDifference(int from, int to) {
         if (from < 0) from += 360;
@@ -60,15 +55,35 @@ public abstract class AutonomousBase extends LinearOpMode  {
         return diff;
     }
 
+    private static final double SAFE_TURN_SPEED = .1;
+    private static final double FAST_TURN_SPEED = .3;
+    private static final double STUPID_TURN_SPEED = .5;
+    private static final int FAST_TURN_THRESHOLD = 30;
+    private static final int STUPID_TURN_THRESHOLD = 60;
+
     private static double speedForTurnDistance(int angle) {
         angle = Math.abs(angle);
-        if (angle > 60) {
+        if (angle > STUPID_TURN_THRESHOLD) {
             return STUPID_TURN_SPEED;
         }
         if (angle > FAST_TURN_THRESHOLD) {
             return FAST_TURN_SPEED;
         }
         return SAFE_TURN_SPEED;
+    }
+
+    private static final int MAX_HEADING_SLOP = 1;
+
+    protected void turnUntilBeaconIsVisible(int degrees) throws InterruptedException {
+        robot.resetGyro();
+        while(opModeIsActive() && ! vision.canSeeWall()) {
+            int diff = angleDifference(robot.getHeading(), degrees);
+            if (MAX_HEADING_SLOP >= Math.abs(diff)) break;
+            double speed = speedForTurnDistance(diff);
+            robot.drive(0.0, 0.0, diff > 0 ? -speed : speed);
+            idle();
+        }
+        robot.stopDriveMotors();
     }
 
     protected void turnToAngle(int degrees) throws InterruptedException {
