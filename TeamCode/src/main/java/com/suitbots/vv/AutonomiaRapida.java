@@ -55,7 +55,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
                 @Override
                 public void act() throws InterruptedException {
                     if (AllianceColor.RED == allianceColor()) {
-                        turn(130);
+                        turn(120);
                     } else {
                         turn(50);
                     }
@@ -73,7 +73,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
                     if (AllianceColor.RED == allianceColor()) {
                         turnUntilBeaconIsVisible(60);
                     } else {
-                        turnUntilBeaconIsVisible(-50);
+                        turnUntilBeaconIsVisible(-60);
                     }
                 }
             },
@@ -92,7 +92,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             new Step("Away from Wall 1") {
                 @Override
                 public void act() throws InterruptedException {
-                    driveDirectionTiles(pressersDir() + Math.PI, .125);
+                    driveDirectionTiles(pressersDir() + Math.PI, .5);
                 }
             },
             new Step("True to wall 1") {
@@ -122,7 +122,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             new Step("Away from Wall") {
                 @Override
                 public void act() throws InterruptedException {
-                    driveDirectionTiles(pressersDir() + Math.PI, .5);
+                    driveDirectionTiles(pressersDir() + Math.PI, .75);
                 }
             },
             new Step("True to wall 2") {
@@ -214,8 +214,12 @@ public abstract class AutonomiaRapida extends AutonomousBase {
 
     private void runAutoMode() throws InterruptedException {
         double t0 = getRuntime();
+        double begin = 50;
         String prev = "None";
         for(Step s : steps) {
+            if (! opModeIsActive()) {
+                break;
+            }
             telemetry.addData("Last", String.format(Locale.US, "%s: %.2f", prev, getRuntime() - t0));
             prev = s.getName();
             t0 = getRuntime();
@@ -225,18 +229,24 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         }
         telemetry.addData("Last", String.format(Locale.US, "%s: %.2f", prev, getRuntime() - t0));
         telemetry.addData("Phase", "Done");
+        telemetry.addData("Total", getRuntime() - begin);
         telemetry.update();
     }
 
+    // TODO: Handle NO_DATA in a more useful way.
+    // Currently we just sit in one spot and wait if there's NO_DATA.
+    // Maybe, if it persists for half a second or so, we should drive
+    // around a bit to see if we can't get a signal elsewhere.
     private void driveToBeacon() throws InterruptedException {
         int no_data = 0;
-        while (opModeIsActive() && no_data < 1000) {
+        while (opModeIsActive() && no_data < 10) {
             BeaconFinder.Status s = beaconLoop();
             if (s == BeaconFinder.Status.NO_DATA) {
                 telemetry.addData("Beacon", "INVISIBLE");
                 ++no_data;
-                sleep(10);
+                sleep(100);
             } else if (s == BeaconFinder.Status.CONTINUE) {
+                no_data = 0;
                 telemetry.addData("Beacon", "INVISIBLE");
                 idle();
             } else {
@@ -246,32 +256,15 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         }
     }
 
-    private static final double BEACON_PRESSING_MOVE_TILES = .25; // about 4 inches
-    // Going faster seems to keep us a little more square.
-    private static final double BEACON_PRESSING_SPEED = .6;
-
     // todo: replace the current button pressers with a rack and pinion system
     //       so driving and aligning is not required for this step
     private void pressButton() throws InterruptedException {
         robot.resetGyro();
-        final boolean back_button = robot.getColor() == allianceColor();
-
-        if (back_button) {
-            robot.toggleBackServo();
-        } else {
-            robot.toggleFrontServo();
+        AllianceColor beacon = robot.getColor();
+        if (beacon == allianceColor()) {
+            robot.pressBackButton();
+        } else if (beacon != AllianceColor.NONE) {
+            robot.pressFrontButton();
         }
-
-        snooze(250);
-
-        driveDirectionTiles(pressersDir(), BEACON_PRESSING_MOVE_TILES, BEACON_PRESSING_SPEED);
-        driveDirectionTiles(antiPressersDir(), BEACON_PRESSING_MOVE_TILES, BEACON_PRESSING_SPEED);
-
-        if (back_button) {
-            robot.toggleBackServo();
-        } else {
-            robot.toggleFrontServo();
-        }
-        turnToAngle(0);
     }
 }
