@@ -75,6 +75,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
     private static final int MAX_HEADING_SLOP = 1;
 
     protected void turnUntilBeaconIsVisible(int degrees) throws InterruptedException {
+        degrees = - degrees;
         robot.resetGyro();
         while(opModeIsActive() && ! vision.canSeeWall()) {
             int diff = angleDifference(robot.getHeading(), degrees);
@@ -114,6 +115,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
         robot.setEncoderDrivePower(power);
         robot.encoderDriveTiles(directionRadians, tiles);
         while (opModeIsActive() && robot.driveMotorsBusy()) {
+            robot.loop();
             idle();
         }
         robot.stopDriveMotors();
@@ -171,24 +173,25 @@ public abstract class AutonomousBase extends LinearOpMode  {
         return (pressersDir() + forwardDir()) / 2.0;
     }
 
-    private static final double WHITE_LINE_SPEED = .3;
-    private void driveToWhiteLine(double dir) throws InterruptedException {
-        driveToWhiteLine(dir, WHITE_LINE_SPEED);
-    }
+//    private static final double WHITE_LINE_SPEED = .3;
+//    private void driveToWhiteLine(double dir) throws InterruptedException {
+//        driveToWhiteLine(dir, WHITE_LINE_SPEED);
+//    }
 
-    private static final double LINE_LIGHT_READING_MIN = 3.0;
-    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
-        while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
-            robot.drive(dir, speed, 0.0);
-            idle();
-        }
-    }
+//    private static final double LINE_LIGHT_READING_MIN = 3.0;
+//    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
+//        while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
+//            robot.loop();
+//            robot.drive(dir, speed, 0.0);
+//            idle();
+//        }
+//    }
 
-    private static final double SLOW_LINE_SPEED = .2;
-    protected void driveForwardToWhiteLine() throws InterruptedException {
-        // Let's assume that we're going to overshoot the first time
-        driveToWhiteLine(forwardDir(), SLOW_LINE_SPEED);
-    }
+//    private static final double SLOW_LINE_SPEED = .2;
+//    protected void driveForwardToWhiteLine() throws InterruptedException {
+//        // Let's assume that we're going to overshoot the first time
+//        driveToWhiteLine(forwardDir(), SLOW_LINE_SPEED);
+//    }
 
     // Assumes that you're parallel to the wall, range sensor facing it
     protected void achieveWallDistance(double distance, AllianceColor alliance) throws InterruptedException {
@@ -199,6 +202,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
             sleep(100);
         }
         while (vision.canSeeWall()) {
+            robot.loop();
             final double d = vision.getXOffset();
             if (.5 >= Math.abs(d - distance)) {
                 break;

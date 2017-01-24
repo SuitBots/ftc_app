@@ -46,7 +46,7 @@ public class BeaconFinder {
         return 0.0;
     }
 
-    private static final float DESIRED_X_DISTANCE_CM = 15f;
+    private static final float DESIRED_X_DISTANCE_CM = 12f;
 
     public Status loop(boolean testing) {
         if (! vision.canSeeWall()) {
@@ -72,6 +72,7 @@ public class BeaconFinder {
 
         double speed = calcSpeed(d);
         // todo: tune
+        // double rspeed = Math.max(.1, Math.abs(rot) / 100.0) * rot < 0.0 ? -1.0 : 1.0;
         double rspeed = rot / 100.0;
 
         if (Math.abs(rot) < 1.0) {
@@ -93,6 +94,7 @@ public class BeaconFinder {
         return vision.canSeeWall() ? vision.getOrientation() : 0.0;
     }
 
+    @Disabled
     @TeleOp(name = "Beacon Finder Test", group = "Test")
     public static class TestTeleop extends AutonomousBase {
         private BeaconFinder beacons;

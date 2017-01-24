@@ -44,29 +44,28 @@ public class MecanumTeleop extends OpMode {
     }
 
     private void g1Loop(Controller g) {
-        g1.update();
         DriveHelper.drive(g, robot);
 
         robot.setHarvesterPower(g.left_trigger - g.right_trigger);
-
-        if (g.XOnce()) {
-            robot.toggleBackServo();
-        }
-        if (g.YOnce()) {
-            robot.toggleFrontServo();
-        }
-
     }
 
     private void g2Loop(Controller g) {
-        g.update();
-        if (g.XOnce()) {
-            robot.toggleBackServo();
+        if (g.X()) {
+            robot.setBackPower(-1.0);
+        } else if (g.Y()) {
+            robot.setBackPower(1.0);
+        } else {
+            robot.setBackPower(0.0);
         }
 
-        if (g.YOnce()) {
-            robot.toggleFrontServo();
+        if (g.A()) {
+            robot.setFrontPower(-1.0);
+        } else if (g.B()) {
+            robot.setFrontPower(1.0);
+        } else {
+            robot.setFrontPower(0.0);
         }
+
 
         double flipper = Math.pow(g.left_trigger - g.right_trigger, 3.0);
         if (0.1 < Math.abs(flipper)) {
@@ -84,6 +83,8 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void loop() {
+        g1.update();
+        g2.update();
         robot.loop();
         g1Loop(g1);
         g2Loop(g2);

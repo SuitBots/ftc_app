@@ -1,5 +1,6 @@
 package com.suitbots.vv;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -8,10 +9,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.RunnableFuture;
 
 /**
  * Created by Suit Bots on 11/11/2016.
@@ -19,9 +21,9 @@ import java.util.Locale;
 
 public class MecanumRobot {
     private DcMotor lf, lr, rf, rr, harvester, flipper;
-    private ToggleableServo bf, br, dispenser;
+    private ToggleableServo dispenser;
+    private LazyCR pf, pr;
     private ModernRoboticsI2cGyro gyro;
-    private OpticalDistanceSensor line;
     private ColorSensor color;
     private Telemetry telemetry;
     private DeviceInterfaceModule dim;
@@ -36,12 +38,11 @@ public class MecanumRobot {
         flipper = hardwareMap.dcMotor.get("flipper");
         harvester = hardwareMap.dcMotor.get("harvester");
 
-        bf = new ToggleableServo(hardwareMap .servo.get("pf"), 0.3, 1.0);
-        br = new ToggleableServo(hardwareMap.servo.get("pr"), 0.3, 1.0);
+        pf = new LazyCR(hardwareMap.crservo.get("pf"));
+        pr = new LazyCR(hardwareMap.crservo.get("pr"));
         dispenser = new ToggleableServo(hardwareMap.servo.get("dispenser"), 0.0, .3);
 
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
-        line = hardwareMap.opticalDistanceSensor.get("line");
         color = hardwareMap.colorSensor.get("color");
         color.enableLed(false);
 
@@ -57,19 +58,43 @@ public class MecanumRobot {
     }
 
     public void onStart() {
-        bf.set(0.0);
-        br.set(0.0);
         dispenser.set(0.0);
-        bf.onStart();
-        br.onStart();
         dispenser.onStart();
+        pf.setPower(0.0);
+        pr.setPower(0.0);
     }
 
     public void onStop() {
         stopDriveMotors();
         flipper.setPower(0.0);
         harvester.setPower(0.0);
+        pf.setPower(0.0);
+        pr.setPower(0.0);
     }
+
+    private interface Stoppable {
+        public boolean stopped();
+    }
+
+    private class ButtonPresser implements Stoppable {
+        private LazyCR s;
+        private long t0;
+        public ButtonPresser(LazyCR s_) {
+            s = s_;
+            t0 = System.currentTimeMillis();
+        }
+
+        @Override
+        public boolean stopped() {
+            if(1000 > (System.currentTimeMillis() - t0)) {
+                return false;
+            }
+            s.setPower(0.0);
+            return true;
+        }
+    }
+
+    private ArrayList<Stoppable> stoppables = new ArrayList<>();
 
     // Things that need to happen in the teleop loop to accommodate long-running
     // tasks like running the flipper one at a time.
@@ -77,13 +102,67 @@ public class MecanumRobot {
         if (isDoneFlipping()) {
             setFlipperPower(0.0);
         }
+
+        // TODO: make this work
+        /*
+        ArrayList<Stoppable> stopped = new ArrayList<>();
+        for (Stoppable s : stoppables) {
+            if (s.stopped()) {
+                stopped.add(s);
+            }
+        }
+        for(Stoppable s : stopped) {
+            stoppables.remove(s);
+        }
+        */
+    }
+
+    private class Stopper implements Runnable {
+        private LazyCR servo;
+        public Stopper(LazyCR s) {
+            servo = s;
+        }
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(1000);
+            } catch(InterruptedException ie) {
+                // pass
+            }
+            servo.setPower(0.0);
+        }
+    }
+
+    private void pressButton(final LazyCR servo) throws InterruptedException {
+        servo.setPower(-1.0);
+        Thread.sleep(1000);
+        servo.setPower(0.0);
+        Thread.sleep(250);
+        servo.setPower(1.0);
+
+        Thread th = new Thread(new Stopper(servo));
+        th.start();
+        /*
+        // Put this back in if the thready button pusher doesn't work.
+        Thread.sleep(1000);
+        servo.setPower(0.0);
+        */
+        // TODO: make sure we're looping everywhere so we can get going before 2.5 seconds is up
+        // stoppables.add(new ButtonPresser(servo));
+    }
+
+    public void pressFrontButton() throws InterruptedException {
+        pressButton(pf);
+    }
+
+    public void pressBackButton() throws InterruptedException {
+        pressButton(pr);
     }
 
     public void updateSensorTelemetry() {
         telemetry.addData("Flipping", flipping ? "Yes" : "No");
         telemetry.addData("Gyro",  gyro.getIntegratedZValue());
-        telemetry.addData("Line", String.format(Locale.US, "%.2f", line.getRawLightDetected()));
-        telemetry.addData("Color", String.format(Locale.US, "r: %d\td: %d", color.red(), color.blue()));
+        telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
         telemetry.addData("Encoders", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
                 lf.getCurrentPosition(),
                 lr.getCurrentPosition(),
@@ -111,8 +190,8 @@ public class MecanumRobot {
     public static final int FLIPPER_CLOSE_ENOUGH = 2;
     public boolean isDoneFlipping() {
         return flipping
-            && ! flipper.isBusy()
-            || FLIPPER_CLOSE_ENOUGH >= Math.abs(ONE_FILPPER_REVOLUTION - flipper.getCurrentPosition());
+                && ! flipper.isBusy()
+                || FLIPPER_CLOSE_ENOUGH >= Math.abs(ONE_FILPPER_REVOLUTION - flipper.getCurrentPosition());
     }
 
     public void stopFlipperIfItIsNotFlipping() {
@@ -137,12 +216,8 @@ public class MecanumRobot {
 
     // Servo Control
 
-    public void toggleFrontServo() {
-        bf.toggle();
-    }
-    public void toggleBackServo() {
-        br.toggle();
-    }
+    public void setFrontPower(double p) { pf.setPower(p); }
+    public void setBackPower(double p) { pr.setPower(p); }
     public void toggleDispenser() {
         dispenser.toggle();
     }
@@ -152,9 +227,6 @@ public class MecanumRobot {
 
     // Sensors
 
-    public double getLineLightReading() {
-        return line.getRawLightDetected();
-    }
     public boolean isCalibrating(){  return gyro.isCalibrating(); }
     public void resetGyro() {
         gyro.resetZAxisIntegrator();
