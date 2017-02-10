@@ -70,6 +70,7 @@ public class MecanumRobot {
         harvester.setPower(0.0);
         pf.setPower(0.0);
         pr.setPower(0.0);
+        dispenser.set(0.0);
     }
 
     private interface Stoppable {
