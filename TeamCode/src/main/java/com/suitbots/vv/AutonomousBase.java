@@ -159,7 +159,6 @@ public abstract class AutonomousBase extends LinearOpMode  {
         }
         robot.toggleDispenser();
         sleep(500);
-        robot.toggleDispenser();
         fire(800);
     }
 
