@@ -92,7 +92,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             new Step("Away from Wall 1") {
                 @Override
                 public void act() throws InterruptedException {
-                    driveDirectionTiles(pressersDir() + Math.PI, .25);
+                    driveDirectionTiles(pressersDir() + Math.PI, .75);
                 }
             },
             new Step("True to wall 1") {
