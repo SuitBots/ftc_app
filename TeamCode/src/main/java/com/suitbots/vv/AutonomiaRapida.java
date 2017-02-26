@@ -113,7 +113,16 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         return new Step("Start Harvester") {
             @Override
             public void act() throws InterruptedException {
-                robot.setHarvesterPower(- 1.0);
+                new Thread(new Runnable() {
+                    @Override public void run() {
+                        try {
+                            Thread.sleep(250);
+                        } catch(InterruptedException ie) {
+
+                        }
+                        robot.setHarvesterPower(-1.0);
+                    }
+                }).run();
             }
         };
     }
