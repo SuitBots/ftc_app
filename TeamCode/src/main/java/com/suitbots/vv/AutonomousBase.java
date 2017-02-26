@@ -27,10 +27,10 @@ public abstract class AutonomousBase extends LinearOpMode  {
     }
 
     public void onStop() {
-        robot.onStop();
         if (vision != null) {
             vision.deactivate();
         }
+        robot.onStop();
     }
 
     protected void snooze(int ms) throws InterruptedException {
@@ -56,8 +56,8 @@ public abstract class AutonomousBase extends LinearOpMode  {
     }
 
     private static final double SAFE_TURN_SPEED = .1;
-    private static final double FAST_TURN_SPEED = .3;
-    private static final double STUPID_TURN_SPEED = .5;
+    private static final double FAST_TURN_SPEED = .2;
+    private static final double STUPID_TURN_SPEED = .3;
     private static final int FAST_TURN_THRESHOLD = 30;
     private static final int STUPID_TURN_THRESHOLD = 60;
 

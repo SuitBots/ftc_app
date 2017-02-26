@@ -46,7 +46,7 @@ public class BeaconFinder {
         return 0.0;
     }
 
-    private static final float DESIRED_X_DISTANCE_CM = 12f;
+    private static final float DESIRED_X_DISTANCE_CM = 10f;
 
     public Status loop(boolean testing) {
         if (! vision.canSeeWall()) {

@@ -58,6 +58,8 @@ public class MecanumRobot {
     }
 
     public void onStart() {
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rr, rf, flipper);
+        setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rr, rf, flipper);
         dispenser.set(0.0);
         dispenser.onStart();
         pf.setPower(0.0);
@@ -307,13 +309,13 @@ public class MecanumRobot {
 
         return new Wheels(v1 / scale, v2 / scale, v3 / scale, v4 / scale);
     }
-
     public void drive(double direction, double velocity, double rotationVelocity) {
         Wheels w = getWheels(direction, velocity, rotationVelocity);
         lf.setPower(w.lf);
         rf.setPower(w.rf);
         lr.setPower(w.lr);
         rr.setPower(w.rr);
+        telemetry.addData("Powers", String.format(Locale.US, "%.2f %.2f %.2f %.2f", w.lf, w.rf, w.lr, w.rr));
     }
 
     /// Shut down all motors
@@ -327,9 +329,9 @@ public class MecanumRobot {
     // Encoder Driving
 
     // Assuming 4" wheels
-    private static final double TICKS_PER_INCH = 1140 / (Math.PI * 4.0);
+    private static final double TICKS_PER_INCH = 1120 * (16./24.) / (Math.PI * 4.0);
     private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
-    private static final double ENCODER_DRIVE_POWER = .35;
+    private static final double ENCODER_DRIVE_POWER = .3; // .35;
 
     private double encoder_drive_power = -1.0;
 
