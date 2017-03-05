@@ -1,6 +1,7 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name = "Simple Shooter", group = "Tournament")
 public class SimpleShooter extends AutonomousBase {

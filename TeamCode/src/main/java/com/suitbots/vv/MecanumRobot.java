@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.MagneticFlux;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -64,6 +65,8 @@ public class MecanumRobot {
         dispenser.onStart();
         pf.setPower(0.0);
         pr.setPower(0.0);
+        flipper.setPower(0.0);
+        flipping = false;
     }
 
     public void onStop() {
@@ -73,6 +76,7 @@ public class MecanumRobot {
         pf.setPower(0.0);
         pr.setPower(0.0);
         dispenser.set(0.0);
+        flipping = false;
     }
 
     private interface Stoppable {
@@ -106,18 +110,6 @@ public class MecanumRobot {
             setFlipperPower(0.0);
         }
 
-        // TODO: make this work
-        /*
-        ArrayList<Stoppable> stopped = new ArrayList<>();
-        for (Stoppable s : stoppables) {
-            if (s.stopped()) {
-                stopped.add(s);
-            }
-        }
-        for(Stoppable s : stopped) {
-            stoppables.remove(s);
-        }
-        */
     }
 
     private class Stopper implements Runnable {
@@ -128,7 +120,7 @@ public class MecanumRobot {
         @Override
         public void run() {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch(InterruptedException ie) {
                 // pass
             }
@@ -138,7 +130,7 @@ public class MecanumRobot {
 
     private void pressButton(final LazyCR servo) throws InterruptedException {
         servo.setPower(-1.0);
-        Thread.sleep(1000);
+        Thread.sleep(500);
         servo.setPower(0.0);
         Thread.sleep(250);
         servo.setPower(1.0);
@@ -182,19 +174,37 @@ public class MecanumRobot {
             return;
         }
         flipper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (0 != flipper.getCurrentPosition()) {
+            throw new RuntimeException("Well there's your problem (Bad encoder value)");
+        }
         flipper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipper.setTargetPosition(ONE_FILPPER_REVOLUTION);
         flipper.setPower(1.0);
+        if (! flipper.isBusy()) {
+            throw new RuntimeException("Flipper should be busy.");
+        }
         flipping = true;
     }
 
     public boolean isFlipping() { return flipping; }
 
     public static final int FLIPPER_CLOSE_ENOUGH = 2;
-    public boolean isDoneFlipping() {
-        return flipping
-                && ! flipper.isBusy()
-                || FLIPPER_CLOSE_ENOUGH >= Math.abs(ONE_FILPPER_REVOLUTION - flipper.getCurrentPosition());
+    private boolean isDoneFlipping() {
+        if (! flipping) {
+            return false;
+        }
+
+        if (! flipper.isBusy()) {
+            return true;
+        }
+
+        /*
+        if (FLIPPER_CLOSE_ENOUGH >= Math.abs(ONE_FILPPER_REVOLUTION - flipper.getCurrentPosition())) {
+            return true;
+        }
+        */
+
+        return false;
     }
 
     public void stopFlipperIfItIsNotFlipping() {

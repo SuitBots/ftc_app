@@ -56,7 +56,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
     }
 
     private static final double SAFE_TURN_SPEED = .1;
-    private static final double FAST_TURN_SPEED = .2;
+    private static final double FAST_TURN_SPEED = .15;
     private static final double STUPID_TURN_SPEED = .3;
     private static final int FAST_TURN_THRESHOLD = 30;
     private static final int STUPID_TURN_THRESHOLD = 60;
@@ -123,29 +123,16 @@ public abstract class AutonomousBase extends LinearOpMode  {
         robot.clearEncoderDrivePower();
     }
 
-    protected void waitTimeout(long ms, Callable<Boolean> test) throws InterruptedException {
-        long done = System.currentTimeMillis() + ms;
-        try {
-            while (opModeIsActive() && done > System.currentTimeMillis() && !test.call()) {
-                robot.loop();
-                idle();
-            }
-        } catch(InterruptedException ie) {
-            throw ie;
-        } catch(Exception e) {
-            // pass
-        }
-    }
-
     private void fire(long timeout) throws InterruptedException {
         robot.fire();
-        waitTimeout(timeout, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                robot.loop();
-                return !robot.isFlipping();
+        final long t0 = System.currentTimeMillis();
+        while (robot.isFlipping()) {
+            robot.loop();
+            final long t1 = System.currentTimeMillis();
+            if (timeout < (t1 - t0)) {
+                break;
             }
-        });
+        }
         robot.setFlipperPower(0.0);
     }
 

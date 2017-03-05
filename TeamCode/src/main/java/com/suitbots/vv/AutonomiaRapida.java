@@ -1,6 +1,7 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
 
 import java.util.ArrayList;
@@ -37,121 +38,18 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         abstract public void act() throws InterruptedException;
     }
 
-    public Step drive(String name, final double direction, final double tiles) {
-        return new Step(name) {
-            @Override
-            public void act() throws InterruptedException {
-                driveDirectionTilesFast(direction, tiles);
-            }
-        };
-    }
-
-    public Step rot(String name, final int if_red, final int if_blue) {
-        return new Step(name) {
-            @Override
-            public void act() throws InterruptedException {
-                if(AllianceColor.RED == allianceColor()) {
-                    turn(if_red);
-                } else {
-                    turn(if_blue);
-                }
-            }
-        };
-    }
-
-    private Step approach() {
-        return new Step("Approach Beacon") {
-            @Override
-            public void act() throws InterruptedException {
-                driveToBeacon();
-            }
-        };
-    }
-
-    private Step press() {
-        return new Step("Press Button 1") {
-            @Override
-            public void act() throws InterruptedException {
-                pressButton();
-            }
-        };
-    }
-
-    private Step awayFromWall(final double distance) {
-        return new Step("Away from Wall 1") {
-            @Override
-            public void act() throws InterruptedException {
-                driveDirectionTiles(pressersDir() + Math.PI, distance);
-            }
-        };
-    }
-
-    private Step awayFromWall() {
-        return awayFromWall(.75);
-    }
-
-    private Step trueToWall() {
-        return new Step("True to wall") {
-            @Override
-            public void act() throws InterruptedException {
-                alignToVisionTarget();
-            }
-        };
-    }
-
-    private Step shoot() {
-        return new Step("Shoot") {
-            @Override
-            public void act() throws InterruptedException {
-                robot.setHarvesterPower(-1.0);
-                shoot(shoot_no);
-                robot.setHarvesterPower(0.0);
-            }
-        };
-    }
-
-    private Step startHarvester() {
-        return new Step("Start Harvester") {
-            @Override
-            public void act() throws InterruptedException {
-                new Thread(new Runnable() {
-                    @Override public void run() {
-                        try {
-                            Thread.sleep(250);
-                        } catch(InterruptedException ie) {
-
-                        }
-                        robot.setHarvesterPower(-1.0);
-                    }
-                }).run();
-            }
-        };
-    }
-
-    private Step turnParallel(String name, final int if_red, final int if_blue) {
-        return new Step(name) {
-            @Override
-            public void act() throws InterruptedException {
-                if (AllianceColor.RED == allianceColor()) {
-                    turnUntilBeaconIsVisible(if_red);
-                } else {
-                    turnUntilBeaconIsVisible(if_blue);
-                }
-            }
-        };
-    }
 
     private Step[] quick_beacons = new Step[] {
             drive("Initial Forward", forwardDir(), 2.0),
             drive("Initial Left", leftForwardDir(), 1.0),
             approach(),
             press(),
-            awayFromWall(),
+            awayFromWall(.75),
             trueToWall(),
             drive("Back", forwardDir(), 2.0),
             approach(),
             press(),
-            awayFromWall(),
+            awayFromWall(.75),
             trueToWall(),
             rot("Turn towards bucket", -45, -135),
             drive("To shoot", Math.PI, Math.sqrt(2.0)),
@@ -162,122 +60,23 @@ public abstract class AutonomiaRapida extends AutonomousBase {
     private Step[] han_solo = new Step[] {
             drive("Initial Forward",  Math.PI, .65),
             shoot(),
-            rot("Turn towards beacon", 120, 50),
+            rot("Turn towards beacon", 130, 50),
             drive("Drive to Beacon", forwardDir(), 2.3),
-            turnParallel("Turn parallel", 60, -60),
-            approach(),
-            press(),
-            awayFromWall(),
-            trueToWall(),
-            drive("Next beacon", forwardDir(), 2.0),
+            turnParallel("Turn parallel", 50, -50),
+            goLeftIfYouCanNotSeeTheTarget(),
             approach(),
             press(),
             awayFromWall(.5),
             trueToWall(),
-            drive("Back to ramp", forwardDir() + Math.PI, 3.5)
-    };
-
-    private Step[] good_old_steps = new Step[] {
-            new Step("Initial Forward") {
-                @Override
-                public void act() throws InterruptedException {
-                    robot.resetGyro();
-                    driveDirectionTilesFast(Math.PI, 0.65);
-                    turnToAngle(0);
-                }
-            },
-            new Step("Shoot") {
-                @Override
-                public void act() throws InterruptedException {
-                    shoot(shoot_no);
-                }
-            },
-            new Step("Turn towards Beacon") {
-                @Override
-                public void act() throws InterruptedException {
-                    if (AllianceColor.RED == allianceColor()) {
-                        turn(120);
-                    } else {
-                        turn(50);
-                    }
-                }
-            },
-            new Step("Drive To Beacon") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveDirectionTilesFast(forwardDir(), 2.3);
-                }
-            },
-            new Step("Turn parallel to wall") {
-                @Override
-                public void act() throws InterruptedException {
-                    if (AllianceColor.RED == allianceColor()) {
-                        turnUntilBeaconIsVisible(60);
-                    } else {
-                        turnUntilBeaconIsVisible(-60);
-                    }
-                }
-            },
-            new Step("Approach Beacon 1") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveToBeacon();
-                }
-            },
-            new Step("Press Button 1") {
-                @Override
-                public void act() throws InterruptedException {
-                    pressButton();
-                }
-            },
-            new Step("Away from Wall 1") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveDirectionTiles(pressersDir() + Math.PI, .75);
-                }
-            },
-            new Step("True to wall 1") {
-                @Override
-                public void act() throws InterruptedException {
-                    alignToVisionTarget();
-                }
-            },
-            new Step("Next Beacon") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveDirectionTilesFast(forwardDir(), 2);
-                }
-            },
-            new Step("Approach Beacon 2") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveToBeacon();
-                }
-            },
-            new Step("Press Button 2") {
-                @Override
-                public void act() throws InterruptedException {
-                    pressButton();
-                }
-            },
-            new Step("Away from Wall") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveDirectionTiles(pressersDir() + Math.PI, .5);
-                }
-            },
-            new Step("True to wall 2") {
-                @Override
-                public void act() throws InterruptedException {
-                    alignToVisionTarget();
-                }
-            },
-            new Step("Back to Ramp") {
-                @Override
-                public void act() throws InterruptedException {
-                    driveDirectionTilesFast(forwardDir() + Math.PI, 3.5);
-                }
-            }
+            drive("Next beacon", forwardDir(), 2.0),
+            waitToSeeIfItCanSeeTarget(),
+            goLeftIfYouCanNotSeeTheTarget(),
+            waitToSeeIfItCanSeeTarget(),
+            approach(),
+            press(),
+            awayFromWall(.5),
+            trueToWall(),
+            drive("Back to ramp", forwardDir() + Math.PI, 4.0)
     };
 
     private Step[] basic_steps = han_solo;
@@ -298,6 +97,8 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             if (c.YOnce()) {
                 debug_mode = ! debug_mode;
             }
+            /*
+            // Perhaps we'll bring Sonic back at s
             if (c.XOnce()) {
                 if (basic_steps == han_solo) {
                     basic_steps = quick_beacons;
@@ -305,10 +106,11 @@ public abstract class AutonomiaRapida extends AutonomousBase {
                     basic_steps = han_solo;
                 }
             }
+            */
             telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
             telemetry.addData("(b) Shooting", shoot_no);
             telemetry.addData("(y) Debug Mode", debug_mode ? "*** ON ***" : "Off");
-            telemetry.addData("(x) Strategy", han_solo == basic_steps ? "Han Solo" : "Sonic");
+            // telemetry.addData("(x) Strategy", han_solo == basic_steps ? "Han Solo" : "Sonic");
             telemetry.addData("Time", getRuntime());
             telemetry.update();
         }
@@ -382,6 +184,133 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         telemetry.addData("Phase", "Done");
         telemetry.addData("Total", getRuntime() - begin);
         telemetry.update();
+    }
+
+
+    public Step drive(String name, final double direction, final double tiles) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                driveDirectionTilesFast(direction, tiles);
+            }
+        };
+    }
+
+    public Step rot(String name, final int if_red, final int if_blue) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                if(AllianceColor.RED == allianceColor()) {
+                    turn(if_red);
+                } else {
+                    turn(if_blue);
+                }
+            }
+        };
+    }
+
+    private Step approach() {
+        return new Step("Approach Beacon") {
+            @Override
+            public void act() throws InterruptedException {
+                driveToBeacon();
+            }
+        };
+    }
+
+    private Step press() {
+        return new Step("Press Button 1") {
+            @Override
+            public void act() throws InterruptedException {
+                pressButton();
+            }
+        };
+    }
+
+    private Step awayFromWall(final double distance) {
+        return new Step("Away from Wall 1") {
+            @Override
+            public void act() throws InterruptedException {
+                driveDirectionTiles(pressersDir() + Math.PI, distance);
+            }
+        };
+    }
+
+
+    private Step trueToWall() {
+        return new Step("True to wall") {
+            @Override
+            public void act() throws InterruptedException {
+                alignToVisionTarget();
+            }
+        };
+    }
+
+    private Step shoot() {
+        return new Step("Shoot") {
+            @Override
+            public void act() throws InterruptedException {
+                robot.setHarvesterPower(-1.0);
+                shoot(shoot_no);
+                robot.setHarvesterPower(0.0);
+            }
+        };
+    }
+
+    private Step startHarvester() {
+        return new Step("Start Harvester") {
+            @Override
+            public void act() throws InterruptedException {
+                new Thread(new Runnable() {
+                    @Override public void run() {
+                        try {
+                            Thread.sleep(250);
+                        } catch(InterruptedException ie) {
+
+                        }
+                        robot.setHarvesterPower(-1.0);
+                    }
+                }).run();
+            }
+        };
+    }
+
+    private Step turnParallel(String name, final int if_red, final int if_blue) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                if (AllianceColor.RED == allianceColor()) {
+                    turnUntilBeaconIsVisible(if_red);
+                } else {
+                    turnUntilBeaconIsVisible(if_blue);
+                }
+            }
+        };
+    }
+
+    private Step waitToSeeIfItCanSeeTarget () {
+        return new Step("waitToSeeIfItCanSeeTarget"){
+            @Override
+            public void act() throws InterruptedException{
+                for (int i = 0; i < 10; ++i) {
+                    if (vision.canSeeWall()) {
+                        break;
+                    }
+                    sleep(100);
+                }
+            }
+        };
+    }
+
+    private Step goLeftIfYouCanNotSeeTheTarget() {
+        return new Step("Left if no target") {
+            @Override
+            public void act() throws InterruptedException {
+                if (! vision.canSeeWall()) {
+                    driveDirectionTiles(3.0 * Math.PI / 2.0, .25, .2);
+                }
+            }
+        };
     }
 
     // TODO: Handle NO_DATA in a more useful way.

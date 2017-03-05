@@ -1,5 +1,6 @@
 package com.suitbots.vv;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -13,6 +14,7 @@ public class MecanumTeleop extends OpMode {
     private MecanumRobot robot = null;
     private Controller g1, g2;
     private boolean debug_mode = false;
+
 
     @Override
     public void init() {
