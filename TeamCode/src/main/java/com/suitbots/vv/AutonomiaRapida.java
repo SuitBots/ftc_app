@@ -74,7 +74,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             waitToSeeIfItCanSeeTarget(),
             approach(),
             press(),
-            awayFromWall(.5),
+            awayFromWall(.75),
             trueToWall(),
             drive("Back to ramp", forwardDir() + Math.PI, 4.0)
     };
