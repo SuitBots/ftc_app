@@ -108,13 +108,15 @@ public abstract class AutonomousBase extends LinearOpMode  {
     }
 
     protected void driveDirectionTilesFast(double directionRadians, double tiles) throws InterruptedException {
-        driveDirectionTiles(directionRadians, tiles, .75);
+        driveDirectionTiles(directionRadians, tiles, .65);
     }
 
     protected void driveDirectionTiles(double directionRadians, double tiles, double power) throws InterruptedException {
         robot.setEncoderDrivePower(power);
         robot.encoderDriveTiles(directionRadians, tiles);
         while (opModeIsActive() && robot.driveMotorsBusy()) {
+            robot.updateSensorTelemetry();
+            telemetry.update();
             robot.loop();
             idle();
         }
@@ -158,27 +160,66 @@ public abstract class AutonomousBase extends LinearOpMode  {
     protected double leftForwardDir() {
         return (pressersDir() + forwardDir()) / 2.0;
     }
+    protected double backwardDir() {
+        return forwardDir() + Math.PI;
+    }
 
-//    private static final double WHITE_LINE_SPEED = .3;
-//    private void driveToWhiteLine(double dir) throws InterruptedException {
-//        driveToWhiteLine(dir, WHITE_LINE_SPEED);
-//    }
+    private static final double WHITE_LINE_SPEED = .2;
+    protected void driveToWhiteLine(double dir) throws InterruptedException {
+        driveToWhiteLine(dir, WHITE_LINE_SPEED);
+    }
 
-//    private static final double LINE_LIGHT_READING_MIN = 3.0;
-//    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
-//        while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
-//            robot.loop();
-//            robot.drive(dir, speed, 0.0);
-//            idle();
-//        }
-//    }
+    protected void driveToWhiteLineBackSensor(double dir) throws InterruptedException {
+        driveToWhiteLineBackSensor(dir, WHITE_LINE_SPEED);
+    }
 
-//    private static final double SLOW_LINE_SPEED = .2;
-//    protected void driveForwardToWhiteLine() throws InterruptedException {
-//        // Let's assume that we're going to overshoot the first time
-//        driveToWhiteLine(forwardDir(), SLOW_LINE_SPEED);
-//    }
+    protected void driveToWhiteLineBackSensorSlow(double dir) throws InterruptedException {
+        driveToWhiteLineBackSensor(dir, WHITE_LINE_SPEED / 2.0);
+    }
 
+    protected void driveToWhiteLineBackSensor(double dir, double speed) throws InterruptedException {
+        driveToWhiteLine(dir, speed, true);
+    }
+
+    protected void driveToWhiteLineSlow(double dir) throws InterruptedException {
+        driveToWhiteLine(dir, WHITE_LINE_SPEED / 2.0);
+    }
+
+    private static final double LINE_LIGHT_READING_MIN = 4.0;
+    protected void driveToWhiteLine(double dir, double speed) throws InterruptedException {
+        driveToWhiteLine(dir, speed, true);
+    }
+
+    private double ods(boolean front) {
+        return front ? robot.getLineLightReadingF() : robot.getLineLightReadingB();
+    }
+
+    private void driveToWhiteLine(double dir, double speed, boolean frontSensor) throws InterruptedException {
+        robot.drive(dir, speed, 0.0);
+        while(opModeIsActive() && ods(frontSensor) < LINE_LIGHT_READING_MIN) {
+            robot.loop();
+            idle();
+        }
+        robot.stopDriveMotors();
+
+    }
+
+    private final double SNEAKY_SPEED = .2;
+    protected void sneakToBeacons(){
+        while(! robot.touchSensorPressed()){
+            final double orientation = robot.getHeading();
+            robot.drive(pressersDir(), SNEAKY_SPEED, orientation / 50.0);
+        }
+        robot.stopDriveMotors();
+    }
+
+    private static final double SLOW_LINE_SPEED = .2;
+    protected void driveForwardToWhiteLine() throws InterruptedException {
+        // Let's assume that we're going to overshoot the first time
+        driveToWhiteLine(forwardDir(), SLOW_LINE_SPEED);
+    }
+
+    /*
     // Assumes that you're parallel to the wall, range sensor facing it
     protected void achieveWallDistance(double distance, AllianceColor alliance) throws InterruptedException {
         for (int i = 0; i < 4; ++i) {
@@ -198,8 +239,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
             idle();
         }
         robot.stopDriveMotors();
-
-    }
+    } */
 
     private BeaconFinder finder = null;
 

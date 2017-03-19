@@ -27,7 +27,7 @@ public abstract class AutonomiaRapida extends AutonomousBase {
 
     @Override
     public double forwardDir() {
-        return AllianceColor.RED == allianceColor() ? 0.0 : Math.PI;
+        return AllianceColor.RED == allianceColor() ? 2.0 * Math.PI : Math.PI;
     }
 
     abstract class Step {
@@ -38,6 +38,27 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         abstract public void act() throws InterruptedException;
     }
 
+    private Step[] blind_man = new Step[] {
+            drive("Initial Diagonal", leftForwardDir(), 4.5),
+            trueUp(),
+            toWhiteLine("To White Line", forwardDir()),
+            trueUp(),
+            sneak(),
+            press(),
+            awayFromWall(.3),
+            trueUp(),
+            drive("Second Forward", forwardDir(), 1.75),
+            trueUp(),
+            toWhiteLine("To White Line", forwardDir()),
+            trueUp(),
+            sneak(),
+            press(),
+            awayFromWall(.5),
+            rot("Tun to Shoot",-45,-135),
+            drive("Towards Vortex", Math.PI, 1.0),
+            //shoot(),
+            drive("Back to center", Math.PI, 2.0),
+    };
 
     private Step[] quick_beacons = new Step[] {
             drive("Initial Forward", forwardDir(), 2.0),
@@ -63,10 +84,12 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             rot("Turn towards beacon", 130, 50),
             drive("Drive to Beacon", forwardDir(), 2.3),
             turnParallel("Turn parallel", 50, -50),
+            waitToSeeIfItCanSeeTarget(),
             goLeftIfYouCanNotSeeTheTarget(),
+            waitToSeeIfItCanSeeTarget(),
             approach(),
             press(),
-            awayFromWall(.5),
+            awayFromWall(.75),
             trueToWall(),
             drive("Next beacon", forwardDir(), 2.0),
             waitToSeeIfItCanSeeTarget(),
@@ -79,14 +102,14 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             drive("Back to ramp", forwardDir() + Math.PI, 4.0)
     };
 
-    private Step[] basic_steps = han_solo;
+    private Step[] basic_steps = blind_man;
 
     private ArrayList<Step> steps = new ArrayList<>();
 
     // TODO: Figure out the ordering re: shoot first + diagonal start v. shoot last
     @Override
     public void runOpMode() throws InterruptedException {
-        initRobot();
+        initRobot(false);
         Controller c = new Controller(gamepad1);
         boolean debug_mode = false;
         while (! isStarted()) {
@@ -97,20 +120,19 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             if (c.YOnce()) {
                 debug_mode = ! debug_mode;
             }
-            /*
             // Perhaps we'll bring Sonic back at s
             if (c.XOnce()) {
                 if (basic_steps == han_solo) {
-                    basic_steps = quick_beacons;
+                    basic_steps = blind_man;
                 } else {
                     basic_steps = han_solo;
                 }
             }
-            */
+
             telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
             telemetry.addData("(b) Shooting", shoot_no);
             telemetry.addData("(y) Debug Mode", debug_mode ? "*** ON ***" : "Off");
-            // telemetry.addData("(x) Strategy", han_solo == basic_steps ? "Han Solo" : "Sonic");
+            telemetry.addData("(x) Strategy", han_solo == basic_steps ? "Han Solo" : "Chirrut");
             telemetry.addData("Time", getRuntime());
             telemetry.update();
         }
@@ -186,12 +208,43 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         telemetry.update();
     }
 
+    public Step trueUp() {
+        return new Step("True Up") {
+            @Override
+            public void act() throws InterruptedException {
+                turnToAngle(0);
+            }
+        };
+    }
+
+    public Step toWhiteLine(String name, final double direction) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                if (allianceColor() == AllianceColor.BLUE) {
+                    driveToWhiteLineBackSensor(direction);
+                } else {
+                    driveToWhiteLine(direction);
+                }
+                driveToWhiteLineSlow(-direction);
+            }
+        };
+    }
 
     public Step drive(String name, final double direction, final double tiles) {
         return new Step(name) {
             @Override
             public void act() throws InterruptedException {
                 driveDirectionTilesFast(direction, tiles);
+            }
+        };
+    }
+
+    public Step sneak() {
+        return new Step("Sneak to beacon") {
+            @Override
+            public void act() throws InterruptedException {
+                sneakToBeacons();
             }
         };
     }
@@ -292,11 +345,11 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         return new Step("waitToSeeIfItCanSeeTarget"){
             @Override
             public void act() throws InterruptedException{
-                for (int i = 0; i < 10; ++i) {
+                for (int i = 0; i < 40; ++i) {
                     if (vision.canSeeWall()) {
                         break;
                     }
-                    sleep(100);
+                    sleep(200);
                 }
             }
         };

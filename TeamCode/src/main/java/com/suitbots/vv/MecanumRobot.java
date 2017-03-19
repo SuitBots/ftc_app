@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.MagneticFlux;
 
@@ -28,6 +31,10 @@ public class MecanumRobot {
     private ColorSensor color;
     private Telemetry telemetry;
     private DeviceInterfaceModule dim;
+    private OpticalDistanceSensor odsf; //optical sensor front and back
+    private OpticalDistanceSensor odsb;
+    private TouchSensor touch;
+
 
     public MecanumRobot(HardwareMap hardwareMap, Telemetry _telemetry) {
         telemetry = _telemetry;
@@ -38,6 +45,7 @@ public class MecanumRobot {
         rr = hardwareMap.dcMotor.get("rr");
         flipper = hardwareMap.dcMotor.get("flipper");
         harvester = hardwareMap.dcMotor.get("harvester");
+        touch = hardwareMap.touchSensor.get("touch");
 
         pf = new LazyCR(hardwareMap.crservo.get("pf"));
         pr = new LazyCR(hardwareMap.crservo.get("pr"));
@@ -46,6 +54,8 @@ public class MecanumRobot {
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
         color = hardwareMap.colorSensor.get("color");
         color.enableLed(false);
+        odsf = hardwareMap.opticalDistanceSensor.get("linef");
+        odsb = hardwareMap.opticalDistanceSensor.get("lineb");
 
         rr.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -120,7 +130,7 @@ public class MecanumRobot {
         @Override
         public void run() {
             try {
-                Thread.sleep(500);
+                Thread.sleep(1000);
             } catch(InterruptedException ie) {
                 // pass
             }
@@ -130,7 +140,7 @@ public class MecanumRobot {
 
     private void pressButton(final LazyCR servo) throws InterruptedException {
         servo.setPower(-1.0);
-        Thread.sleep(500);
+        Thread.sleep(1000);
         servo.setPower(0.0);
         Thread.sleep(250);
         servo.setPower(1.0);
@@ -158,12 +168,18 @@ public class MecanumRobot {
         telemetry.addData("Flipping", flipping ? "Yes" : "No");
         telemetry.addData("Gyro",  gyro.getIntegratedZValue());
         telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
-        telemetry.addData("Encoders", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
+        telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
                 lf.getCurrentPosition(),
                 lr.getCurrentPosition(),
                 rf.getCurrentPosition(),
                 rr.getCurrentPosition(),
                 flipper.getCurrentPosition()));
+        telemetry.addData("EncodersT", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
+                lf.getTargetPosition(),
+                lr.getTargetPosition(),
+                rf.getTargetPosition(),
+                rr.getTargetPosition(),
+                flipper.getTargetPosition()));
     }
 
     // The Flipper
@@ -239,6 +255,18 @@ public class MecanumRobot {
     }
 
     // Sensors
+
+    public boolean touchSensorPressed() {
+        return touch.isPressed();
+    }
+
+    public double getLineLightReadingF() {
+        return odsf.getRawLightDetected();
+    }
+
+    public double getLineLightReadingB() {
+        return odsb.getRawLightDetected();
+    }
 
     public boolean isCalibrating(){  return gyro.isCalibrating(); }
     public void resetGyro() {
@@ -332,6 +360,7 @@ public class MecanumRobot {
     public void stopDriveMotors() {
         lf.setPower(0.0);
         lr.setPower(0.0);
+
         rf.setPower(0.0);
         rr.setPower(0.0);
     }
@@ -371,18 +400,20 @@ public class MecanumRobot {
         }
     }
 
+    public static final int ENCODERS_CLOSE_ENOUGH = 10;
     private boolean busy(DcMotor... ms) {
-        int count = 0;
+        int total = 0;
         for (DcMotor m : ms) {
-            if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && m.isBusy()) {
-                ++count;
+            if (m.isBusy()) {
+                total += Math.abs(m.getCurrentPosition() - m.getTargetPosition());
             }
         }
-        return count == ms.length;
+        return total > ENCODERS_CLOSE_ENOUGH;
     }
 
     public boolean driveMotorsBusy() {
         return busy(lf, lr, rf, rr);
+
     }
 
     public void encoderDriveTiles(double direction, double tiles) {
@@ -390,7 +421,6 @@ public class MecanumRobot {
     }
 
     public void encoderDriveInches(double direction, double inches) {
-        direction %= Math.PI * 2.0;
         final Wheels w = getWheels(direction, 1.0, 0.0);
         final int ticks = (int)(inches * TICKS_PER_INCH);
         encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);

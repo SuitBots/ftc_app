@@ -22,7 +22,7 @@ public class SimpleShooter extends AutonomousBase {
                 shoot_particles = (1 + shoot_particles) % 3;
             }
             if (c.BOnce()) {
-                wait = (wait + 1000) % 10000;
+                wait = (wait + 1000) % 21000;
             }
             telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
             telemetry.addData("(a) Shooting", shoot_particles);

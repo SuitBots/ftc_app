@@ -25,7 +25,7 @@ public class WallDistanceTest extends AutonomousBase {
             if (g.Y()) distance += 5.0;
 
             if (g.rightBumperOnce()) {
-                achieveWallDistance(distance, AllianceColor.RED);
+                // achieveWallDistance(distance, AllianceColor.RED);
             }
 
             double lx = gamepad1.left_stick_x, ly = - gamepad1.left_stick_y;
