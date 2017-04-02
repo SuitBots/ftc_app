@@ -26,13 +26,11 @@ public class DriveHelper {
             v_theta = Math.sqrt(lx * lx + ly * ly);
             v_rotation = g.right_stick_x;
 
-            if (g.rightBumper()) v_theta /= 2.0;
-            if (g.leftBumper()) v_theta /= 2.0;
         }
 
         // If A or B are pressed, rotate drive motion by 90 degrees for more effective
         // teleop button pushing.
-        if (g.A() || g.B()) {
+        if (g.leftBumper() || g.rightBumper()) {
             theta += Math.PI / 2.0;
         }
 

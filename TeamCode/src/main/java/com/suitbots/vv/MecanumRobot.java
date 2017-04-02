@@ -3,6 +3,7 @@ package com.suitbots.vv;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.robotcore.eventloop.SyncdDevice;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -31,8 +32,7 @@ public class MecanumRobot {
     private ColorSensor color;
     private Telemetry telemetry;
     private DeviceInterfaceModule dim;
-    private OpticalDistanceSensor odsf; //optical sensor front and back
-    private OpticalDistanceSensor odsb;
+    private OpticalDistanceSensor ods;
     private TouchSensor touch;
 
 
@@ -54,8 +54,7 @@ public class MecanumRobot {
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
         color = hardwareMap.colorSensor.get("color");
         color.enableLed(false);
-        odsf = hardwareMap.opticalDistanceSensor.get("linef");
-        odsb = hardwareMap.opticalDistanceSensor.get("lineb");
+        ods = hardwareMap.opticalDistanceSensor.get("line");
 
         rr.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -120,12 +119,20 @@ public class MecanumRobot {
             setFlipperPower(0.0);
         }
 
+        if (collect_light_meter_info) {
+            total_light_meter_reading += ods.getRawLightDetected();
+            light_meter_readings_tooken++;
+        }
+
+        // manageEncoderAccelleration(lf, lr, rf, rr);
     }
 
     private class Stopper implements Runnable {
-        private LazyCR servo;
-        public Stopper(LazyCR s) {
+        private final LazyCR servo;
+        private final long time;
+        public Stopper(LazyCR s, long _time) {
             servo = s;
+            time = _time;
         }
         @Override
         public void run() {
@@ -138,22 +145,27 @@ public class MecanumRobot {
         }
     }
 
+    private static final long MAX_PRESS_TIME = 1000;
     private void pressButton(final LazyCR servo) throws InterruptedException {
         servo.setPower(-1.0);
-        Thread.sleep(1000);
-        servo.setPower(0.0);
-        Thread.sleep(250);
+        final long t0 = System.currentTimeMillis();
+        boolean activated = false;
+        while (MAX_PRESS_TIME > (System.currentTimeMillis() - t0)) {
+            if (getColorAlpha() < 1) {
+                activated = true;
+                break;
+            }
+            Thread.sleep(10);
+        }
+        final long t1 = System.currentTimeMillis();
+        if(! activated) {
+            servo.setPower(0.0);
+            Thread.sleep(250);
+        }
         servo.setPower(1.0);
 
-        Thread th = new Thread(new Stopper(servo));
+        Thread th = new Thread(new Stopper(servo, t0 - t1));
         th.start();
-        /*
-        // Put this back in if the thready button pusher doesn't work.
-        Thread.sleep(1000);
-        servo.setPower(0.0);
-        */
-        // TODO: make sure we're looping everywhere so we can get going before 2.5 seconds is up
-        // stoppables.add(new ButtonPresser(servo));
     }
 
     public void pressFrontButton() throws InterruptedException {
@@ -168,6 +180,7 @@ public class MecanumRobot {
         telemetry.addData("Flipping", flipping ? "Yes" : "No");
         telemetry.addData("Gyro",  gyro.getIntegratedZValue());
         telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
+        telemetry.addData("Light", getLineLightReading());
         telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
                 lf.getCurrentPosition(),
                 lr.getCurrentPosition(),
@@ -214,12 +227,6 @@ public class MecanumRobot {
             return true;
         }
 
-        /*
-        if (FLIPPER_CLOSE_ENOUGH >= Math.abs(ONE_FILPPER_REVOLUTION - flipper.getCurrentPosition())) {
-            return true;
-        }
-        */
-
         return false;
     }
 
@@ -260,12 +267,8 @@ public class MecanumRobot {
         return touch.isPressed();
     }
 
-    public double getLineLightReadingF() {
-        return odsf.getRawLightDetected();
-    }
-
-    public double getLineLightReadingB() {
-        return odsb.getRawLightDetected();
+    public double getLineLightReading() {
+        return ods.getRawLightDetected();
     }
 
     public boolean isCalibrating(){  return gyro.isCalibrating(); }
@@ -372,14 +375,14 @@ public class MecanumRobot {
     private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
     private static final double ENCODER_DRIVE_POWER = .3; // .35;
 
-    private double encoder_drive_power = -1.0;
+    private double encoder_drive_power = ENCODER_DRIVE_POWER;
 
     void setEncoderDrivePower(double p) {
         encoder_drive_power = p;
     }
 
     void clearEncoderDrivePower() {
-        encoder_drive_power = -1.0;
+        encoder_drive_power = ENCODER_DRIVE_POWER;
     }
 
     private void setMode(DcMotor.RunMode mode, DcMotor... ms) {
@@ -445,19 +448,86 @@ public class MecanumRobot {
         setTargetPosition(lrt, lr);
         setTargetPosition(rrt, rr);
         setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lr, rr);
-        if (0.0 < encoder_drive_power) {
-            setPower(encoder_drive_power, lf, lr, rf, rr);
-        } else {
-            setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
+        setPower(encoder_drive_power, lf, lr, rf, rr);
+    }
+
+
+    // All motors start out at ENCODER_DRIVE_POWER power. Once we get one revolution
+    // in, go ahead and speed up. When we get within a revolution of the end of our
+    // run, start slowing down. The idea here is to avoid slip.
+    private static final int ACCEL_THRESHOLD = 1120 * 24 / 18; // one wheel revolution, for starters
+    private boolean atSteadyState = false;
+    private void manageEncoderAccelleration(DcMotor... ms) {
+        if (encoder_drive_power > ENCODER_DRIVE_POWER) {
+            int current = 0, remaining = 0, count = 0;
+
+            ArrayList<DcMotor> driving = new ArrayList<>();
+            for (DcMotor m : ms) {
+                if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && 0 != m.getTargetPosition()) {
+                    driving.add(m);
+                    current += m.getCurrentPosition();
+                    remaining += Math.abs(m.getCurrentPosition() - m.getTargetPosition());
+                    count++;
+                }
+            }
+
+            if (0 < driving.size()) {
+                current /= count;
+                remaining /= count;
+
+                double power = encoder_drive_power;
+                double dp = encoder_drive_power - ENCODER_DRIVE_POWER;
+
+                if (remaining < ACCEL_THRESHOLD) {
+                    atSteadyState = false;
+                    power = ENCODER_DRIVE_POWER + dp * ((double)remaining / (double)ACCEL_THRESHOLD);
+                    for (DcMotor m : driving) {
+                        m.setPower(power);
+                    }
+                } else if (current < ACCEL_THRESHOLD) {
+                    atSteadyState = false;
+                    power = ENCODER_DRIVE_POWER + dp * ((double)current / (double)ACCEL_THRESHOLD);
+                    for (DcMotor m : driving) {
+                        m.setPower(power);
+                    }
+                }  else {
+                    if (! atSteadyState) {
+                        for (DcMotor m : driving) {
+                            m.setPower(power);
+                        }
+                        atSteadyState = true;
+                    }
+                }
+
+            }
         }
     }
+
+
 
     public void resetDriveMotorModes() {
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
 
+    private double total_light_meter_reading = 0.0;
+    private int light_meter_readings_tooken = 0;
+    private boolean collect_light_meter_info = false;
+
+    public void startCollectingLightMeter() {
+        collect_light_meter_info = true;
+        total_light_meter_reading = 0.0;
+        light_meter_readings_tooken = 0;
+    }
+    public void stopCollectingLightMeter() {
+        collect_light_meter_info = false;
+    }
+    public double getAverageLightMeter() {
+        return total_light_meter_reading / light_meter_readings_tooken;
+    }
+
     public void disableEncoders() {
         setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER, lf, lr, rf, rr);
     }
 }
+

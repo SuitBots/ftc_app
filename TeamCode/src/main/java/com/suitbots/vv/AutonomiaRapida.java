@@ -1,14 +1,8 @@
 package com.suitbots.vv;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Locale;
-
-public abstract class AutonomiaRapida extends AutonomousBase {
+public abstract class AutonomiaRapida extends SteppedAutonomous {
     private int shoot_no = 2;
 
     public abstract AllianceColor allianceColor();
@@ -30,18 +24,14 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         return AllianceColor.RED == allianceColor() ? 2.0 * Math.PI : Math.PI;
     }
 
-    abstract class Step {
-        private String name;
-        public Step(String n) { name = n; }
-        public String getName() { return name; }
-
-        abstract public void act() throws InterruptedException;
-    }
-
     private Step[] blind_man = new Step[] {
+            // startHarvester(),
+            startGettingLightData(),
             drive("Initial Diagonal", leftForwardDir(), 4.5),
             trueUp(),
+            stopGettingLightData(),
             toWhiteLine("To White Line", forwardDir()),
+            toWhiteLineSlow("To White Line", Math.PI + forwardDir()),
             trueUp(),
             sneak(),
             press(),
@@ -50,162 +40,108 @@ public abstract class AutonomiaRapida extends AutonomousBase {
             drive("Second Forward", forwardDir(), 1.75),
             trueUp(),
             toWhiteLine("To White Line", forwardDir()),
+            toWhiteLineSlow("To White Line", Math.PI + forwardDir()),
             trueUp(),
             sneak(),
             press(),
             awayFromWall(.5),
             rot("Tun to Shoot",-45,-135),
             drive("Towards Vortex", Math.PI, 1.0),
-            //shoot(),
+            shoot(),
+    };
+
+    private Step[] park_in_center = new Step[] {
             drive("Back to center", Math.PI, 2.0),
     };
 
-    private Step[] quick_beacons = new Step[] {
-            drive("Initial Forward", forwardDir(), 2.0),
-            drive("Initial Left", leftForwardDir(), 1.0),
-            approach(),
-            press(),
-            awayFromWall(.75),
-            trueToWall(),
-            drive("Back", forwardDir(), 2.0),
-            approach(),
-            press(),
-            awayFromWall(.75),
-            trueToWall(),
-            rot("Turn towards bucket", -45, -135),
-            drive("To shoot", Math.PI, Math.sqrt(2.0)),
-            shoot(),
-            drive("To Center", Math.PI, Math.sqrt(2.0))
-    };
-
-    private Step[] han_solo = new Step[] {
-            drive("Initial Forward",  Math.PI, .65),
-            shoot(),
-            rot("Turn towards beacon", 130, 50),
-            drive("Drive to Beacon", forwardDir(), 2.3),
-            turnParallel("Turn parallel", 50, -50),
-            waitToSeeIfItCanSeeTarget(),
-            goLeftIfYouCanNotSeeTheTarget(),
-            waitToSeeIfItCanSeeTarget(),
-            approach(),
-            press(),
-            awayFromWall(.75),
-            trueToWall(),
-            drive("Next beacon", forwardDir(), 2.0),
-            waitToSeeIfItCanSeeTarget(),
-            goLeftIfYouCanNotSeeTheTarget(),
-            waitToSeeIfItCanSeeTarget(),
-            approach(),
-            press(),
-            awayFromWall(.75),
-            trueToWall(),
-            drive("Back to ramp", forwardDir() + Math.PI, 4.0)
+    private Step[] park_on_corner = new Step[] {
+            rot("Turn to corner", 45, -45),
+            drive("Park on corner", Math.PI, 2.0),
     };
 
     private Step[] basic_steps = blind_man;
 
-    private ArrayList<Step> steps = new ArrayList<>();
+    private enum Parking { Center, Corner };
 
     // TODO: Figure out the ordering re: shoot first + diagonal start v. shoot last
     @Override
     public void runOpMode() throws InterruptedException {
-        initRobot(false);
-        Controller c = new Controller(gamepad1);
-        boolean debug_mode = false;
-        while (! isStarted()) {
-            c.update();
-            if (c.BOnce()) {
-                shoot_no = (1 + shoot_no) % 3;
-            }
-            if (c.YOnce()) {
-                debug_mode = ! debug_mode;
-            }
-            // Perhaps we'll bring Sonic back at s
-            if (c.XOnce()) {
-                if (basic_steps == han_solo) {
-                    basic_steps = blind_man;
-                } else {
-                    basic_steps = han_solo;
+        try {
+            Parking parking = Parking.Center;
+            initRobot(false);
+            Controller c = new Controller(gamepad1);
+            boolean debug_mode = false;
+            while (!isStarted()) {
+                c.update();
+                if (c.BOnce()) {
+                    shoot_no = (1 + shoot_no) % 3;
                 }
+                if (c.YOnce()) {
+                    debug_mode = !debug_mode;
+                }
+                if (c.XOnce()) {
+                    parking = parking == Parking.Center ? Parking.Corner : Parking.Center;
+                }
+
+                telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
+                telemetry.addData("(b) Shooting", shoot_no);
+                telemetry.addData("(x) Parking", parking.toString());
+                telemetry.addData("(y) Debug Mode", debug_mode ? "*** ON ***" : "Off");
+                telemetry.addData("Time", getRuntime());
+                telemetry.update();
             }
 
-            telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
-            telemetry.addData("(b) Shooting", shoot_no);
-            telemetry.addData("(y) Debug Mode", debug_mode ? "*** ON ***" : "Off");
-            telemetry.addData("(x) Strategy", han_solo == basic_steps ? "Han Solo" : "Chirrut");
-            telemetry.addData("Time", getRuntime());
+            setSteps(basic_steps);
+
+            if (Parking.Center == parking) {
+                appendSteps(park_in_center);
+            } else {
+                appendSteps(park_on_corner);
+            }
+
+            onStart();
+            robot.resetGyro();
+
+            if (debug_mode) {
+                runDebugMode();
+            } else {
+                runAutoMode();
+            }
+        } catch(UnsupportedOperationException uoe) {
+            telemetry.addData("Exception", uoe.toString());
+            int stackCount = 0;
+            StackTraceElement[] stack = uoe.getStackTrace();
+            for (StackTraceElement te : stack) {
+                telemetry.addData("Stack " + stackCount++, te.getFileName() + ":" + te.getLineNumber());
+            }
             telemetry.update();
-        }
-
-        steps.addAll(Arrays.asList(basic_steps));
-
-        onStart();
-        robot.resetGyro();
-
-        if (debug_mode) {
-            runDebugMode();
-        } else {
-            runAutoMode();
+            while (opModeIsActive()) {
+                idle();
+            }
         }
 
         onStop();
     }
 
-    private void runDebugMode() throws InterruptedException {
-        int i = 0;
-        double t0 = getRuntime(), t1 = getRuntime();
-        String prev = "None";
-        Controller c = new Controller(gamepad1);
-        while (opModeIsActive()) {
-            c.update();
-            if (c.dpadUpOnce()) {
-                i++;
-            } else if (c.dpadDownOnce()) {
-                i--;
-            } else if (c.leftBumperOnce()) {
-                robot.stopDriveMotors();
-                t0 = getRuntime();
-                steps.get(i++).act();
-                t1 = getRuntime();
-            } else {
-                // We don't need dpad mode here, and we don't want to throw off the
-                // autonomous by moving a little bit after a mode switch
-                if (! (c.dpadDown() || c.dpadUp() || c.dpadLeft() || c.dpadRight())) {
-                    DriveHelper.drive(c, robot);
-                }
-            }
-            if (i < 0) {
-                i = steps.size() - 1;
-            } else if (i >= steps.size()) {
-                i = 0;
-            }
 
-            telemetry.addData("Current", steps.get(i).getName());
-            telemetry.addData("Previous", String.format(Locale.US, "%s: %.2f", prev, t1 - t0));
-            telemetry.update();
-
-        }
+    public Step startGettingLightData() {
+        return new Step("Start Getting Light Data") {
+            @Override
+            public void act() throws InterruptedException {
+                robot.startCollectingLightMeter();
+            }
+        };
     }
 
-    private void runAutoMode() throws InterruptedException {
-        double t0 = getRuntime();
-        double begin = 50;
-        String prev = "None";
-        for(Step s : steps) {
-            if (! opModeIsActive()) {
-                break;
+    public Step stopGettingLightData() {
+        return new Step("Stop Getting Light Data") {
+            @Override
+            public void act() throws InterruptedException {
+                robot.startCollectingLightMeter();
+                telemetry.addData("Light Average", robot.getAverageLightMeter());
+                telemetry.update();
             }
-            telemetry.addData("Last", String.format(Locale.US, "%s: %.2f", prev, getRuntime() - t0));
-            prev = s.getName();
-            t0 = getRuntime();
-            telemetry.addData("Phase", prev);
-            telemetry.update();
-            s.act();
-        }
-        telemetry.addData("Last", String.format(Locale.US, "%s: %.2f", prev, getRuntime() - t0));
-        telemetry.addData("Phase", "Done");
-        telemetry.addData("Total", getRuntime() - begin);
-        telemetry.update();
+        };
     }
 
     public Step trueUp() {
@@ -221,12 +157,16 @@ public abstract class AutonomiaRapida extends AutonomousBase {
         return new Step(name) {
             @Override
             public void act() throws InterruptedException {
-                if (allianceColor() == AllianceColor.BLUE) {
-                    driveToWhiteLineBackSensor(direction);
-                } else {
-                    driveToWhiteLine(direction);
-                }
-                driveToWhiteLineSlow(-direction);
+                driveToWhiteLine(direction);
+            }
+        };
+    }
+
+    public Step toWhiteLineSlow(String name, final double direction) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                driveToWhiteLineSlow(direction);
             }
         };
     }

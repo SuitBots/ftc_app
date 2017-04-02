@@ -169,34 +169,16 @@ public abstract class AutonomousBase extends LinearOpMode  {
         driveToWhiteLine(dir, WHITE_LINE_SPEED);
     }
 
-    protected void driveToWhiteLineBackSensor(double dir) throws InterruptedException {
-        driveToWhiteLineBackSensor(dir, WHITE_LINE_SPEED);
-    }
-
-    protected void driveToWhiteLineBackSensorSlow(double dir) throws InterruptedException {
-        driveToWhiteLineBackSensor(dir, WHITE_LINE_SPEED / 2.0);
-    }
-
-    protected void driveToWhiteLineBackSensor(double dir, double speed) throws InterruptedException {
-        driveToWhiteLine(dir, speed, true);
-    }
-
     protected void driveToWhiteLineSlow(double dir) throws InterruptedException {
         driveToWhiteLine(dir, WHITE_LINE_SPEED / 2.0);
     }
 
-    private static final double LINE_LIGHT_READING_MIN = 4.0;
-    protected void driveToWhiteLine(double dir, double speed) throws InterruptedException {
-        driveToWhiteLine(dir, speed, true);
-    }
-
-    private double ods(boolean front) {
-        return front ? robot.getLineLightReadingF() : robot.getLineLightReadingB();
-    }
-
-    private void driveToWhiteLine(double dir, double speed, boolean frontSensor) throws InterruptedException {
+    private static final double LINE_LIGHT_READING_MIN = 3.5;
+    private static final double LINE_READING_SCALE_FACTOR = 3.0;
+    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
         robot.drive(dir, speed, 0.0);
-        while(opModeIsActive() && ods(frontSensor) < LINE_LIGHT_READING_MIN) {
+        final double line_limit = LINE_LIGHT_READING_MIN; // robot.getAverageLightMeter() * LINE_READING_SCALE_FACTOR;
+        while(opModeIsActive() && robot.getLineLightReading() < line_limit) {
             robot.loop();
             idle();
         }
@@ -204,42 +186,28 @@ public abstract class AutonomousBase extends LinearOpMode  {
 
     }
 
-    private final double SNEAKY_SPEED = .2;
-    protected void sneakToBeacons(){
+    private static final double SNEAKY_SPEED = .2;
+    private static final double SNEAKY_SCALE = 0.1;
+    protected void sneakToBeacons() throws InterruptedException {
         while(! robot.touchSensorPressed()){
             final double orientation = robot.getHeading();
-            robot.drive(pressersDir(), SNEAKY_SPEED, orientation / 50.0);
+            robot.drive(pressersDir(), SNEAKY_SPEED, orientation * SNEAKY_SCALE);
+            idle(); // If this all of the sudden stops working, drop the idle!!
         }
         robot.stopDriveMotors();
     }
 
-    private static final double SLOW_LINE_SPEED = .2;
+    protected void sneakToBeaconAssumingCenteredRobot() {
+        while (! robot.touchSensorPressed()) {
+
+        }
+    }
+
+    private static final double SLOW_LINE_SPEED = .1;
     protected void driveForwardToWhiteLine() throws InterruptedException {
         // Let's assume that we're going to overshoot the first time
         driveToWhiteLine(forwardDir(), SLOW_LINE_SPEED);
     }
-
-    /*
-    // Assumes that you're parallel to the wall, range sensor facing it
-    protected void achieveWallDistance(double distance, AllianceColor alliance) throws InterruptedException {
-        for (int i = 0; i < 4; ++i) {
-            if (vision.canSeeWall()) {
-                break;
-            }
-            sleep(100);
-        }
-        while (vision.canSeeWall()) {
-            robot.loop();
-            final double d = vision.getXOffset();
-            if (.5 >= Math.abs(d - distance)) {
-                break;
-            }
-            final double direction = d > distance ? pressersDir() : (pressersDir() + Math.PI);
-            robot.drive(direction, 0.1, 0.0);
-            idle();
-        }
-        robot.stopDriveMotors();
-    } */
 
     private BeaconFinder finder = null;
 
@@ -254,4 +222,11 @@ public abstract class AutonomousBase extends LinearOpMode  {
         int rot = (int) vision.getOrientation();
         turn(rot);
     }
+
+//    public void averageColor() {
+//         private double c =0; //c=count
+//        for(){
+//            c++;
+//        }
+//    }
 }
