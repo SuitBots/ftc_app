@@ -48,6 +48,7 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
             rot("Tun to Shoot",-45,-135),
             drive("Towards Vortex", Math.PI, 1.0),
             shoot(),
+            //random stuff random stuff random stuff random stuff random stuff random stuff random stuff ranndom stuff random stuff random stuff ramdom stuff why random stuff am random stuff I random stuff doing random stuff this random stuff random stuff ??????? random stuff
     };
 
     private Step[] park_in_center = new Step[] {

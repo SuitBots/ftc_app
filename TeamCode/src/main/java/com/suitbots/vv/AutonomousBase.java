@@ -187,7 +187,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
     }
 
     private static final double SNEAKY_SPEED = .2;
-    private static final double SNEAKY_SCALE = 0.1;
+    private static final double SNEAKY_SCALE = 0.01;
     protected void sneakToBeacons() throws InterruptedException {
         while(! robot.touchSensorPressed()){
             final double orientation = robot.getHeading();
