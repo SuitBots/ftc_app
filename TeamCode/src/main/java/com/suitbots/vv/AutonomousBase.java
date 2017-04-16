@@ -129,7 +129,7 @@ public abstract class AutonomousBase extends LinearOpMode  {
         robot.fire();
         final long t0 = System.currentTimeMillis();
         while (robot.isFlipping()) {
-            robot.loop();
+            // robot.loop();
             final long t1 = System.currentTimeMillis();
             if (timeout < (t1 - t0)) {
                 break;
@@ -173,12 +173,12 @@ public abstract class AutonomousBase extends LinearOpMode  {
         driveToWhiteLine(dir, WHITE_LINE_SPEED / 2.0);
     }
 
-    private static final double LINE_LIGHT_READING_MIN = 3.5;
+    private static final double LINE_LIGHT_READING_MIN = 4.0;
     private static final double LINE_READING_SCALE_FACTOR = 3.0;
     private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
         robot.drive(dir, speed, 0.0);
         final double line_limit = LINE_LIGHT_READING_MIN; // robot.getAverageLightMeter() * LINE_READING_SCALE_FACTOR;
-        while(opModeIsActive() && robot.getLineLightReading() < line_limit) {
+        while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
             robot.loop();
             idle();
         }

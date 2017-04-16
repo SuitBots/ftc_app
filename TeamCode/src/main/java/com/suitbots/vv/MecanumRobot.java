@@ -112,6 +112,33 @@ public class MecanumRobot {
 
     private ArrayList<Stoppable> stoppables = new ArrayList<>();
 
+    private int averageRemainingTicks(DcMotor... ms) {
+        int total = 0;
+        int count = 0;
+        for (DcMotor m : ms) {
+            if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && 100 < Math.abs(m.getTargetPosition())) {
+                total += Math.abs(m.getTargetPosition() - m.getCurrentPosition());
+                count += 1;
+            }
+        }
+        return 0 == count ? 0 : total / count;
+    }
+
+    private static int SLOW_DOWN_HERE = 1120;
+    private static double ARBITRARY_SLOW_SPEED = .3;
+    private boolean slowedDown = false;
+    private void encoderDriveSlowdown() {
+        if (! slowedDown) {
+            if (lf.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
+                int remaining = averageRemainingTicks(lf, lr, rf, rr);
+                if (remaining < SLOW_DOWN_HERE) {
+                    slowedDown = true;
+                    setPower(ARBITRARY_SLOW_SPEED, lf, lr, rf, rr);
+                }
+            }
+        }
+    }
+
     // Things that need to happen in the teleop loop to accommodate long-running
     // tasks like running the flipper one at a time.
     public void loop() {
@@ -124,6 +151,8 @@ public class MecanumRobot {
             light_meter_readings_tooken++;
         }
 
+
+        encoderDriveSlowdown();
         // manageEncoderAccelleration(lf, lr, rf, rr);
     }
 
@@ -181,6 +210,7 @@ public class MecanumRobot {
         telemetry.addData("Gyro",  gyro.getIntegratedZValue());
         telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
         telemetry.addData("Light", getLineLightReading());
+        telemetry.addData("Encoder Remain", averageRemainingTicks(lf, lr, rf, rr));
         telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
                 lf.getCurrentPosition(),
                 lr.getCurrentPosition(),
@@ -223,7 +253,7 @@ public class MecanumRobot {
             return false;
         }
 
-        if (! flipper.isBusy()) {
+        if (flipper.getMode() == DcMotor.RunMode.RUN_TO_POSITION && ! flipper.isBusy()) {
             return true;
         }
 
@@ -408,7 +438,9 @@ public class MecanumRobot {
         int total = 0;
         for (DcMotor m : ms) {
             if (m.isBusy()) {
-                total += Math.abs(m.getCurrentPosition() - m.getTargetPosition());
+                final int c = Math.abs(m.getCurrentPosition());
+                final int t = Math.abs(m.getTargetPosition());
+                total += Math.max(0, t - c);
             }
         }
         return total > ENCODERS_CLOSE_ENOUGH;
@@ -449,6 +481,7 @@ public class MecanumRobot {
         setTargetPosition(rrt, rr);
         setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lr, rr);
         setPower(encoder_drive_power, lf, lr, rf, rr);
+        slowedDown = false;
     }
 
 

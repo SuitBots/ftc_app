@@ -24,13 +24,14 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
         return AllianceColor.RED == allianceColor() ? 2.0 * Math.PI : Math.PI;
     }
 
-    private Step[] blind_man = new Step[] {
+    private Step[] sonic = new Step[] {
             // startHarvester(),
-            startGettingLightData(),
-            drive("Initial Diagonal", leftForwardDir(), 4.5),
+            // startGettingLightData(),
+            drive("Initial Diagonal", leftForwardDir(), 4.0),
             trueUp(),
-            stopGettingLightData(),
+            // stopGettingLightData(),
             toWhiteLine("To White Line", forwardDir()),
+            pause(),
             toWhiteLineSlow("To White Line", Math.PI + forwardDir()),
             trueUp(),
             sneak(),
@@ -40,29 +41,56 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
             drive("Second Forward", forwardDir(), 1.75),
             trueUp(),
             toWhiteLine("To White Line", forwardDir()),
+            pause(),
             toWhiteLineSlow("To White Line", Math.PI + forwardDir()),
             trueUp(),
             sneak(),
             press(),
             awayFromWall(.5),
             rot("Tun to Shoot",-45,-135),
-            drive("Towards Vortex", Math.PI, 1.0),
+            drive("Towards Vortex", Math.PI, 1.5),
             shoot(),
+            drive("Park in Center", Math.PI, 1.0)
             //random stuff random stuff random stuff random stuff random stuff random stuff random stuff ranndom stuff random stuff random stuff ramdom stuff why random stuff am random stuff I random stuff doing random stuff this random stuff random stuff ??????? random stuff
     };
 
-    private Step[] park_in_center = new Step[] {
-            drive("Back to center", Math.PI, 2.0),
+    private Step[] regicide = new Step[] {
+            drive("Initial Fwd", Math.PI, 1.8),
+            shoot(),
+            drive("Next Fwd", Math.PI, 1.9),
+            rot("Towards", 45, -45),
+            delayTo("No penalty", 10500),
+            driveFrantic("Final Fwd", Math.PI, 3.2)
     };
 
-    private Step[] park_on_corner = new Step[] {
-            rot("Turn to corner", 45, -45),
-            drive("Park on corner", Math.PI, 2.0),
+    private Step[] simpleShooter = new Step[] {
+            drive("Initial Fwd", Math.PI, 1.8),
+            shoot(),
+            drive("Next Fwd", Math.PI, 1.9)
     };
 
-    private Step[] basic_steps = blind_man;
+
+    private Step[] basic_steps = sonic;
 
     private enum Parking { Center, Corner };
+
+    private static class Strategy {
+        public Strategy(String n, Step[] ss) {
+            name = n;
+            steps = ss;
+        }
+        public String name;
+        public Step[] steps;
+    }
+
+    private Strategy strat(String name, Step[] steps) {
+        return new Strategy(name, steps);
+    }
+
+    private Strategy[] strats = new Strategy[] {
+            strat("Sonic", sonic),
+            strat("Regicide", regicide)
+    };
 
     // TODO: Figure out the ordering re: shoot first + diagonal start v. shoot last
     @Override
@@ -72,6 +100,7 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
             initRobot(false);
             Controller c = new Controller(gamepad1);
             boolean debug_mode = false;
+            int strat = 0;
             while (!isStarted()) {
                 c.update();
                 if (c.BOnce()) {
@@ -81,27 +110,23 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
                     debug_mode = !debug_mode;
                 }
                 if (c.XOnce()) {
-                    parking = parking == Parking.Center ? Parking.Corner : Parking.Center;
+                    strat = (1 + strat) % strats.length;
                 }
 
                 telemetry.addData("Ready", robot.isCalibrating() ? "no" : ">>> YES <<<");
                 telemetry.addData("(b) Shooting", shoot_no);
-                telemetry.addData("(x) Parking", parking.toString());
+                telemetry.addData("(x) Strategy", strats[strat].name);
                 telemetry.addData("(y) Debug Mode", debug_mode ? "*** ON ***" : "Off");
                 telemetry.addData("Time", getRuntime());
                 telemetry.update();
             }
 
-            setSteps(basic_steps);
+            setSteps(strats[strat].steps);
 
-            if (Parking.Center == parking) {
-                appendSteps(park_in_center);
-            } else {
-                appendSteps(park_on_corner);
-            }
 
             onStart();
             robot.resetGyro();
+            startTime = System.currentTimeMillis();
 
             if (debug_mode) {
                 runDebugMode();
@@ -124,6 +149,31 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
         onStop();
     }
 
+    public Step pause(final long waitTime) {
+        return new Step("Pause") {
+            @Override
+            public void act() throws InterruptedException {
+                Thread.sleep(waitTime);
+            }
+        };
+
+    }
+
+    public Step pause() {
+        return pause(250L);
+    }
+
+    private long startTime = 0;
+    public Step delayTo(String name, final long ms) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                while((System.currentTimeMillis() - startTime) < ms) {
+                    Thread.sleep(50);
+                }
+            }
+        };
+    }
 
     public Step startGettingLightData() {
         return new Step("Start Getting Light Data") {
@@ -141,6 +191,19 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
                 robot.startCollectingLightMeter();
                 telemetry.addData("Light Average", robot.getAverageLightMeter());
                 telemetry.update();
+            }
+        };
+    }
+
+    public Step trueUp(final int if_red, final int if_blue) {
+        return new Step("Han Solo True-up") {
+            @Override
+            public void act() throws InterruptedException {
+                if (AllianceColor.RED == allianceColor()) {
+                    turnToAngle(if_red);
+                } else {
+                    turnToAngle(if_blue);
+                }
             }
         };
     }
@@ -177,6 +240,15 @@ public abstract class AutonomiaRapida extends SteppedAutonomous {
             @Override
             public void act() throws InterruptedException {
                 driveDirectionTilesFast(direction, tiles);
+            }
+        };
+    }
+
+    public Step driveFrantic(String name, final double direction, final double tiles) {
+        return new Step(name) {
+            @Override
+            public void act() throws InterruptedException {
+                driveDirectionTiles(direction, tiles, 0.9);
             }
         };
     }
