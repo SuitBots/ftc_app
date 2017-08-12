@@ -18,17 +18,27 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * drive train and a gyro sensor.
  */
 public class Robot {
+    public static enum GyroOrientation {
+        X, Y, Z;
+    }
+
     private final HardwareMap hardwareMap;
     private final Telemetry telemetry;
 
     private final DcMotor lf, lr, rf, rr;
     private final BNO055IMU imu;
+    private final GyroOrientation orientation;
 
     private double headingOffset = 0.0;
     private Orientation angles;
     private Acceleration gravity;
 
-    public Robot(final HardwareMap _hardwareMap, final Telemetry _telemetry) {
+    public Robot(final HardwareMap _h, final Telemetry _t) {
+        this(_h, _t, GyroOrientation.Z);
+    }
+
+    public Robot(final HardwareMap _hardwareMap, final Telemetry _telemetry, final GyroOrientation _orientation) {
+        orientation = _orientation;
         hardwareMap = _hardwareMap;
         telemetry = _telemetry;
 
@@ -52,6 +62,20 @@ public class Robot {
         imu.initialize(parameters);
     }
 
+    private void setMotorMode(DcMotor.RunMode mode, DcMotor... motors) {
+        for (DcMotor motor : motors) {
+            motor.setMode(mode);
+        }
+    }
+
+    public void runUsingEncoders() {
+        setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
+    }
+
+    public void runWithoutEncoders() {
+        setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER, lf, lr, rf, rr);
+    }
+
     /**
      * @return true if the gyro is fully calibrated, false otherwise
      */
@@ -72,17 +96,38 @@ public class Robot {
     }
 
     /**
-     * @return the robot's current heading
+     * @return the raw heading along the desired axis
+     */
+    private double getRawHeading() {
+        switch (orientation) {
+            case X:
+                return angles.thirdAngle;
+            case Y:
+                return angles.secondAngle;
+            case Z:
+                return angles.firstAngle;
+            default:
+                return Double.NaN;
+        }
+    }
+
+    /**
+     * @return the robot's current heading in radians
      */
     public double getHeading() {
-        return (angles.firstAngle - headingOffset) % (2.0 * Math.PI);
+        return (getRawHeading() - headingOffset) % (2.0 * Math.PI);
     }
+
+    /**
+     * @return the robot's current heading in degrees
+     */
+    public double getHeadingDegrees() { return Math.toDegrees(getHeading()); }
 
     /**
      * Set the current heading to zero.
      */
     public void resetHeading() {
-        headingOffset = angles.firstAngle;
+        headingOffset = getRawHeading();
     }
 
     /**

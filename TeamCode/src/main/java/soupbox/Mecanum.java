@@ -16,15 +16,21 @@ public class Mecanum extends OpMode {
     private Robot robot;
     private Controller controller;
     private boolean arcadeMode = false;
+    private int gyroCalibratedCount = 0;
 
     @Override
     public void init() {
-        robot = new Robot(hardwareMap, telemetry);
+        robot = new Robot(hardwareMap, telemetry, Robot.GyroOrientation.Z);
+        robot.runUsingEncoders();
         controller = new Controller(gamepad1);
     }
 
     @Override
     public void init_loop() {
+        controller.update();
+        if (controller.AOnce()) {
+            arcadeMode = ! arcadeMode;
+        }
         telemetry.addData("Gyro Ready?", robot.isGyroCalibrated() ? "YES" : "no.");
         telemetry.addData("Arcade Mode (a)", arcadeMode ? "YES" : "no.");
         telemetry.update();
@@ -42,9 +48,7 @@ public class Mecanum extends OpMode {
             arcadeMode = !arcadeMode;
         }
         telemetry.addData("Arcade Mode (a)", arcadeMode ? "YES" : "no.");
-        if (arcadeMode) {
-            telemetry.addData("Heading (reset: x)", robot.getHeading());
-        }
+        telemetry.addData("Heading (reset: x)", robot.getHeadingDegrees());
         telemetry.update();
 
         final double x = Math.pow(controller.left_stick_x, 3.0);
