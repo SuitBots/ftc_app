@@ -20,7 +20,7 @@ public class Mecanum extends OpMode {
 
     @Override
     public void init() {
-        robot = new Robot(hardwareMap, telemetry, Robot.GyroOrientation.Z);
+        robot = new Robot(hardwareMap, telemetry);
         robot.runUsingEncoders();
         controller = new Controller(gamepad1);
     }
