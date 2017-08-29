@@ -66,6 +66,17 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER, lf, lr, rf, rr);
     }
 
+    public void setEncoderTargets(int lft, int lrt, int rft, int rrt) {
+        lf.setTargetPosition(lft);
+        lr.setTargetPosition(lrt);
+        rf.setTargetPosition(rft);
+        rr.setTargetPosition(rrt);
+    }
+
+    public boolean driveMotorsAreBusy() {
+        return lf.isBusy() || lr.isBusy() || rf.isBusy() || rr.isBusy();
+    }
+
     /**
      * @return true if the gyro is fully calibrated, false otherwise
      */
