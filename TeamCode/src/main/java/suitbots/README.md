@@ -1,3 +1,4 @@
 # Suit Bot Relic Recovery
 
-# Programing meeting has commenced! I'm just going to test something. Hi everyone!
+# Programing meeting has commenced!
+# This is the new change!!
