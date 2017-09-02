@@ -1,3 +1,3 @@
 # Suit Bot Relic Recovery
 
-# Programing meeting has commenced! LOL
+# Programing meeting has commenced! LOL LMAO
