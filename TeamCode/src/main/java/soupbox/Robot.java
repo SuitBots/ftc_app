@@ -2,6 +2,7 @@ package soupbox;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,6 +24,7 @@ public class Robot {
 
     private final DcMotor lf, lr, rf, rr;
     private final BNO055IMU imu;
+    private ColorSensor lineDetector;
 
     private double headingOffset = 0.0;
     private Orientation angles;
@@ -50,6 +52,7 @@ public class Robot {
         parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu.initialize(parameters);
+        lineDetector = hardwareMap.colorSensor.get("line");
     }
 
     private void setMotorMode(DcMotor.RunMode mode, DcMotor... motors) {
