@@ -36,7 +36,7 @@ public class Robot {
         return angles.firstAngle;
     }
     public double getGyro(){
-        return (getGyroRaw()-lastG)%2*Math.PI;
+        return (getGyroRaw()-lastG)* (2.0 * Math.PI);
     }
 
     private void initilizeGyro() {
