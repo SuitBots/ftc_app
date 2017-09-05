@@ -18,11 +18,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class Robot {
     //Yo necesito dormir.
     private double lastG;
-    private BNO055IMU gyro;
+    private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr;
     private ColorSensor lineDetector;
     public Robot(HardwareMap h) {
-        gyro = h.get(BNO055IMU.class, "gyro");
+        imu = h.get(BNO055IMU.class, "gyro");
         initilizeGyro();
         lineDetector = h.colorSensor.get("lineDetector");
 
@@ -32,7 +32,7 @@ public class Robot {
         lastG = getGyroRaw();
     }
     public double getGyroRaw() {
-        Orientation angles   = gyro.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        Orientation angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
         return angles.firstAngle;
     }
     public double getGyro(){
@@ -47,7 +47,7 @@ public class Robot {
         parameters.loggingEnabled      = false;
         parameters.loggingTag          = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        gyro.initialize(parameters);
+        imu.initialize(parameters);
     }
 
     public int getLight() {
@@ -62,4 +62,8 @@ public class Robot {
             return false;
         }
     }
+
+//    public boolean isGyroCalibrated() {
+//
+//    }
 }
