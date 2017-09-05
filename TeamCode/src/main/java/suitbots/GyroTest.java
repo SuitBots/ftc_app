@@ -14,7 +14,10 @@ public class GyroTest extends OpMode {
     @Override
     public void init() {
         robot = new Robot(hardwareMap);
-
+        while (!robot.isGyroCalibrated()) {
+            telemetry.addLine("Gyro is not calibrated");
+        }
+        telemetry.addLine("GYRO IS CALIBRATED!!");
     }
 
     @Override
