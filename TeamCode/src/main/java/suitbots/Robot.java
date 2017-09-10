@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 public class Robot {
     //Yo necesito dormir.
-    private int gyrochecker = 0;
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr;
@@ -49,7 +48,6 @@ public class Robot {
         parameters.loggingTag          = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu.initialize(parameters);
-        gyrochecker = 1;
     }
 
     public int getLight() {
@@ -66,7 +64,7 @@ public class Robot {
     }
 
     public boolean isGyroCalibrated() {
-        if(gyrochecker == 1) {
+        if(imu.isSystemCalibrated()) {
             return true;
         }
         else {
