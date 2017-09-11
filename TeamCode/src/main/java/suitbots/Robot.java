@@ -19,6 +19,7 @@ import java.util.Locale;
 
 public class Robot {
     //Yo necesito dormir.
+
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr;
@@ -69,9 +70,39 @@ public class Robot {
         return imu.isSystemCalibrated();
     }
 //    public double getHeadingRadians() {
-//    degrees -> radians
-//    1 = MATH.PI/180
-//        double angles = ;
+    //This one I'm having trouble with
+////    degrees -> radians
+////    1 = MATH.PI/180
+//        double angles = imu.getAngularOrientation().angleUnit.fromRadians();
 //        return angles;
 //    }
+
+    //I forgot how to this one T.T
+//    public void resetHeading() {
+//        imu.getAngularOrientation(0,0,0);
+//    }
+
+    public void setMotorSpeeds(double lfs, double lrs, double rfs, double rrs){
+        lf.setPower(lfs);
+        lr.setPower(lrs);
+        rf.setPower(rfs);
+        rr.setPower(rrs);
+    }
+    //wait...why do we need this?
+//    public void setMotorMode(DcMotor.RunMode runMode) {
+//        return DcMotor.RunMode.;
+//    }
+    public void setEncoderTargets(int lfs, int lrs, int rfs, int rrs) {
+        lf.setTargetPosition(lfs);
+        lr.setTargetPosition(lrs);
+        rf.setTargetPosition(rfs);
+        rr.setTargetPosition(rrs);
+    }
+    public boolean driveMotorsAreBusy() {
+        if (lf.isBusy() || rf.isBusy() || lr.isBusy()|| rr.isBusy()){
+            return true;
+        }else {
+            return false;
+        }
+    }
 }
