@@ -9,10 +9,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp (name = "Gyro Test")
 
-public class GyroTest extends OpMode {
+public abstract class GyroTest extends OpMode {
     private Robot robot;
     @Override
-    public void init() {
+    public void init_loop() {
         robot = new Robot(hardwareMap);
         while (!robot.isGyroCalibrated()) {
             telemetry.addLine("Gyro is not calibrated");

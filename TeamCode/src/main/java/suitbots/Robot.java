@@ -11,6 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+import java.util.Locale;
+
 /**
  * Created by Samantha on 9/2/2017.
  */
@@ -64,11 +66,12 @@ public class Robot {
     }
 
     public boolean isGyroCalibrated() {
-        if(imu.isSystemCalibrated()) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return imu.isSystemCalibrated();
     }
+//    public double getHeadingRadians() {
+//    degrees -> radians
+//    1 = MATH.PI/180
+//        double angles = ;
+//        return angles;
+//    }
 }
