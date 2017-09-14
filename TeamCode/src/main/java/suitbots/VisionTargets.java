@@ -53,7 +53,7 @@ public class VisionTargets {
             pose = ((VuforiaTrackableDefaultListener)relicTemplate.getListener()).getPose();
             if (null != pose) {
                 trans = pose.getTranslation();
-                rot = Orientation.getOrientation(pose, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                rot = Orientation.getOrientation(pose, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
             } else {
                 trans = null;
                 rot = null;
