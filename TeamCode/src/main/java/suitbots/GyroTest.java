@@ -18,6 +18,7 @@ public abstract class GyroTest extends OpMode {
             telemetry.addLine("Gyro is not calibrated");
         }
         telemetry.addLine("GYRO IS CALIBRATED!!");
+        telemetry.update();
     }
 
     @Override
