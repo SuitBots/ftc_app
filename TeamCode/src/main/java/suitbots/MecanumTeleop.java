@@ -1,11 +1,9 @@
 package suitbots;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import com.qualcomm.robotcore.eventloop.SyncdDevice;
 
+import com.suitbots.util.Controller;
 
 /**
  * Created by Samantha on 9/17/2017.

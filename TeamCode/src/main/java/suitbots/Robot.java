@@ -75,28 +75,10 @@ public class Robot {
     public boolean isGyroCalibrated() {
         return imu.isSystemCalibrated();
     }
-    public double getHeadingRadians() {
-//    degrees -> radians
-//    1 = MATH.PI/180
-        double angles = getGyro();
-        return angles;
-    }
+    public double getHeadingRadians() { return getGyro(); }
 
-    //I forgot how to this one T.T
     public void resetHeading() {
-        Orientation angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
-        if (angles.firstAngle < 90){
-            lf.setPower(0.6);
-            lr.setPower(0.6);
-            rf.setPower(-0.6);
-            rr.setPower(-0.6);
-            while (angles.firstAngle < 90) { //imu.getAngularOrientation().firstAngle
-                angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
-            }
-        }
-        //setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
-        //setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
-        // or is it resetting the gyro
+        lastG = getGyroRaw();
     }
 
     public void setMotorSpeeds(double lfs, double lrs, double rfs, double rrs){
