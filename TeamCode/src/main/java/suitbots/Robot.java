@@ -27,7 +27,7 @@ public class Robot {
     private DcMotor lf, lr, rf, rr;
     private ColorSensor lineDetector;
     public Robot(HardwareMap h) {
-        imu = h.get(BNO055IMU.class, "gyro");
+        imu = h.get(BNO055IMU.class, "imu");
         initilizeGyro();
         lineDetector = h.colorSensor.get("lineDetector");
 
@@ -176,7 +176,7 @@ public class Robot {
 //    public void setFrontPower(double p) { pf.setPower(p); }
 //    public void setBackPower(double p) { pr.setPower(p); }
 public void updateSensorTelemetry() {
-    telemetry.addData("Gyro", getGyro());
+    telemetry.addData("Imu", getGyro());
     //telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
     telemetry.addData("Light", getLight());
     telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
