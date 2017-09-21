@@ -103,12 +103,6 @@ public class Robot {
         rf.setTargetPosition(rfs);
         rr.setTargetPosition(rrs);
         setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rr, rf);
-        setPower(ENCODER_DRIVE_POWER, lf, lr, rf, rr);
-        while(busy(lf, lr, rf, rr)){
-            //wait(); // wait, it this right? I keep getting errors
-        }
-        setPower(0.0, lf, lr, rf, rr);
-        setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rr, rf);
     }
     public void resetDriveMotorModes() {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
@@ -172,4 +166,8 @@ public void updateSensorTelemetry() {
             rf.getTargetPosition(),
             rr.getTargetPosition()));
     }
+//    public double getHeading() {
+//        double angle = getGyro();
+//        return angle;
+//    }
 }
