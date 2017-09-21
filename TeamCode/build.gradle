@@ -17,3 +17,8 @@ apply from: '../build.common.gradle'
 android {
     buildToolsVersion '25.0.0'
 }
+
+dependencies {
+    repositories { mavenCentral() }
+    compile 'com.suitbots:libsb:0.0.1'
+}
