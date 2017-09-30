@@ -2,9 +2,7 @@ package suitbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.suitbots.util.Controller;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 /**
  * Created by Samantha on 9/17/2017.
@@ -19,7 +17,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void init() {
-        robot = new Robot(hardwareMap, telemetry);
+        robot = new Robot(hardwareMap);
 
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
@@ -47,12 +45,6 @@ public class MecanumTeleop extends OpMode {
     }
 
 
-    private void g1Loop(Controller g) {
-        //DriveHelper.drive(g, robot);
-
-        //robot.setHarvesterPower(g.left_trigger - g.right_trigger);
-    }
-
 
 //    private void g2Loop(Controller g) {
 //        if (g.X()) {
@@ -79,7 +71,7 @@ public class MecanumTeleop extends OpMode {
     public void loop() {
         g1.update();
         g2.update();
-        g1Loop(g1);
+//        g1Loop(g1);
 //        g2Loop(g2);
         if (debug_mode) {
             robot.updateSensorTelemetry();
