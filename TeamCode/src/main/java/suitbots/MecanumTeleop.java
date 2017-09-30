@@ -2,6 +2,7 @@ package suitbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.suitbots.util.Controller;
 
 
 /**
@@ -44,35 +45,12 @@ public class MecanumTeleop extends OpMode {
         robot.onStop();
     }
 
-
-
-//    private void g2Loop(Controller g) {
-//        if (g.X()) {
-//            robot.setBackPower(-1.0);
-//        } else if (g.Y()) {
-//            robot.setBackPower(1.0);
-//        } else {
-//            robot.setBackPower(0.0);
-//        }
-//
-//        if (g.A()) {
-//            robot.setFrontPower(-1.0);
-//        } else if (g.B()) {
-//            robot.setFrontPower(1.0);
-//        } else {
-//            robot.setFrontPower(0.0);
-//        }
-//
-//
-//
-//    }
-
     @Override
     public void loop() {
         g1.update();
         g2.update();
-//        g1Loop(g1);
-//        g2Loop(g2);
+        DriverHelper.drive(g1,robot);
+
         if (debug_mode) {
             robot.updateSensorTelemetry();
             telemetry.update();
