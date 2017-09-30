@@ -26,7 +26,8 @@ public class Robot {
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr;
     private ColorSensor lineDetector;
-    public Robot(HardwareMap h) {
+    public Robot(HardwareMap h, Telemetry _telemetry) {
+        telemetry = _telemetry;
         imu = h.get(BNO055IMU.class, "imu");
         initilizeGyro();
         lineDetector = h.colorSensor.get("lineDetector");
