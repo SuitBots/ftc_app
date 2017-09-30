@@ -26,7 +26,7 @@ public class Robot {
     private static double pracSpeed = 0.5;
     private double lastG;
     private BNO055IMU imu;
-    private DcMotor lf, lr, rf, rr, pully;
+    private DcMotor lf, lr, rf, rr, lift;
     private ColorSensor lineDetector;
     private Servo rightGripper, leftGripper;
 
@@ -44,7 +44,7 @@ public class Robot {
         lr = h.dcMotor.get("lr");
         rf = h.dcMotor.get("rf");
         rr = h.dcMotor.get("rr");
-        pully = h.dcMotor.get("pully");
+        lift = h.dcMotor.get("pully");
 
         rightGripper = h.servo.get("rightGripper");
         leftGripper = h.servo.get("leftGripper");
@@ -56,7 +56,7 @@ public class Robot {
         lr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        pully.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void resetGyro() {
@@ -252,6 +252,7 @@ public void updateSensorTelemetry() {
     public static final double OPEN_LITTLE_LEFT = 0.15;
     public static final double CLOSED_RIGHT = 0.49;
     public static final double CLOSED_LEFT = 0.41;
+
     public void grabBlock() {
         rightGripper.setPosition(CLOSED_RIGHT);
         leftGripper.setPosition(CLOSED_LEFT);
@@ -263,6 +264,10 @@ public void updateSensorTelemetry() {
     public void openLittle() {
         rightGripper.setPosition(OPEN_LITTLE_RIGHT);
         leftGripper.setPosition(OPEN_LITTLE_LEFT);
+    }
+
+    public void moveLift(double x) {
+        lift.setPower(x);
     }
 
 

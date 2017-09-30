@@ -49,16 +49,20 @@ public class MecanumTeleop2 extends OpMode {
     }
 
 
-
+    private boolean grabbed;
     private void g2Loop(Controller g) {
         if (g.AOnce()) {
-            robot.grabBlock();
-        } else if (g.B()) {
+            if (grabbed) {
+                robot.openLittle();
+            } else {
+                robot.grabBlock();
+            }
+            grabbed = ! grabbed;
+        } else if (g.BOnce()) {
             robot.openArms();
-        } else if (g.A()){
-            robot.openLittle();
         }
-
+        
+        robot.moveLift(g.right_trigger - g.left_trigger);
     }
 
 
