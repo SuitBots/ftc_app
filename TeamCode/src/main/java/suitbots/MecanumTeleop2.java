@@ -61,7 +61,7 @@ public class MecanumTeleop2 extends OpMode {
         } else if (g.BOnce()) {
             robot.openArms();
         }
-        
+
         robot.moveLift(g.right_trigger - g.left_trigger);
     }
 
