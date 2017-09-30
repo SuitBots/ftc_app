@@ -34,7 +34,7 @@ public class Robot {
         telemetry = _telemetry;
         imu = h.get(BNO055IMU.class, "imu");
         initilizeGyro();
-        lineDetector = h.colorSensor.get("lineDetector");
+        //lineDetector = h.colorSensor.get("lineDetector");
 
         //pf = new LazyCR(hardwareMap.crservo.get("pf"));
         //pr = new LazyCR(hardwareMap.crservo.get("pr"));
@@ -81,18 +81,18 @@ public class Robot {
         imu.initialize(parameters);
     }
 
-    public int getLight() {
-        return lineDetector.alpha();
-    }
+//    public int getLight() {
+//        return lineDetector.alpha();
+//    }
 
-    public boolean isAboveWhiteLine() {
-        if(getLight() >= 200) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+//    public boolean isAboveWhiteLine() {
+//        if(getLight() >= 200) {
+//            return true;
+//        }
+//        else {
+//            return false;
+//        }
+//    }
 
     public boolean isGyroCalibrated() {
         return imu.isSystemCalibrated();
@@ -176,7 +176,7 @@ public class Robot {
 public void updateSensorTelemetry() {
     telemetry.addData("Imu", getGyro());
     //telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
-    telemetry.addData("Light", getLight());
+//    telemetry.addData("Light", getLight());
     telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
             lf.getCurrentPosition(),
             lr.getCurrentPosition(),
