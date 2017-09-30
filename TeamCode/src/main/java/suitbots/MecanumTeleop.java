@@ -2,6 +2,7 @@ package suitbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.suitbots.util.Controller;
 
 
 /**
@@ -17,7 +18,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void init() {
-        robot = new Robot(hardwareMap);
+        robot = new Robot(hardwareMap, telemetry);
 
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
@@ -30,7 +31,11 @@ public class MecanumTeleop extends OpMode {
             debug_mode = ! debug_mode;
         }
         telemetry.addData("Debug? (a)", debug_mode ? "on" : "off");
-        telemetry.addData("Ready?", "YES.");
+        if(robot.isGyroCalibrated()){
+            telemetry.addData("Ready?", "YES.");
+        }else {
+            telemetry.addData("Ready?","no");
+        }
         telemetry.update();
     }
 
@@ -71,8 +76,7 @@ public class MecanumTeleop extends OpMode {
     public void loop() {
         g1.update();
         g2.update();
-//        g1Loop(g1);
-//        g2Loop(g2);
+        DriverHelper.drive(g1, robot);
         if (debug_mode) {
             robot.updateSensorTelemetry();
             telemetry.update();

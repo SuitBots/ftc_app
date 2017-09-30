@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -24,8 +26,10 @@ public class Robot {
     private static double pracSpeed = 0.5;
     private double lastG;
     private BNO055IMU imu;
-    private DcMotor lf, lr, rf, rr;
+    private DcMotor lf, lr, rf, rr, pully;
     private ColorSensor lineDetector;
+    private Servo rightGripper, leftGripper;
+
     public Robot(HardwareMap h, Telemetry _telemetry) {
         telemetry = _telemetry;
         imu = h.get(BNO055IMU.class, "imu");
@@ -35,10 +39,24 @@ public class Robot {
         //pf = new LazyCR(hardwareMap.crservo.get("pf"));
         //pr = new LazyCR(hardwareMap.crservo.get("pr"));
 
+
+        lf = h.dcMotor.get("lf");
+        lr = h.dcMotor.get("lr");
+        rf = h.dcMotor.get("rf");
+        rr = h.dcMotor.get("rr");
+        pully = h.dcMotor.get("pully");
+
+        rightGripper = h.servo.get("rightGripper");
+        leftGripper = h.servo.get("leftGripper");
+
+        lr.setDirection(DcMotorSimple.Direction.REVERSE);
+        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+
         lf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pully.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void resetGyro() {
@@ -224,6 +242,27 @@ public void updateSensorTelemetry() {
         lr.setPower(w.lr);
         rr.setPower(w.rr);
         telemetry.addData("Powers", String.format(Locale.US, "%.2f %.2f %.2f %.2f", w.lf, w.rf, w.lr, w.rr));
+    }
+    //open l = 0.25 , r = 0.65
+    //closed l = 0.41 , r = 0.49
+
+    public static final double OPEN_RIGHT = 0.65;
+    public static final double OPEN_LEFT = 0.25;
+    public static final double OPEN_LITTLE_RIGHT = 0.55;
+    public static final double OPEN_LITTLE_LEFT = 0.15;
+    public static final double CLOSED_RIGHT = 0.49;
+    public static final double CLOSED_LEFT = 0.41;
+    public void grabBlock() {
+        rightGripper.setPosition(CLOSED_RIGHT);
+        leftGripper.setPosition(CLOSED_LEFT);
+    }
+    public void openArms() {
+        rightGripper.setPosition(OPEN_RIGHT);
+        leftGripper.setPosition(OPEN_LEFT);
+    }
+    public void openLittle() {
+        rightGripper.setPosition(OPEN_LITTLE_RIGHT);
+        leftGripper.setPosition(OPEN_LITTLE_LEFT);
     }
 
 
