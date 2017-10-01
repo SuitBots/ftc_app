@@ -2,9 +2,7 @@ package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.suitbots.util.Controller;
 
-import suitbots.Robot;
 import suitbots.VisionTargets;
 
 @TeleOp(name = "Fill your eyes....")
