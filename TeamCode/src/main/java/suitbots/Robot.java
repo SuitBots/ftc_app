@@ -36,10 +36,6 @@ public class Robot {
         initilizeGyro();
         lineDetector = h.colorSensor.get("lineDetector");
 
-        //pf = new LazyCR(hardwareMap.crservo.get("pf"));
-        //pr = new LazyCR(hardwareMap.crservo.get("pr"));
-
-
         lf = h.dcMotor.get("lf");
         lr = h.dcMotor.get("lr");
         rf = h.dcMotor.get("rf");
