@@ -44,7 +44,7 @@ public class Robot {
         lr = h.dcMotor.get("lr");
         rf = h.dcMotor.get("rf");
         rr = h.dcMotor.get("rr");
-        lift = h.dcMotor.get("pully");
+        lift = h.dcMotor.get("lift");
 
         rightGripper = h.servo.get("rightGripper");
         leftGripper = h.servo.get("leftGripper");
@@ -52,10 +52,10 @@ public class Robot {
         lr.setDirection(DcMotorSimple.Direction.REVERSE);
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        lf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
@@ -174,24 +174,29 @@ public class Robot {
 //    public void setFrontPower(double p) { pf.setPower(p); }
 //    public void setBackPower(double p) { pr.setPower(p); }
 public void updateSensorTelemetry() {
-    telemetry.addData("Imu", getGyro());
+    //telemetry.addData("Imu", getGyro());
     //telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
 //    telemetry.addData("Light", getLight());
-    telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
-            lf.getCurrentPosition(),
-            lr.getCurrentPosition(),
-            rf.getCurrentPosition(),
-            rr.getCurrentPosition()));
-    telemetry.addData("EncodersT", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
-            lf.getTargetPosition(),
-            lr.getTargetPosition(),
-            rf.getTargetPosition(),
-            rr.getTargetPosition()));
-    }
+//    telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
+//            lf.getCurrentPosition(),
+//            lr.getCurrentPosition(),
+//            rf.getCurrentPosition(),
+//            rr.getCurrentPosition()));
+//    telemetry.addData("EncodersT", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
+//            lf.getTargetPosition(),
+//            lr.getTargetPosition(),
+//            rf.getTargetPosition(),
+//            rr.getTargetPosition()));
+//    }
+//    telemetry.addData("POWER", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
+//            lf.getPower(),
+//            lr.getPower(),
+//            rf.getPower(),
+//            rr.getPower()));
 //    public double getHeading() {
 //        double angle = getGyro();
 //        return angle;
-//    }
+    }
 
     private static class Wheels {
         public double lf, lr, rf, rr;
@@ -241,6 +246,7 @@ public void updateSensorTelemetry() {
         rf.setPower(w.rf);
         lr.setPower(w.lr);
         rr.setPower(w.rr);
+
         telemetry.addData("Powers", String.format(Locale.US, "%.2f %.2f %.2f %.2f", w.lf, w.rf, w.lr, w.rr));
     }
     //open l = 0.25 , r = 0.65
@@ -249,9 +255,9 @@ public void updateSensorTelemetry() {
     public static final double OPEN_RIGHT = 0.65;
     public static final double OPEN_LEFT = 0.25;
     public static final double OPEN_LITTLE_RIGHT = 0.55;
-    public static final double OPEN_LITTLE_LEFT = 0.15;
-    public static final double CLOSED_RIGHT = 0.49;
-    public static final double CLOSED_LEFT = 0.41;
+    public static final double OPEN_LITTLE_LEFT = 0.35;
+    public static final double CLOSED_RIGHT = 0.48;
+    public static final double CLOSED_LEFT = 0.42;
 
     public void grabBlock() {
         rightGripper.setPosition(CLOSED_RIGHT);

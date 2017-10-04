@@ -18,7 +18,6 @@ public class MecanumTeleop2 extends OpMode {
     @Override
     public void init() {
         robot = new Robot(hardwareMap, telemetry);
-
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
     }
@@ -52,12 +51,7 @@ public class MecanumTeleop2 extends OpMode {
     private boolean grabbed;
     private void g2Loop(Controller g) {
         if (g.AOnce()) {
-            if (grabbed) {
-                robot.openLittle();
-            } else {
-                robot.grabBlock();
-            }
-            grabbed = ! grabbed;
+            robot.grabBlock();
         } else if (g.BOnce()) {
             robot.openArms();
         }
