@@ -98,6 +98,7 @@ public class Robot {
         return imu.isSystemCalibrated();
     }
     public double getHeadingRadians() { return getGyro(); }
+    public int getHeadingDeg() { return (int)getGyro(); }
 
     public void resetHeading() {
         lastG = getGyroRaw();
