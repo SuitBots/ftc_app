@@ -27,14 +27,14 @@ public class Robot {
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr, lift;
-    private ColorSensor lineDetector;
-    private Servo rightGripper, leftGripper;
+    private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
+    private Servo rightGripper, leftGripper, soas;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
         telemetry = _telemetry;
         imu = h.get(BNO055IMU.class, "imu");
         initilizeGyro();
-        //lineDetector = h.colorSensor.get("lineDetector");
+        jewelColorDetector = h.colorSensor.get("jewelColorDetector");
 
         //pf = new LazyCR(hardwareMap.crservo.get("pf"));
         //pr = new LazyCR(hardwareMap.crservo.get("pr"));
@@ -46,8 +46,12 @@ public class Robot {
         rr = h.dcMotor.get("rr");
         lift = h.dcMotor.get("lift");
 
+
         rightGripper = h.servo.get("rightGripper");
         leftGripper = h.servo.get("leftGripper");
+        soas = h.servo.get("soas");
+
+
 
         lr.setDirection(DcMotorSimple.Direction.REVERSE);
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -82,7 +86,7 @@ public class Robot {
     }
 
 //    public int getLight() {
-//        return lineDetector.alpha();
+//        return jewelColorDetector.alpha();
 //    }
 
 //    public boolean isAboveWhiteLine() {
@@ -258,6 +262,8 @@ public void updateSensorTelemetry() {
     public static final double OPEN_LITTLE_LEFT = 0.35;
     public static final double CLOSED_RIGHT = 0.48;
     public static final double CLOSED_LEFT = 0.42;
+    public static final double DOWN_SOAS = 0.68;
+    public static final double UP_SOAS = 0;
 
     public void grabBlock() {
         rightGripper.setPosition(CLOSED_RIGHT);
@@ -274,6 +280,17 @@ public void updateSensorTelemetry() {
 
     public void moveLift(double x) {
         lift.setPower(x);
+    }
+
+    public void putDownSoas(){
+        soas.setPosition(DOWN_SOAS);
+    }
+    public void putUpSoas() {
+        soas.setPosition(UP_SOAS);
+    }
+
+    public boolean jewelIsRed(){
+        return jewelColorDetector.red() > jewelColorDetector.blue();
     }
 
 
