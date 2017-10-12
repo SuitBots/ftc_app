@@ -37,33 +37,9 @@ public abstract class AutoBase extends LinearOpMode  {
     private static final int FAST_TURN_THRESHOLD = 30;
     private static final int STUPID_TURN_THRESHOLD = 60;
 
-    private static double speedForTurnDistanceDeg(int angle) {
-        angle = Math.abs(angle);
-        if (angle > STUPID_TURN_THRESHOLD) {
-            return STUPID_TURN_SPEED;
-        }
-        if (angle > FAST_TURN_THRESHOLD) {
-            return FAST_TURN_SPEED;
-        }
-        return SAFE_TURN_SPEED;
-    }
 
-    private int angleDifferenceDeg(int from, int to) {
-        if (from < 0) from += 360;
-        if (to < 0) to += 360;
 
-        int diff = to - from;
-
-        if (diff < -180) {
-            diff += 360;
-        } else if (diff > 180) {
-            diff = - (360 - diff);
-        }
-
-        return diff;
-    }
-
-    private double angleDifferenceRad(double from, double to) {
+    private double angleDifference(double from, double to) {
         if (from < 0) from += 2*Math.PI;
         if (to < 0) to += 2*Math.PI;
 
@@ -78,7 +54,7 @@ public abstract class AutoBase extends LinearOpMode  {
         return diff;
     }
 
-    private static double speedForTurnDistanceRad(double angle) {
+    private static double speedForTurnDistance(double angle) {
         angle = Math.abs(angle);
         if (angle > STUPID_TURN_THRESHOLD) {
             return STUPID_TURN_SPEED;
@@ -91,21 +67,15 @@ public abstract class AutoBase extends LinearOpMode  {
 
     private static final int MAX_HEADING_SLOP = 1;
 
-    protected void turnToAngleDeg(int degrees) throws InterruptedException {
-        while(opModeIsActive()) {
-            int diff = angleDifferenceDeg(robot.getHeadingDeg(), degrees);
-            if (MAX_HEADING_SLOP >= Math.abs(diff)) break;
-            double speed = speedForTurnDistanceDeg(diff);
-            robot.drive(0.0, 0.0, diff > 0 ? -speed : speed);
-            idle();
-        }
-        robot.stopDriveMotors();
+    protected void turnToAngleDeg(double degrees) throws InterruptedException {
+        degrees = Math.toRadians(degrees);
+        turnToAngleRad(degrees);
     }
     protected void turnToAngleRad(double radians) throws InterruptedException {
         while(opModeIsActive()) {
-            double diff = angleDifferenceRad(robot.getHeadingRadians(), radians);
+            double diff = angleDifference(robot.getHeadingRadians(), radians);
             if (MAX_HEADING_SLOP >= Math.abs(diff)) break;
-            double speed = speedForTurnDistanceRad(diff);
+            double speed = speedForTurnDistance(diff);
             robot.drive(0.0, 0.0, diff > 0 ? -speed : speed);
             idle();
         }
