@@ -294,6 +294,10 @@ public void updateSensorTelemetry() {
         return jewelColorDetector.red() > jewelColorDetector.blue();
     }
 
+//    public boolean robotIsNear(){
+//        return true;
+//    }
+
 
 //    public void setFrontPower(double p) { pf.setPower(p); }
 //    public void setBackPower(double p) { pr.setPower(p); }

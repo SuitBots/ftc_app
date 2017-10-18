@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 public class AutonomousRR extends LinearOpMode {
     private Robot robot = null;
     private Controller g1, g2;
+    private boolean near;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -29,6 +30,14 @@ public class AutonomousRR extends LinearOpMode {
 
             if (g1.XOnce()) redAlliance = ! redAlliance;
         }
+
+        if(g1.BOnce()){
+            near = true;
+        } else if(g1.BOnce()) {
+            near = false;
+        }
+        telemetry.addData("Location", near ? "Near":"Far");
+        telemetry.update();
 
         robot = new Robot(hardwareMap, telemetry);
 
@@ -46,5 +55,7 @@ public class AutonomousRR extends LinearOpMode {
         robot.stopDriveMotors();
 
         robot.putUpSoas();
+        sleep(1000);
+
    }
 }

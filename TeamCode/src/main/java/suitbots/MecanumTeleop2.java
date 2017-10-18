@@ -13,6 +13,7 @@ public class MecanumTeleop2 extends OpMode {
     private Robot robot = null;
     private Controller g1, g2;
     private boolean debug_mode = false;
+    private boolean near;
 
 
     @Override
@@ -28,6 +29,7 @@ public class MecanumTeleop2 extends OpMode {
         if (g1.AOnce()) {
             debug_mode = ! debug_mode;
         }
+
         telemetry.addData("Debug? (a)", debug_mode ? "on" : "off");
         if(robot.isGyroCalibrated()){
             telemetry.addData("Ready?", "YES.");
@@ -48,7 +50,16 @@ public class MecanumTeleop2 extends OpMode {
     }
 
 
-    private boolean grabbed;
+    //private boolean grabbed;
+
+    private void g1Loop(Controller g) {
+        if (g.YOnce()) {
+            robot.putUpSoas();
+        } else if (g.XOnce()){
+            robot.putDownSoas();
+        }
+    }
+
     private void g2Loop(Controller g) {
         if (g.AOnce()) {
             robot.grabBlock();
@@ -65,6 +76,7 @@ public class MecanumTeleop2 extends OpMode {
     public void loop() {
         g1.update();
         g2.update();
+        g1Loop(g1);
         g2Loop(g2);
         DriverHelper.drive(g1, robot);
         if (debug_mode) {
