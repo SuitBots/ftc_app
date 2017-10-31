@@ -256,12 +256,12 @@ public void updateSensorTelemetry() {
     //open l = 0.25 , r = 0.65
     //closed l = 0.41 , r = 0.49
 
-    public static final double OPEN_RIGHT = 0.65;
-    public static final double OPEN_LEFT = 0.25;
+    public static final double OPEN_RIGHT = 0.81;
+    public static final double OPEN_LEFT = 0.02;
     public static final double OPEN_LITTLE_RIGHT = 0.55;
     public static final double OPEN_LITTLE_LEFT = 0.35;
-    public static final double CLOSED_RIGHT = 0.48;
-    public static final double CLOSED_LEFT = 0.42;
+    public static final double CLOSED_RIGHT = 0.70;
+    public static final double CLOSED_LEFT = 0.20;
     public static final double DOWN_SOAS = 0.68;
     public static final double UP_SOAS = 0;
 
