@@ -3,7 +3,7 @@ package suitbots;
 /**
  * Created by Samantha on 9/21/2017.
  */
-
+import com.qualcomm.robotcore.eventloop.SyncdDevice;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import java.util.concurrent.Callable;
@@ -82,33 +82,34 @@ public abstract class AutoBase extends LinearOpMode  {
         robot.stopDriveMotors();
     }
 
+
+
 //
 //    protected void turn(int degrees) throws InterruptedException {
 //        robot.resetGyro();
 //        turnToAngle(- degrees);
 //    }
 
-//    protected void driveDirectionTiles(double directionRadians, double tiles) throws InterruptedException {
-//        driveDirectionTiles(directionRadians, tiles, .35);
-//    }
-//
-//    protected void driveDirectionTilesFast(double directionRadians, double tiles) throws InterruptedException {
-//        driveDirectionTiles(directionRadians, tiles, .65);
-//    }
+    protected void driveDirectionTiles(double directionRadians, double tiles) throws InterruptedException {
+        driveDirectionTiles(directionRadians, tiles, .35);
+    }
 
-//    protected void driveDirectionTiles(double directionRadians, double tiles, double power) throws InterruptedException {
-//        robot.setEncoderDrivePower(power);
-//        robot.encoderDriveTiles(directionRadians, tiles);
-//        while (opModeIsActive() && robot.driveMotorsBusy()) {
-//            robot.updateSensorTelemetry();
-//            telemetry.update();
-//            robot.loop();
-//            idle();
-//        }
-//        robot.stopDriveMotors();
-//        robot.resetDriveMotorModes();
-//        robot.clearEncoderDrivePower();
-//    }
+    protected void driveDirectionTilesFast(double directionRadians, double tiles) throws InterruptedException {
+        driveDirectionTiles(directionRadians, tiles, .65);
+    }
+
+    protected void driveDirectionTiles(double directionRadians, double tiles, double power) throws InterruptedException {
+        robot.setEncoderDrivePower(power);
+        robot.encoderDriveTiles(directionRadians, tiles);
+        while (opModeIsActive() && robot.driveMotorsBusy()) {
+            //robot.updateSensorTelemetry();
+            telemetry.update();
+            idle();
+        }
+        robot.stopDriveMotors();
+        robot.resetDriveMotorModes();
+        robot.clearEncoderDrivePower();
+    }
 
 //    private void fire(long timeout) throws InterruptedException {
 //        robot.fire();

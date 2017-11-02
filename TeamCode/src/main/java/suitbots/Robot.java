@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -122,7 +123,6 @@ public class Robot {
         }
     }
 
-    private static final double ENCODER_DRIVE_POWER = .3; // .35;
     public void setEncoderTargets(int lfs, int lrs, int rfs, int rrs) {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rr, rf);
         lf.setTargetPosition(lfs);
@@ -140,9 +140,22 @@ public class Robot {
 //            m.setTargetPosition(pos);
 //        }
 //    }
+
+    private void setMode(DcMotor.RunMode mode, DcMotor... ms) {
+        for (DcMotor m : ms) {
+            m.setMode(mode);
+        }
+    }
+
     private void setPower(double p, DcMotor... ms) {
         for (DcMotor m : ms) {
             m.setPower(p);
+        }
+    }
+
+    private void setTargetPosition(int pos, DcMotor... ms) {
+        for (DcMotor m : ms) {
+            m.setTargetPosition(pos);
         }
     }
 
@@ -176,32 +189,49 @@ public class Robot {
         rf.setPower(0.0);
         rr.setPower(0.0);
     }
-//    public void setFrontPower(double p) { pf.setPower(p); }
-//    public void setBackPower(double p) { pr.setPower(p); }
-public void updateSensorTelemetry() {
-    //telemetry.addData("Imu", getGyro());
-    //telemetry.addData("Color", String.format(Locale.US, "R: %d\tB: %d", color.red(), color.blue()));
-//    telemetry.addData("Light", getLight());
-//    telemetry.addData("EncodersC", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
-//            lf.getCurrentPosition(),
-//            lr.getCurrentPosition(),
-//            rf.getCurrentPosition(),
-//            rr.getCurrentPosition()));
-//    telemetry.addData("EncodersT", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
-//            lf.getTargetPosition(),
-//            lr.getTargetPosition(),
-//            rf.getTargetPosition(),
-//            rr.getTargetPosition()));
-//    }
-//    telemetry.addData("POWER", String.format(Locale.US, "%d\t%d\t%d\t%d\t%d",
-//            lf.getPower(),
-//            lr.getPower(),
-//            rf.getPower(),
-//            rr.getPower()));
-//    public double getHeading() {
-//        double angle = getGyro();
-//        return angle;
+
+    private static final double ENCODER_DRIVE_POWER = .3; // .35;
+    // Assuming 4" wheels
+    private static final double TICKS_PER_INCH = 1120 * (16./24.) / (Math.PI * 4.0);
+    private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
+
+    void setEncoderDrivePower(double p) {
+        encoder_drive_power = p;
     }
+
+    private double encoder_drive_power = ENCODER_DRIVE_POWER;
+
+    void clearEncoderDrivePower() {
+        encoder_drive_power = ENCODER_DRIVE_POWER;
+    }
+
+    private int averageRemainingTicks(DcMotor... ms) {
+        int total = 0;
+        int count = 0;
+        for (DcMotor m : ms) {
+            if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && 100 < Math.abs(m.getTargetPosition())) {
+                total += Math.abs(m.getTargetPosition() - m.getCurrentPosition());
+                count += 1;
+            }
+        }
+        return 0 == count ? 0 : total / count;
+    }
+
+    private static int SLOW_DOWN_HERE = 1120;
+    private static double ARBITRARY_SLOW_SPEED = .3;
+    private boolean slowedDown = false;
+    private void encoderDriveSlowdown() {
+        if (! slowedDown) {
+            if (lf.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
+                int remaining = averageRemainingTicks(lf, lr, rf, rr);
+                if (remaining < SLOW_DOWN_HERE) {
+                    slowedDown = true;
+                    setPower(ARBITRARY_SLOW_SPEED, lf, lr, rf, rr);
+                }
+            }
+        }
+    }
+
 
     private static class Wheels {
         public double lf, lr, rf, rr;
@@ -301,5 +331,36 @@ public void updateSensorTelemetry() {
 
 //    public void setFrontPower(double p) { pf.setPower(p); }
 //    public void setBackPower(double p) { pr.setPower(p); }
+public void encoderDriveTiles(double direction, double tiles) {
+    encoderDriveInches(direction, 24.0 * tiles);
+}
 
+    public void encoderDriveInches(double direction, double inches) {
+        final Wheels w = getWheels(direction, 1.0, 0.0);
+        final int ticks = (int)(inches * TICKS_PER_INCH);
+        encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
+    }
+
+    public void encoderDriveCM(double direction, double cm) {
+        direction %= Math.PI * 2.0;
+        final Wheels w = getWheels(direction, 1.0, 0.0);
+        final int ticks = (int)(cm * TICKS_PER_CM);
+        encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
+    }
+
+    private void encoderDrive(double lft, double rft, double lrt, double rrt) {
+        encoderDrive((int) lft, (int) rft, (int) lrt, (int) rrt);
+    }
+
+    private void encoderDrive(int lft, int rft, int lrt, int rrt) {
+        setPower(0.0, lf, lr, rf, rr);
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
+        setTargetPosition(lft, lf);
+        setTargetPosition(rft, rf);
+        setTargetPosition(lrt, lr);
+        setTargetPosition(rrt, rr);
+        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lr, rr);
+        setPower(encoder_drive_power, lf, lr, rf, rr);
+        slowedDown = false;
+    }
 }
