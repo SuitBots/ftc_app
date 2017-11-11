@@ -1,10 +1,11 @@
 package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
-
+@Disabled
 @Autonomous(name = "AUTO")
 public class ExampleAutonomous extends LinearOpMode {
     @Override

@@ -1,15 +1,14 @@
 package suitbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.suitbots.util.Controller;
-
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 
 /**
  * Created by Suit Bots on 10/10/2017.
  */
 
+@Disabled
 @Autonomous(name = "AutonomousRR")
 public abstract class AutonomousRR extends AutoBase  {
     private Robot robot = null;
@@ -41,18 +40,13 @@ public abstract class AutonomousRR extends AutoBase  {
         }
 
 
-        robot = new Robot(hardwareMap, telemetry);
-
-        telemetry.addData("State", "Waiting for start");
-        telemetry.update();
         waitForStart();
-        telemetry.addData("State", "NOT Waiting for Start");
-        telemetry.update();
+        robot = new Robot(hardwareMap, telemetry);
 
         robot.putDownSoas();
         sleep(1000);
 
-        int identifier = robot.getRGBA();
+        int identifier = robot.detectJewelColour();
         final boolean jewelIsRed = 1 == identifier;
 
         if (jewelIsRed == redAlliance) {
@@ -62,12 +56,11 @@ public abstract class AutonomousRR extends AutoBase  {
             knockBackward();
         }
 
-        //robot.drive(0, 0, robot.jewelIsRed() == redAlliance ? .8 : -.8);
-        sleep(750);
-        robot.stopDriveMotors();
 
         robot.putUpSoas();
         sleep(1000);
+
+        driveDirectionTiles(redAlliance ? 0 : Math.PI ,1, 0.8);
 
         //robot.encoderDriveTiles(0.0,1.5); //should go straight
 
