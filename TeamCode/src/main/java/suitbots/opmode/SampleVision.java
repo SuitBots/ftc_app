@@ -1,10 +1,11 @@
 package suitbots.opmode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import suitbots.VisionTargets;
-
+@Disabled
 @TeleOp(name = "Fill your eyes....")
 public class SampleVision extends OpMode {
     private VisionTargets vt;

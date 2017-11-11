@@ -5,7 +5,9 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -53,7 +55,6 @@ public class Robot {
         soas = h.servo.get("soas");
 
 
-
         lr.setDirection(DcMotorSimple.Direction.REVERSE);
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -67,54 +68,50 @@ public class Robot {
     public void resetGyro() {
         lastG = getGyroRaw();
     }
+
     public double getGyroRaw() {
-        Orientation angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
         return angles.firstAngle;
     }
-    public double getGyro(){
-        return (getGyroRaw()-lastG)* (2.0 * Math.PI);
+
+    public double getGyro() {
+        return (getGyroRaw() - lastG) * (2.0 * Math.PI);
     }
 
     private void initilizeGyro() {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.RADIANS;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = false;
-        parameters.loggingTag          = "IMU";
+        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "AdafruitIMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = false;
+        parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu.initialize(parameters);
     }
 
-//    public int getLight() {
-//        return jewelColorDetector.alpha();
-//    }
-
-//    public boolean isAboveWhiteLine() {
-//        if(getLight() >= 200) {
-//            return true;
-//        }
-//        else {
-//            return false;
-//        }
-//    }
-
     public boolean isGyroCalibrated() {
         return imu.isSystemCalibrated();
     }
-    public double getHeadingRadians() { return getGyro(); }
-    public int getHeadingDeg() { return (int)getGyro(); }
+
+    public double getHeadingRadians() {
+        return getGyro();
+    }
+
+    public int getHeadingDeg() {
+        return (int) getGyro();
+    }
 
     public void resetHeading() {
         lastG = getGyroRaw();
     }
 
-    public void setMotorSpeeds(double lfs, double lrs, double rfs, double rrs){
+    public void setMotorSpeeds(double lfs, double lrs, double rfs, double rrs) {
         lf.setPower(lfs);
         lr.setPower(lrs);
         rf.setPower(rfs);
         rr.setPower(rrs);
     }
+
     //wait...why do we need this?
     //OOHHHHHHH!!! Found out
     public void setMotorMode(DcMotor.RunMode mode, DcMotor... ms) {
@@ -131,6 +128,7 @@ public class Robot {
         rr.setTargetPosition(rrs);
         setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rr, rf);
     }
+
     public void resetDriveMotorModes() {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
@@ -160,6 +158,7 @@ public class Robot {
     }
 
     public static final int ENCODERS_CLOSE_ENOUGH = 10;
+
     private boolean busy(DcMotor... ms) {
         int total = 0;
         for (DcMotor m : ms) {
@@ -169,10 +168,12 @@ public class Robot {
         }
         return total > ENCODERS_CLOSE_ENOUGH;
     }
+
     public boolean driveMotorsBusy() {
         return busy(lf, lr, rf, rr);
 
     }
+
     public void onStart() {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rr, rf);
         setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rr, rf);
@@ -182,6 +183,7 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rr, rf);
         stopDriveMotors();
     }
+
     public void stopDriveMotors() {
         lf.setPower(0.0);
         lr.setPower(0.0);
@@ -192,7 +194,7 @@ public class Robot {
 
     private static final double ENCODER_DRIVE_POWER = .3; // .35;
     // Assuming 4" wheels
-    private static final double TICKS_PER_INCH = 1120 * (16./24.) / (Math.PI * 4.0);
+    private static final double TICKS_PER_INCH = 1120 * (16. / 24.) / (Math.PI * 4.0);
     private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
 
     void setEncoderDrivePower(double p) {
@@ -220,8 +222,9 @@ public class Robot {
     private static int SLOW_DOWN_HERE = 1120;
     private static double ARBITRARY_SLOW_SPEED = .3;
     private boolean slowedDown = false;
+
     private void encoderDriveSlowdown() {
-        if (! slowedDown) {
+        if (!slowedDown) {
             if (lf.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
                 int remaining = averageRemainingTicks(lf, lr, rf, rr);
                 if (remaining < SLOW_DOWN_HERE) {
@@ -249,7 +252,7 @@ public class Robot {
         final double td = direction;
         final double vt = rotationVelocity;
 
-        double s =  Math.sin(td + Math.PI / 4.0);
+        double s = Math.sin(td + Math.PI / 4.0);
         double c = Math.cos(td + Math.PI / 4.0);
         double m = Math.max(Math.abs(s), Math.abs(c));
         s /= m;
@@ -293,17 +296,18 @@ public class Robot {
     public static final double OPEN_LITTLE_LEFT = 0.35;
     public static final double CLOSED_RIGHT = 0.70;
     public static final double CLOSED_LEFT = 0.20;
-    public static final double DOWN_SOAS = 0.68;
-    public static final double UP_SOAS = 0;
+
 
     public void grabBlock() {
         rightGripper.setPosition(CLOSED_RIGHT);
         leftGripper.setPosition(CLOSED_LEFT);
     }
+
     public void openArms() {
         rightGripper.setPosition(OPEN_RIGHT);
         leftGripper.setPosition(OPEN_LEFT);
     }
+
     public void openLittle() {
         rightGripper.setPosition(OPEN_LITTLE_RIGHT);
         leftGripper.setPosition(OPEN_LITTLE_LEFT);
@@ -313,38 +317,33 @@ public class Robot {
         lift.setPower(x);
     }
 
-    public void putDownSoas(){
+    public static final double DOWN_SOAS = 0.65;
+    public static final double UP_SOAS = 0.10;
+    public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
     }
     public void putUpSoas() {
         soas.setPosition(UP_SOAS);
     }
 
-    public boolean jewelIsRed(){
+    public boolean jewelIsRed() {
         return jewelColorDetector.red() > jewelColorDetector.blue();
     }
 
-//    public boolean robotIsNear(){
-//        return true;
-//    }
-
-
-//    public void setFrontPower(double p) { pf.setPower(p); }
-//    public void setBackPower(double p) { pr.setPower(p); }
-public void encoderDriveTiles(double direction, double tiles) {
-    encoderDriveInches(direction, 24.0 * tiles);
-}
+    public void encoderDriveTiles(double direction, double tiles) {
+        encoderDriveInches(direction, 24.0 * tiles);
+    }
 
     public void encoderDriveInches(double direction, double inches) {
         final Wheels w = getWheels(direction, 1.0, 0.0);
-        final int ticks = (int)(inches * TICKS_PER_INCH);
+        final int ticks = (int) (inches * TICKS_PER_INCH);
         encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
     }
 
     public void encoderDriveCM(double direction, double cm) {
         direction %= Math.PI * 2.0;
         final Wheels w = getWheels(direction, 1.0, 0.0);
-        final int ticks = (int)(cm * TICKS_PER_CM);
+        final int ticks = (int) (cm * TICKS_PER_CM);
         encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
     }
 
@@ -364,21 +363,15 @@ public void encoderDriveTiles(double direction, double tiles) {
         slowedDown = false;
     }
 
-    //ATTEMPT TO USE BRAIN CODE
-
-    public int getRGBA(){ //0 = blue, 1 = red
-        final float [] important  = new float [] {
+    public int detectJewelColour() { //0 = blue, 1 = red
+        final float[] important = new float[]{
                 jewelColorDetector.red(),
                 jewelColorDetector.blue(),
                 jewelColorDetector.green(),
                 jewelColorDetector.alpha()
         };
-            return Brain.predict(important);
+        return Brain.predict(important);
     }
-
-
-
-
 
 
 }

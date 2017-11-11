@@ -2,6 +2,7 @@ package suitbots;
 
 import android.os.Environment;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -17,7 +18,7 @@ import java.io.PrintWriter;
 /**
  * Created by Samantha on 10/21/2017.
  */
-
+@Disabled
 @TeleOp(name = "Data Gather-er", group = "Tournament")
 public class DataCollectionTeleOp extends OpMode {
     private ColorSensor jewelColorDetector;

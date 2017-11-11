@@ -5,6 +5,9 @@ package suitbots;
  */
 import com.qualcomm.robotcore.eventloop.SyncdDevice;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.concurrent.Callable;
 
@@ -12,10 +15,9 @@ import java.util.concurrent.Callable;
 public abstract class AutoBase extends LinearOpMode  {
     protected Robot robot;
 
-//    protected void initRobot() {
-//        initRobot(true);
-//    }
-
+    public void initialize(HardwareMap hm, Telemetry telemetry) {
+        robot = new Robot(hm, telemetry);
+    }
 
     public void onStart() {
         robot.onStart();
@@ -36,8 +38,6 @@ public abstract class AutoBase extends LinearOpMode  {
     private static final double STUPID_TURN_SPEED = .3;
     private static final int FAST_TURN_THRESHOLD = 30;
     private static final int STUPID_TURN_THRESHOLD = 60;
-
-
 
     private double angleDifference(double from, double to) {
         if (from < 0) from += 2*Math.PI;
@@ -82,14 +82,6 @@ public abstract class AutoBase extends LinearOpMode  {
         robot.stopDriveMotors();
     }
 
-
-
-//
-//    protected void turn(int degrees) throws InterruptedException {
-//        robot.resetGyro();
-//        turnToAngle(- degrees);
-//    }
-
     protected void driveDirectionTiles(double directionRadians, double tiles) throws InterruptedException {
         driveDirectionTiles(directionRadians, tiles, .35);
     }
@@ -111,110 +103,12 @@ public abstract class AutoBase extends LinearOpMode  {
         robot.clearEncoderDrivePower();
     }
 
-//    private void fire(long timeout) throws InterruptedException {
-//        robot.fire();
-//        final long t0 = System.currentTimeMillis();
-//        while (robot.isFlipping()) {
-//            // robot.loop();
-//            final long t1 = System.currentTimeMillis();
-//            if (timeout < (t1 - t0)) {
-//                break;
-//            }
-//        }
-//        robot.setFlipperPower(0.0);
-//    }
-
-   // Let's make some autonomous routines orientation-agnostic.
     protected abstract double forwardDir();
-    protected double pressersDir() {
-        return 3.0 * Math.PI / 2.0;
+
+    public void knockForward() throws InterruptedException {
+        driveDirectionTiles(0, .15, .25);
     }
-    protected double antiPressersDir() { return Math.PI / 2.0; }
-    protected double leftForwardDir() {
-        return (pressersDir() + forwardDir()) / 2.0;
-    }
-    protected double backwardDir() {
-        return forwardDir() + Math.PI;
-    }
-
-    private static final double WHITE_LINE_SPEED = .2;
-//    protected void driveToWhiteLine(double dir) throws InterruptedException {
-//        driveToWhiteLine(dir, WHITE_LINE_SPEED);
-//    }
-//
-//    protected void driveToWhiteLineSlow(double dir) throws InterruptedException {
-//        driveToWhiteLine(dir, WHITE_LINE_SPEED / 2.0);
-//    }
-
-    private static final double LINE_LIGHT_READING_MIN = 4.0;
-    private static final double LINE_READING_SCALE_FACTOR = 3.0;
-//    private void driveToWhiteLine(double dir, double speed) throws InterruptedException {
-//        robot.drive(dir, speed, 0.0);
-//        final double line_limit = LINE_LIGHT_READING_MIN; // robot.getAverageLightMeter() * LINE_READING_SCALE_FACTOR;
-//        while(opModeIsActive() && robot.getLineLightReading() < LINE_LIGHT_READING_MIN) {
-//            robot.loop();
-//            idle();
-//        }
-//        robot.stopDriveMotors();
-//
-//    }
-
-    private static final double SNEAKY_SPEED = .2;
-    private static final double SNEAKY_SCALE = 0.01;
-//    protected void sneakToBeacons() throws InterruptedException {
-//        while(! robot.touchSensorPressed()){
-//            final double orientation = robot.getHeading();
-//            robot.drive(pressersDir(), SNEAKY_SPEED, orientation * SNEAKY_SCALE);
-//            idle(); // If this all of the sudden stops working, drop the idle!!
-//        }
-//        robot.stopDriveMotors();
-//    }
-
-//    protected void sneakToBeaconAssumingCenteredRobot() {
-//        while (! robot.touchSensorPressed()) {
-//
-//        }
-//    }
-
-//    private static final double SLOW_LINE_SPEED = .1;
-//    protected void driveForwardToWhiteLine() throws InterruptedException {
-//        // Let's assume that we're going to overshoot the first time
-//        driveToWhiteLine(forwardDir(), SLOW_LINE_SPEED);
-//    }
-
-//    private BeaconFinder finder = null;
-//
-//    public BeaconFinder.Status beaconLoop() {
-//        if (null == finder) {
-//            finder = new BeaconFinder(robot, vision, telemetry);
-//        }
-//        return finder.loop();
-//    }
-//
-//    public void alignToVisionTarget() throws InterruptedException {
-//        int rot = (int) vision.getOrientation();
-//        turn(rot);
-//    }
-
-//    public void averageColor() {
-//         private double c =0; //c=count
-//        for(){
-//            c++;
-//        }
-//    }
-    private static final double JEWEL_TURN = 5.0;
-    public void knockForward() {
-        try {
-            turnToAngleDeg(JEWEL_TURN);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-    public void knockBackward() {
-        try {
-            turnToAngleDeg(-JEWEL_TURN);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void knockBackward() throws InterruptedException {
+        driveDirectionTiles(Math.PI, .15, .25);
     }
 }
