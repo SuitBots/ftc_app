@@ -67,11 +67,11 @@ public abstract class AutoBase extends LinearOpMode  {
 
     private static final int MAX_HEADING_SLOP = 1;
 
-    protected void turnToAngleDeg(double degrees) throws InterruptedException {
+    private void turnToAngleDeg(double degrees) throws InterruptedException {
         degrees = Math.toRadians(degrees);
         turnToAngleRad(degrees);
     }
-    protected void turnToAngleRad(double radians) throws InterruptedException {
+    private void turnToAngleRad(double radians) throws InterruptedException {
         while(opModeIsActive()) {
             double diff = angleDifference(robot.getHeadingRadians(), radians);
             if (MAX_HEADING_SLOP >= Math.abs(diff)) break;
@@ -202,4 +202,19 @@ public abstract class AutoBase extends LinearOpMode  {
 //            c++;
 //        }
 //    }
+    private static final double JEWEL_TURN = 5.0;
+    public void knockForward() {
+        try {
+            turnToAngleDeg(JEWEL_TURN);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    public void knockBackward() {
+        try {
+            turnToAngleDeg(-JEWEL_TURN);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
  */
 
 @Autonomous(name = "AutonomousRR")
-public class AutonomousRR extends LinearOpMode {
+public abstract class AutonomousRR extends AutoBase  {
     private Robot robot = null;
     private Controller g1, g2;
     private boolean near;
@@ -26,18 +26,20 @@ public class AutonomousRR extends LinearOpMode {
         while (! isStarted()) {
             g1.update();
             telemetry.addData("Alliance (x)", redAlliance ? "RED" : "BLUE");
-            telemetry.update();
 
             if (g1.XOnce()) redAlliance = ! redAlliance;
+
+            telemetry.addData("Location", near ? "Near":"Far");
+
+            if(g1.BOnce()){
+                near = true;
+            } else if(g1.BOnce()) {
+                near = false;
+            }
+            telemetry.addData("Location (b)", near ? "Near":"Far");
+            telemetry.update();
         }
 
-        if(g1.BOnce()){
-            near = true;
-        } else if(g1.BOnce()) {
-            near = false;
-        }
-        telemetry.addData("Location", near ? "Near":"Far");
-        telemetry.update();
 
         robot = new Robot(hardwareMap, telemetry);
 
@@ -50,12 +52,27 @@ public class AutonomousRR extends LinearOpMode {
         robot.putDownSoas();
         sleep(1000);
 
-        robot.drive(0, 0, robot.jewelIsRed() == redAlliance ? .8 : -.8);
+        int identifier = robot.getRGBA();
+        final boolean jewelIsRed = 1 == identifier;
+
+        if (jewelIsRed == redAlliance) {
+            telemetry.addData("State", "MINE");
+            knockForward();
+        }else{
+            knockBackward();
+        }
+
+        //robot.drive(0, 0, robot.jewelIsRed() == redAlliance ? .8 : -.8);
         sleep(750);
         robot.stopDriveMotors();
 
         robot.putUpSoas();
         sleep(1000);
+
+        //robot.encoderDriveTiles(0.0,1.5); //should go straight
+
+        //turnToAngleDeg(90.0);
+
 
    }
 }

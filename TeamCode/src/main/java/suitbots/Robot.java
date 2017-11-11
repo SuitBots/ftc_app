@@ -363,4 +363,22 @@ public void encoderDriveTiles(double direction, double tiles) {
         setPower(encoder_drive_power, lf, lr, rf, rr);
         slowedDown = false;
     }
+
+    //ATTEMPT TO USE BRAIN CODE
+
+    public int getRGBA(){ //0 = blue, 1 = red
+        final float [] important  = new float [] {
+                jewelColorDetector.red(),
+                jewelColorDetector.blue(),
+                jewelColorDetector.green(),
+                jewelColorDetector.alpha()
+        };
+            return Brain.predict(important);
+    }
+
+
+
+
+
+
 }
