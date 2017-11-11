@@ -80,7 +80,7 @@ public class MecanumTeleop2 extends OpMode {
         g2Loop(g2);
         DriverHelper.drive(g1, robot);
         if (debug_mode) {
-            //robot.updateSensorTelemetry();
+            robot.updateSensorTelemetry();
             telemetry.update();
         }
     }

@@ -78,7 +78,7 @@ public class MecanumTeleop extends OpMode {
         g2.update();
         DriverHelper.drive(g1, robot);
         if (debug_mode) {
-            //robot.updateSensorTelemetry();
+            robot.updateSensorTelemetry();
             telemetry.update();
         }
     }
