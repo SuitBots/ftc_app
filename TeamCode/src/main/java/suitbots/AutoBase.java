@@ -82,6 +82,11 @@ public abstract class AutoBase extends LinearOpMode  {
         robot.stopDriveMotors();
     }
 
+    protected void turnRad(final double r) throws InterruptedException {
+        robot.resetGyro();
+        turnToAngleRad(r);
+    }
+
     protected void driveDirectionTiles(double directionRadians, double tiles) throws InterruptedException {
         driveDirectionTiles(directionRadians, tiles, .35);
     }
