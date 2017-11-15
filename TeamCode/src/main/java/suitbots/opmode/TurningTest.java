@@ -23,15 +23,15 @@ public class TurningTest extends AutoBase {
 
         while(opModeIsActive()) {
             c.update();
-//            if (c.AOnce()) {
-//                turnRad(Math.PI / 2.0);
-//            } else if (c.BOnce()) {
-//                turnRad(- Math.PI / 2.0);
-//            } else if (c.XOnce()) {
-//                turnRad(Math.PI);
-//            } else if (c.YOnce()) {
-//                turnRad(- Math.PI);
-//            }
+            if (c.AOnce()) {
+                turnRad(Math.PI / 2.0);
+            } else if (c.BOnce()) {
+                turnRad(- Math.PI / 2.0);
+            } else if (c.XOnce()) {
+                turnRad(Math.PI);
+            } else if (c.YOnce()) {
+                turnRad(- Math.PI);
+            }
         }
     }
 

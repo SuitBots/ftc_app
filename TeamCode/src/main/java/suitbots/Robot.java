@@ -33,7 +33,6 @@ public class Robot {
     private DcMotor armr, arml;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
     private Servo soas;
-    //private Servo rightGripper, leftGripper;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
         telemetry = _telemetry;
@@ -293,8 +292,6 @@ public class Robot {
 
         telemetry.addData("Powers", String.format(Locale.US, "%.2f %.2f %.2f %.2f", w.lf, w.rf, w.lr, w.rr));
     }
-    //open l = 0.25 , r = 0.65
-    //closed l = 0.41 , r = 0.49
 
     public static final double OPEN_RIGHT = 0.90;
     public static final double OPEN_LEFT = 0.00;
@@ -303,21 +300,6 @@ public class Robot {
     public static final double CLOSED_RIGHT = 0.70;
     public static final double CLOSED_LEFT = 0.20;
 
-
-//    public void grabBlock() {
-//        rightGripper.setPosition(CLOSED_RIGHT);
-//        leftGripper.setPosition(CLOSED_LEFT);
-//    }
-//
-//    public void openArms() {
-//        rightGripper.setPosition(OPEN_RIGHT);
-//        leftGripper.setPosition(OPEN_LEFT);
-//    }
-//
-//    public void openLittle() {
-//        rightGripper.setPosition(OPEN_LITTLE_RIGHT);
-//        leftGripper.setPosition(OPEN_LITTLE_LEFT);
-//    }
 
     public void moveLift(double x) {
         lift.setPower(x);
@@ -380,13 +362,13 @@ public class Robot {
     }
 
     public void collect() {
-        arml.setPower(0.5);
-        armr.setPower(0.5);
+        arml.setPower(-0.5);
+        armr.setPower(-0.5);
     }
 
     public void release() {
-        arml.setPower(-0.25);
-        armr.setPower(-0.25);
+        arml.setPower(0.25);
+        armr.setPower(0.25);
     }
 
     public void stoparms() {
