@@ -30,8 +30,10 @@ public class Robot {
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr, lift;
+    private DcMotor armr, arml;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
-    private Servo rightGripper, leftGripper, soas;
+    private Servo soas;
+    //private Servo rightGripper, leftGripper;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
         telemetry = _telemetry;
@@ -49,14 +51,18 @@ public class Robot {
         rr = h.dcMotor.get("rr");
         lift = h.dcMotor.get("lift");
 
+        armr = h.dcMotor.get("armr");
+        arml = h.dcMotor.get("arml");
 
-        rightGripper = h.servo.get("rightGripper");
-        leftGripper = h.servo.get("leftGripper");
+        //rightGripper = h.servo.get("rightGripper");
+        //leftGripper = h.servo.get("leftGripper");
         soas = h.servo.get("soas");
 
+        arml.setDirection(DcMotorSimple.Direction.REVERSE);
 
         lr.setDirection(DcMotorSimple.Direction.REVERSE);
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -290,28 +296,28 @@ public class Robot {
     //open l = 0.25 , r = 0.65
     //closed l = 0.41 , r = 0.49
 
-    public static final double OPEN_RIGHT = 0.81;
-    public static final double OPEN_LEFT = 0.02;
+    public static final double OPEN_RIGHT = 0.90;
+    public static final double OPEN_LEFT = 0.00;
     public static final double OPEN_LITTLE_RIGHT = 0.55;
     public static final double OPEN_LITTLE_LEFT = 0.35;
     public static final double CLOSED_RIGHT = 0.70;
     public static final double CLOSED_LEFT = 0.20;
 
 
-    public void grabBlock() {
-        rightGripper.setPosition(CLOSED_RIGHT);
-        leftGripper.setPosition(CLOSED_LEFT);
-    }
-
-    public void openArms() {
-        rightGripper.setPosition(OPEN_RIGHT);
-        leftGripper.setPosition(OPEN_LEFT);
-    }
-
-    public void openLittle() {
-        rightGripper.setPosition(OPEN_LITTLE_RIGHT);
-        leftGripper.setPosition(OPEN_LITTLE_LEFT);
-    }
+//    public void grabBlock() {
+//        rightGripper.setPosition(CLOSED_RIGHT);
+//        leftGripper.setPosition(CLOSED_LEFT);
+//    }
+//
+//    public void openArms() {
+//        rightGripper.setPosition(OPEN_RIGHT);
+//        leftGripper.setPosition(OPEN_LEFT);
+//    }
+//
+//    public void openLittle() {
+//        rightGripper.setPosition(OPEN_LITTLE_RIGHT);
+//        leftGripper.setPosition(OPEN_LITTLE_LEFT);
+//    }
 
     public void moveLift(double x) {
         lift.setPower(x);
@@ -371,6 +377,21 @@ public class Robot {
                 jewelColorDetector.alpha()
         };
         return Brain.predict(important);
+    }
+
+    public void collect() {
+        arml.setPower(0.5);
+        armr.setPower(0.5);
+    }
+
+    public void release() {
+        arml.setPower(-0.25);
+        armr.setPower(-0.25);
+    }
+
+    public void stoparms() {
+        arml.setPower(0.0);
+        armr.setPower(0.0);
     }
 
 

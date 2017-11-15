@@ -33,7 +33,7 @@ public class JewelAutonomous extends AutoBase {
         }
 
         robot.putDownSoas();
-        robot.grabBlock();
+        //robot.grabBlock();
         sleep(1000);
 
         int identifier = robot.detectJewelColour();
