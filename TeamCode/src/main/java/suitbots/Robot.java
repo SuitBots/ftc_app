@@ -376,5 +376,8 @@ public class Robot {
         armr.setPower(0.0);
     }
 
-
+    public void setArmMotors(final double l, final double r) {
+        arml.setPower(l);
+        armr.setPower(r);
+    }
 }
