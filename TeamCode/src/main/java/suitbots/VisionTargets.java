@@ -1,6 +1,8 @@
 package suitbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.vuforia.HINT;
+import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -29,6 +31,10 @@ public class VisionTargets {
     private OpenGLMatrix pose;
     private VectorF trans;
     private Orientation rot;
+
+    static {
+        Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 1);
+    }
 
     public void initFrontCamera(final OpMode opMode) { init(opMode, true); }
     public void initBackCamera(final OpMode opMode) { init(opMode, false); }
