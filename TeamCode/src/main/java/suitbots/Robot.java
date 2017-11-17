@@ -68,6 +68,12 @@ public class Robot {
         rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void resetGyro() {
@@ -80,7 +86,11 @@ public class Robot {
     }
 
     public double getGyro() {
-        return (getGyroRaw() - lastG) * (2.0 * Math.PI);
+        return (getGyroRaw() - lastG) % (2.0 * Math.PI);
+    }
+
+    public double getGyroDeg() {
+        return Math.toDegrees(getGyro());
     }
 
     private void initilizeGyro() {
@@ -102,8 +112,8 @@ public class Robot {
         return getGyro();
     }
 
-    public int getHeadingDeg() {
-        return (int) getGyro();
+    public double getHeadingDeg() {
+        return (double) getGyroDeg();
     }
 
     public void resetHeading() {
@@ -371,6 +381,11 @@ public class Robot {
         armr.setPower(0.25);
     }
 
+    public void diagonalRelease() {
+        arml.setPower(.5);
+        armr.setPower(-.5);
+    }
+
     public void stoparms() {
         arml.setPower(0.0);
         armr.setPower(0.0);
@@ -379,5 +394,17 @@ public class Robot {
     public void setArmMotors(final double l, final double r) {
         arml.setPower(l);
         armr.setPower(r);
+    }
+
+    public void announceEncoders() {
+        telemetry.addData("LF", lf.getCurrentPosition());
+        telemetry.addData("RF", rf.getCurrentPosition());
+        telemetry.addData("LR", lr.getCurrentPosition());
+        telemetry.addData("RR", rr.getCurrentPosition());
+    }
+
+    public void resetEncoders() {
+        setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
+        setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
 }

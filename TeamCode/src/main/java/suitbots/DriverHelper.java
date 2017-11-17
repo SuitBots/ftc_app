@@ -31,15 +31,17 @@ public class DriverHelper {
             theta = Math.atan2(lx, ly);
             v_theta = Math.sqrt(lx * lx + ly * ly);
             v_rotation = g.right_stick_x;
-
         }
 
         // If A or B are pressed, rotate drive motion by 90 degrees for more effective
         // teleop button pushing.
-        if (g.leftBumper() || g.rightBumper()) {
-            theta += Math.PI / 2.0;
+        if (g.leftBumper()) {
+            v_theta /= 2.0;
         }
 
+        if (g.rightBumper()) {
+            v_theta /= 2.0;
+        }
 
         robot.drive(theta, v_theta, v_rotation);
     }

@@ -53,6 +53,10 @@ public class VisionTargets {
         relicTrackables.activate();
     }
 
+    public void close() {
+        relicTrackables.deactivate();
+    }
+
     public void loop() {
         vuMark = RelicRecoveryVuMark.from(relicTemplate);
         if (vuMark != RelicRecoveryVuMark.UNKNOWN) {
@@ -82,6 +86,4 @@ public class VisionTargets {
     public double getRotationX() { return null == rot ? 0.0 : rot.firstAngle; }
     public double getRotationY() { return null == rot ? 0.0 : rot.secondAngle; }
     public double getRotationZ() { return null == rot ? 0.0 : rot.thirdAngle; }
-
-
 }

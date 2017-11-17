@@ -3,13 +3,11 @@ package suitbots;
 /**
  * Created by Samantha on 9/21/2017.
  */
-import com.qualcomm.robotcore.eventloop.SyncdDevice;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-
-import java.util.concurrent.Callable;
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 
 
 public abstract class AutoBase extends LinearOpMode  {
@@ -33,9 +31,9 @@ public abstract class AutoBase extends LinearOpMode  {
         }
     }
 
-    private static final double SAFE_TURN_SPEED = .1;
-    private static final double FAST_TURN_SPEED = .15;
-    private static final double STUPID_TURN_SPEED = .3;
+    private static final double SAFE_TURN_SPEED = .3;
+    private static final double FAST_TURN_SPEED = .5;
+    private static final double LUCDACRIS_TURN_SPEED = .7;
     private static final int FAST_TURN_THRESHOLD = 30;
     private static final int STUPID_TURN_THRESHOLD = 60;
 
@@ -57,7 +55,7 @@ public abstract class AutoBase extends LinearOpMode  {
     private static double speedForTurnDistance(double angle) {
         angle = Math.abs(angle);
         if (angle > STUPID_TURN_THRESHOLD) {
-            return STUPID_TURN_SPEED;
+            return LUCDACRIS_TURN_SPEED;
         }
         if (angle > FAST_TURN_THRESHOLD) {
             return FAST_TURN_SPEED;
@@ -65,7 +63,7 @@ public abstract class AutoBase extends LinearOpMode  {
         return SAFE_TURN_SPEED;
     }
 
-    private static final int MAX_HEADING_SLOP = 1;
+    private static final double MAX_HEADING_SLOP = Math.PI / 50.0;
 
     private void turnToAngleDeg(double degrees) throws InterruptedException {
         degrees = Math.toRadians(degrees);
@@ -110,10 +108,28 @@ public abstract class AutoBase extends LinearOpMode  {
 
     protected abstract double forwardDir();
 
+    public static final double TURN_ANGLE = Math.PI / 30.0;
     public void knockForward() throws InterruptedException {
-        driveDirectionTiles(0, .15, .25);
+        turnRad(- TURN_ANGLE);
+        robot.putUpSoas();
+        sleep(500);
+        turnRad(TURN_ANGLE);
     }
     public void knockBackward() throws InterruptedException {
-        driveDirectionTiles(Math.PI, .15, .25);
+        turnRad(TURN_ANGLE);
+        robot.putUpSoas();
+        sleep(500);
+        turnRad(- TURN_ANGLE);
+    }
+
+    protected void jumpToTeleop() {
+        jumpToTeleop("TELEOP");
+    }
+
+    protected void jumpToTeleop(final String teleop) {
+        final OpModeManagerImpl ommi = ((OpModeManagerImpl) internalOpModeServices);
+        if (null != ommi) {
+            ommi.initActiveOpMode(teleop);
+        }
     }
 }

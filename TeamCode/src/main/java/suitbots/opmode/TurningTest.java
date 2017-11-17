@@ -1,11 +1,13 @@
 package suitbots.opmode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
 import suitbots.AutoBase;
 import suitbots.Robot;
 
+@Disabled
 @TeleOp(name = "Turning Test")
 public class TurningTest extends AutoBase {
     @Override
@@ -32,6 +34,8 @@ public class TurningTest extends AutoBase {
             } else if (c.YOnce()) {
                 turnRad(- Math.PI);
             }
+            telemetry.addData("Heading Degrees!! : ",robot.getHeadingDeg());
+            telemetry.update();
         }
     }
 

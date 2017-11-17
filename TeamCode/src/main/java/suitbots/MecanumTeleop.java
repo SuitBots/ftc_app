@@ -8,7 +8,7 @@ import com.suitbots.util.Controller;
  * Created by Samantha on 9/30/2017.
  */
 
-@TeleOp(name = "Mr. Bulldops", group = "Tournament")
+@TeleOp(name = "TELEOP", group = "Tournament")
 public class MecanumTeleop extends OpMode {
     private Robot robot = null;
     private Controller g1, g2;
@@ -61,6 +61,7 @@ public class MecanumTeleop extends OpMode {
     private void g2Loop(Controller g) {
         if(g.A()) {robot.collect();}
         else if(g.B()) {robot.release();}
+        else if(g.X()) { robot.diagonalRelease(); }
         else {robot.stoparms();}
         robot.moveLift(g.right_trigger - g.left_trigger);
     }

@@ -1,16 +1,20 @@
 package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.suitbots.util.Controller;
+import com.vuforia.VuMarkTarget;
+
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
 import suitbots.AutoBase;
-import suitbots.Robot;
+import suitbots.VisionTargets;
 
 /**
  * Created by Suit Bots on 11/11/2017.
  */
 
-@Autonomous(name = "Jewel Auto")
+@Autonomous(name = "AUTONOMOUS", group = "Tournament")
 public class JewelAutonomous extends AutoBase {
     boolean redAlliance = true;
 
@@ -18,19 +22,21 @@ public class JewelAutonomous extends AutoBase {
     public void runOpMode() throws InterruptedException {
         Controller c = new Controller(gamepad1);
         initialize(hardwareMap, telemetry);
+        final VisionTargets vt = new VisionTargets();
+        vt.initFrontCamera(this);
 
         while (! isStarted()) {
+            vt.loop();
             c.update();
             if (c.AOnce()) redAlliance = ! redAlliance;
             telemetry.addData("Alliance (a)", redAlliance ? "RED" : "BLUE");
             telemetry.addData("Time", getRuntime());
-            if(robot.isGyroCalibrated()){
-                telemetry.addData("Ready?", "YES.");
-            }else {
-                telemetry.addData("Ready?","no");
-            }
+            telemetry.addData("Vision", vt.getCurrentVuMark());
             telemetry.update();
         }
+
+        final RelicRecoveryVuMark target = vt.getCurrentVuMark();
+        vt.close();
 
         robot.putDownSoas();
         //robot.grabBlock();
@@ -39,14 +45,6 @@ public class JewelAutonomous extends AutoBase {
         int identifier = robot.detectJewelColour();
         final boolean jewelIsRed = 1 == identifier;
 
-        telemetry.addData("Color (x to continue)", jewelIsRed ? "RED" : "BLUE");
-        telemetry.addData("Alliance", redAlliance ? "RED" : "BLUE");
-        telemetry.update();
-        while (true) {
-            if(gamepad1.x) break;
-            idle();
-        }
-
         if (jewelIsRed == redAlliance) {
             knockForward();
         }else{
@@ -54,13 +52,27 @@ public class JewelAutonomous extends AutoBase {
         }
 
         robot.putUpSoas();
-        sleep(2000);
-        driveDirectionTiles(forwardDir(), 2, 0.5);
-        driveDirectionTiles(forwardDir() + (redAlliance ? 3 : 1) * Math.PI / 2.0, .5, .5);
+        // This is the drive that you want to move based on the VuMark
+        driveDirectionTiles(forwardDir(), 1.75, 0.5);
+        turnRad(Math.PI / 2.0);
+        throwGlyph(300, .4, -.6);
+        driveDirectionTiles(0, .25, .5);
+        robot.release();
+        driveDirectionTiles(0, .25, .5);
+        driveDirectionTiles(Math.PI, .3, .5);
+        robot.stopDriveMotors();
+
+        jumpToTeleop();
+    }
+
+    private void throwGlyph(final long time, final double leftPower, final double rightPower) {
+        robot.setArmMotors(leftPower, rightPower);
+        sleep(time);
+        robot.stoparms();
     }
 
     @Override
     protected double forwardDir() {
-        return redAlliance ? 0 : Math.PI;
+        return redAlliance ? Math.PI : 0.0;
     }
 }
