@@ -316,7 +316,7 @@ public class Robot {
     }
 
     public static final double DOWN_SOAS = 0.65;
-    public static final double UP_SOAS = 0.10;
+    public static final double UP_SOAS = 0.20;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
     }
@@ -407,4 +407,5 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
+
 }
