@@ -20,7 +20,7 @@ public class JewelAutonomous extends AutoBase {
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
-    public static final double COLUMN_ADJUST = .3;
+    public static final double COLUMN_ADJUST = .25;
     protected double adjustDriveDistance(final RelicRecoveryVuMark v) {
         if (RelicRecoveryVuMark.LEFT == v) {
             if(redAlliance){
@@ -74,16 +74,12 @@ public class JewelAutonomous extends AutoBase {
         robot.putUpSoas();
         // This is the drive that you want to move based on the VuMark.
         // There's a method up above where you can do that.
-        driveDirectionTiles(forwardDir(), 1.65 + adjustDriveDistance(target), 0.5);
-        turnRad(redAlliance  ? (Math.PI / 2.0) : (Math.PI / 2.2));
-        driveDirectionTiles(0, .35, .5);
-        throwGlyph(1000, .6, -.8);
+        driveDirectionTiles(forwardDir(), 1.75 + adjustDriveDistance(target), 0.5);
+        turnRad((Math.PI / 2.0));
+        throwGlyph(300, .6, -.8);
         robot.release();
-
-        driveDirectionTiles(0, .1, .5);
+        driveDirectionTiles(0, .25, .5);
         driveDirectionTiles(Math.PI, .3, .5);
-        driveDirectionTiles(0, .3, .5);
-        driveDirectionTiles(Math.PI, .25, .5);
         robot.stopDriveMotors();
 
         jumpToTeleop();

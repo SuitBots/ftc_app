@@ -1,3 +1,5 @@
+package suitbots;
+
 class Brain {
 
     public static int predict(float[] atts) {

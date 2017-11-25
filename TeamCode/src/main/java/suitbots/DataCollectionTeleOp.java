@@ -18,7 +18,6 @@ import java.io.PrintWriter;
 /**
  * Created by Samantha on 10/21/2017.
  */
-@Disabled
 @TeleOp(name = "Data Gather-er", group = "Tournament")
 public class DataCollectionTeleOp extends OpMode {
     private ColorSensor jewelColorDetector;
@@ -56,30 +55,28 @@ public class DataCollectionTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        final float r = jewelColorDetector.red(),
+                g = jewelColorDetector.green(),
+                b = jewelColorDetector.blue(),
+                a = jewelColorDetector.alpha();
         if(g1.X()){
-            printf.printf("%d\t%d\t%d\t%d\t%s\n",
-                    jewelColorDetector.red(),
-                    jewelColorDetector.green(),
-                    jewelColorDetector.blue(),
-                    jewelColorDetector.alpha(),
+            printf.printf("%f\t%f\t%f\t%f\t%s\n",r, g, b, a,
                     "BLUE"
                     );
             telemetry.addData("Writing", "BLUE");
             telemetry.addData("Counter BLUE", countB++);
         } else if(g1.B()){
-            printf.printf("%d\t%d\t%d\t%d\t%s\n",
-                    jewelColorDetector.red(),
-                    jewelColorDetector.green(),
-                    jewelColorDetector.blue(),
-                    jewelColorDetector.alpha(),
+            printf.printf("%f\t%f\t%f\t%f\t%s\n",r, g, b, a,
                     "RED");
             telemetry.addData("Writing", "RED");
             telemetry.addData("Counter RED", countR++);
+        } else {
+            telemetry.addData("Brain Results", Brain.predict(new float[] {r, g, b, a}) == 1 ? "RED" : "BLUE");
         }
-        telemetry.addData("Color Red - ",jewelColorDetector.red());
-        telemetry.addData("Color Green - ",jewelColorDetector.green());
-        telemetry.addData("Color Blue - ",jewelColorDetector.blue());
-        telemetry.addData("Color Alpha - ",jewelColorDetector.alpha());
+        telemetry.addData("Color Red - ",r);
+        telemetry.addData("Color Green - ",g);
+        telemetry.addData("Color Blue - ",b);
+        telemetry.addData("Color Alpha - ",a);
 
         g1.update();
         g2.update();
