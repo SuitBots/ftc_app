@@ -361,14 +361,16 @@ public class Robot {
         slowedDown = false;
     }
 
+    private static Brain brain = BrainBuilder.makeBrain();
+
     public int detectJewelColour() { //0 = blue, 1 = red
-        final float[] important = new float[]{
+        final double[] important = new double[]{
                 jewelColorDetector.red(),
                 jewelColorDetector.blue(),
                 jewelColorDetector.green(),
                 jewelColorDetector.alpha()
         };
-        return Brain.predict(important);
+        return brain.predict(important);
     }
 
     public void collect() {
