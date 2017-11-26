@@ -1,16 +1,14 @@
 package suitbots;
 
-import android.os.Environment;
+import android.content.res.Resources;
+
+import org.firstinspires.ftc.teamcode.R;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class BrainBuilder {
-    public static final File ROOT_FOLDER = Environment.getExternalStorageDirectory();
-    public static final File FIRST_FOLDER = new File(ROOT_FOLDER + "/FIRST/");
-
     private static double[] readDoubleArray(final String s) {
         final String[] ss = readRow(s);
         final double[] ret = new double[ss.length];
@@ -57,9 +55,12 @@ public class BrainBuilder {
     }
 
     public static Brain makeBrain() {
-        final File fp = new File(FIRST_FOLDER, "brain.dat");
         try {
-            final BufferedReader br = new BufferedReader(new FileReader(fp));
+            final InputStream is = BrainBuilder.class.getClassLoader().getResourceAsStream("res/raw/brain_config.dat");
+            if (null == is) {
+                throw new RuntimeException("Could not load brain config");
+            }
+            final BufferedReader br = new BufferedReader(new InputStreamReader(is));
             final int nClasses = Integer.parseInt(br.readLine().trim());
             final int nRows = Integer.parseInt(br.readLine().trim());
             final String kernel = br.readLine().trim();
