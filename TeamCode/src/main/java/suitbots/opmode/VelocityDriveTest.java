@@ -27,6 +27,8 @@ public class VelocityDriveTest extends AutoBase {
             } else {
                 DriverHelper.drive(c, robot);
             }
+            telemetry.addData("Velocity", robot.absoluteVelocity());
+            telemetry.update();
         }
     }
 
