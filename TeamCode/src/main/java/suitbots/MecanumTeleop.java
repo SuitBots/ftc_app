@@ -49,6 +49,16 @@ public class MecanumTeleop extends OpMode {
         robot.onStop();
     }
 
+    private void runCollector(Controller g) {
+        if (g.A()) {
+            robot.collect();
+        } else if (g.B()) {
+            robot.release();
+        } else {
+            robot.stoparms();
+        }
+    }
+
     private void g1Loop(Controller g) {
         if (g.YOnce()) {
             robot.putUpSoas();
@@ -59,11 +69,9 @@ public class MecanumTeleop extends OpMode {
     }
 
     private void g2Loop(Controller g) {
-        if(g.A()) {robot.collect();}
-        else if(g.B()) {robot.release();}
-        else if(g.X()) { robot.diagonalRelease(); }
-        else {robot.stoparms();}
+        runCollector(g);
         robot.moveLift(g.right_trigger - g.left_trigger);
+        robot.setRelicarmPower(- g.right_stick_x);
     }
 
     @Override

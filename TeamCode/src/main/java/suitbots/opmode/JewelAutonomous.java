@@ -81,8 +81,6 @@ public class JewelAutonomous extends AutoBase {
         driveDirectionTiles(0, .25, .5);
         driveDirectionTiles(Math.PI, .3, .5);
         robot.stopDriveMotors();
-
-        jumpToTeleop();
     }
 
     private void throwGlyph(final long time, final double leftPower, final double rightPower) {
