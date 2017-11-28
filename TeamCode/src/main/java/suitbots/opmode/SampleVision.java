@@ -13,7 +13,7 @@ public class SampleVision extends OpMode {
     @Override
     public void init() {
         vt = new VisionTargets();
-        vt.initBackCamera(this);
+        vt.initFrontCamera(this);
     }
 
     @Override
@@ -24,9 +24,9 @@ public class SampleVision extends OpMode {
             telemetry.addData("TX", vt.getTranslationX());
             telemetry.addData("TY", vt.getTranslationY());
             telemetry.addData("TZ", vt.getTranslationZ());
-            telemetry.addData("RX", vt.getRotationX());
-            telemetry.addData("RY", vt.getRotationY());
-            telemetry.addData("RZ", vt.getRotationZ());
+            telemetry.addData("RX", Math.toDegrees(vt.getRotationX()));
+            telemetry.addData("RY", Math.toDegrees(vt.getRotationY()));
+            telemetry.addData("RZ", Math.toDegrees(vt.getRotationZ()));
         } else {
             telemetry.clear();
             telemetry.addData("Vision", "Zero");

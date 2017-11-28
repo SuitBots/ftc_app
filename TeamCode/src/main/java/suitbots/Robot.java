@@ -40,10 +40,6 @@ public class Robot {
         initilizeGyro();
         jewelColorDetector = h.colorSensor.get("jewelColorDetector");
 
-        //pf = new LazyCR(hardwareMap.crservo.get("pf"));
-        //pr = new LazyCR(hardwareMap.crservo.get("pr"));
-
-
         lf = h.dcMotor.get("lf");
         lr = h.dcMotor.get("lr");
         rf = h.dcMotor.get("rf");
