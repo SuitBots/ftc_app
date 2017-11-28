@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
 
@@ -30,7 +31,7 @@ public class Robot {
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr, lift;
-    private DcMotor armr, arml;
+    private DcMotor armr, arml, relicarm;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
     private Servo soas;
 
@@ -52,6 +53,7 @@ public class Robot {
 
         armr = h.dcMotor.get("armr");
         arml = h.dcMotor.get("arml");
+        relicarm = h.dcMotor.get("relicarm");
 
         //rightGripper = h.servo.get("rightGripper");
         //leftGripper = h.servo.get("leftGripper");
@@ -80,9 +82,23 @@ public class Robot {
         lastG = getGyroRaw();
     }
 
+    private Orientation orientation;
+    private Velocity velocity;
+    public void loop() {
+        orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+    }
+
     public double getGyroRaw() {
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
-        return angles.firstAngle;
+        return orientation.firstAngle;
+    }
+
+    public Velocity getVelocity() {
+        return velocity;
+    }
+
+    public double absoluteVelocity() {
+        return Math.sqrt(velocity.xVeloc * velocity.xVeloc + velocity.yVeloc * velocity.yVeloc + velocity.zVeloc * velocity.zVeloc);
+
     }
 
     public double getGyro() {
@@ -118,6 +134,10 @@ public class Robot {
 
     public void resetHeading() {
         lastG = getGyroRaw();
+    }
+
+    public void setRelicarmPower(final double x) {
+        relicarm.setPower(x);
     }
 
     public void setMotorSpeeds(double lfs, double lrs, double rfs, double rrs) {
