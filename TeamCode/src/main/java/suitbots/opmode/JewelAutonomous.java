@@ -87,7 +87,23 @@ public class JewelAutonomous extends AutoBase {
         throwGlyph(300, 0, 1);
         robot.release();
         driveDirectionTiles(0, .5, .75);
+        driveDirectionTiles(Math.PI, .5, .5);
+
+        // MORE GLYPHZ?
+        turnRad(Math.PI);
+        robot.collect();
+        driveDirectionTiles(0, 1.2, .75);
+        turnRad(Math.PI / 8.0);
+        turnRad(- Math.PI  / 4.0);
+        turnRad(Math.PI / 8.0);
+        robot.stoparms();
+        turnRad(Math.PI);
+        driveDirectionTiles(0, 1.0, 1);
+        throwGlyph(300, 0, 1);
+        robot.release();
+        driveDirectionTiles(0, .75, .75);
         driveDirectionTiles(Math.PI, .3, .5);
+
         robot.stopDriveMotors();
     }
 
