@@ -5,6 +5,7 @@ package suitbots;
  */
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.suitbots.util.Controller;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
@@ -12,9 +13,23 @@ import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 
 public abstract class AutoBase extends LinearOpMode  {
     protected Robot robot;
+    protected Controller c;
+    protected void debug(String wat) {
+        telemetry.addData("What", wat);
+        telemetry.update();
+        while (opModeIsActive()) {
+            c.update();
+            if (c.XOnce()) {
+                break;
+            }
+        }
+    }
+
+
 
     public void initialize(HardwareMap hm, Telemetry telemetry) {
         robot = new Robot(hm, telemetry);
+        c = new Controller(gamepad1);
     }
 
     protected void snooze(int ms) throws InterruptedException {
@@ -23,7 +38,7 @@ public abstract class AutoBase extends LinearOpMode  {
         }
     }
 
-    private static final double SAFE_TURN_SPEED = .3;
+    private static final double SAFE_TURN_SPEED = .2;
     private static final double FAST_TURN_SPEED = .5;
     private static final double LUCDACRIS_TURN_SPEED = .7;
     private static final double FAST_TURN_THRESHOLD = Math.PI / 6.0;
@@ -55,7 +70,7 @@ public abstract class AutoBase extends LinearOpMode  {
         return SAFE_TURN_SPEED;
     }
 
-    private static final double MAX_HEADING_SLOP = Math.PI / 50.0;
+    private static final double MAX_HEADING_SLOP = Math.PI / 60.0;
 
     private void turnToAngleRad(double radians) throws InterruptedException {
         while(opModeIsActive()) {
@@ -114,7 +129,7 @@ public abstract class AutoBase extends LinearOpMode  {
 
     protected abstract double forwardDir();
 
-    public static final double TURN_ANGLE = Math.PI / 30.0;
+    public static final double TURN_ANGLE = Math.PI / 20.0;
     public void knockForward() throws InterruptedException {
         turnRad(- TURN_ANGLE);
         robot.putUpSoas();

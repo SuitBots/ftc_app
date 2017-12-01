@@ -18,9 +18,16 @@ import suitbots.VisionTargets;
 public class JewelAutonomous extends AutoBase {
     boolean redAlliance = true;
 
+    // This is the number of tiles that we drive after the jewel
+    // to line up with the center column. Change this if the center column
+    // is way off from the rest of them.
+    public static final double BASE_DISTANCE = 1.75;
+
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
-    public static final double COLUMN_ADJUST = .25;
+    // change this if you're wide on both left and right (decrease it)
+    // or if you always hit center (increase)
+    public static final double COLUMN_ADJUST = .35;
     protected double adjustDriveDistance(final RelicRecoveryVuMark v) {
         if (RelicRecoveryVuMark.LEFT == v) {
             if(redAlliance){
@@ -39,7 +46,6 @@ public class JewelAutonomous extends AutoBase {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Controller c = new Controller(gamepad1);
         initialize(hardwareMap, telemetry);
         final VisionTargets vt = new VisionTargets();
         vt.initFrontCamera(this);
@@ -74,11 +80,13 @@ public class JewelAutonomous extends AutoBase {
         robot.putUpSoas();
         // This is the drive that you want to move based on the VuMark.
         // There's a method up above where you can do that.
-        driveDirectionTiles(forwardDir(), 1.75 + adjustDriveDistance(target), 0.5);
+        driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+
         turnRad((Math.PI / 2.0));
-        throwGlyph(300, .6, -.8);
+
+        throwGlyph(300, 0, 1);
         robot.release();
-        driveDirectionTiles(0, .25, .5);
+        driveDirectionTiles(0, .5, .75);
         driveDirectionTiles(Math.PI, .3, .5);
         robot.stopDriveMotors();
     }
