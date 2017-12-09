@@ -334,8 +334,8 @@ public class Robot {
         lift.setPower(x);
     }
 
-    public static final double DOWN_SOAS = 0.66;
-    public static final double UP_SOAS = 0.20;
+    public static final double DOWN_SOAS = 1; // 0.66;
+    public static final double UP_SOAS = 0;   // 0.20;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
     }
@@ -399,14 +399,18 @@ public class Robot {
         }
     }
 
+    public boolean failSafeColourDetectIsRed() {        //here -----------
+        return jewelColorDetector.red() > jewelColorDetector.blue();
+    }
+
     public void collect() {
-        arml.setPower(-0.5);
-        armr.setPower(-0.5);
+        arml.setPower(-0.75);
+        armr.setPower(-0.75);
     }
 
     public void release() {
-        arml.setPower(0.25);
-        armr.setPower(0.25);
+        arml.setPower(0.75);
+        armr.setPower(0.75);
     }
 
     public void diagonalRelease() {
