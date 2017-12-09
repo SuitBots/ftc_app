@@ -49,10 +49,8 @@ public class Robot {
 
         armr = h.dcMotor.get("armr");
         arml = h.dcMotor.get("arml");
-        relicarm = h.dcMotor.get("relicarm");
+        // relicarm = h.dcMotor.get("relicarm");
 
-        //rightGripper = h.servo.get("rightGripper");
-        //leftGripper = h.servo.get("leftGripper");
         soas = h.servo.get("soas");
 
         arml.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -85,6 +83,7 @@ public class Robot {
     }
 
     public double getGyroRaw() {
+        orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
         return orientation.firstAngle;
     }
 
@@ -133,7 +132,7 @@ public class Robot {
     }
 
     public void setRelicarmPower(final double x) {
-        relicarm.setPower(x);
+        // relicarm.setPower(x);
     }
 
     public void setMotorSpeeds(double lfs, double lrs, double rfs, double rrs) {
@@ -331,7 +330,7 @@ public class Robot {
         lift.setPower(x);
     }
 
-    public static final double DOWN_SOAS = 0.70;
+    public static final double DOWN_SOAS = 0.66;
     public static final double UP_SOAS = 0.20;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
@@ -386,7 +385,14 @@ public class Robot {
                 jewelColorDetector.green(),
                 jewelColorDetector.alpha()
         };
-        return brain.predict(important);
+        if (null == brain) {
+            throw new RuntimeException("NULL BRAIN");
+        }
+        try {
+            return brain.predict(important);
+        } catch (NullPointerException npe) {
+            throw new RuntimeException(npe);
+        }
     }
 
     public void collect() {
