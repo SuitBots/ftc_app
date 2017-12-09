@@ -83,10 +83,12 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void loop() {
+        telemetry.addData("Velocity: ", robot.absoluteVelocity());
         g1.update();
         g2.update();
         g1Loop(g1);
         g2Loop(g2);
         DriverHelper.drive(g1, robot);
+        telemetry.update();
     }
 }

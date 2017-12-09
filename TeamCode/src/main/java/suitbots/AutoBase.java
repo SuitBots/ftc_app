@@ -72,7 +72,7 @@ public abstract class AutoBase extends LinearOpMode  {
 
     private static final double MAX_HEADING_SLOP = Math.PI / 60.0;
 
-    private void turnToAngleRad(double radians) throws InterruptedException {
+    protected void turnToAngleRad(double radians) throws InterruptedException {
         while(opModeIsActive()) {
             robot.loop();
             double diff = angleDifference(robot.getHeadingRadians(), radians);
@@ -115,9 +115,14 @@ public abstract class AutoBase extends LinearOpMode  {
     }
 
     protected void driveDirectionTiles(double directionRadians, double tiles, double power) throws InterruptedException {
+        driveDirectionTiles(directionRadians, tiles, power, Double.MAX_VALUE);
+    }
+
+    protected void driveDirectionTiles(double directionRadians, double tiles, double power, double maxTime) throws InterruptedException {
+        final double t0 = getRuntime();
         robot.setEncoderDrivePower(power);
         robot.encoderDriveTiles(directionRadians, tiles);
-        while (opModeIsActive() && robot.driveMotorsBusy()) {
+        while (opModeIsActive() && robot.driveMotorsBusy() && (maxTime > (getRuntime() - t0))) {
             robot.loop();
             telemetry.update();
             idle();
@@ -126,6 +131,7 @@ public abstract class AutoBase extends LinearOpMode  {
         robot.resetDriveMotorModes();
         robot.clearEncoderDrivePower();
     }
+
 
     protected abstract double forwardDir();
 
@@ -142,4 +148,21 @@ public abstract class AutoBase extends LinearOpMode  {
         snooze(500);
         turnRad(- TURN_ANGLE);
     }
+
+    public double getVelocity() {
+        return robot.absoluteVelocity();
+    }
+
+    public double maxVelocity(double previousVelocity, double newVelocity) {
+        if(previousVelocity > newVelocity){
+           return previousVelocity;
+        }else{
+            return newVelocity;
+        }
+    }
+
+    public boolean checkVelocity(double maxVelocity, double lastVelocity) {
+        return maxVelocity >= lastVelocity;
+    }
+
 }

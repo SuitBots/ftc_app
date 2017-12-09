@@ -78,7 +78,6 @@ public class Robot {
     }
 
     private Orientation orientation;
-    private Velocity velocity;
     public void loop() {
         orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
     }
@@ -89,10 +88,11 @@ public class Robot {
     }
 
     public Velocity getVelocity() {
-        return velocity;
+        return imu.getVelocity();
     }
 
     public double absoluteVelocity() {
+        final Velocity velocity = getVelocity();
         return Math.sqrt(velocity.xVeloc * velocity.xVeloc + velocity.yVeloc * velocity.yVeloc + velocity.zVeloc * velocity.zVeloc);
 
     }

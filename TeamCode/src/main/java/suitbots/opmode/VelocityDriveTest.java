@@ -15,6 +15,7 @@ public class VelocityDriveTest extends AutoBase {
         waitForStart();
 
         while (opModeIsActive()) {
+            robot.loop();
             c.update();
             if (c.XOnce()) {
                 driveUntilStop(0.0, .25);

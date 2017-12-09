@@ -21,7 +21,7 @@ public class JewelAutonomous extends AutoBase {
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
     // is way off from the rest of them.
-    public static final double BASE_DISTANCE = 1.75;
+    public static final double BASE_DISTANCE = .75;
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
@@ -84,36 +84,29 @@ public class JewelAutonomous extends AutoBase {
         sleep(500);
 
         robot.putUpSoas();
+        robot.setSwing();
+
+        driveDirectionTiles(forwardDir(),1.0,.35);
+
+        // make sure we're still aligned coming off the balancing stone
+        turnToAngleRad(0);
+
         // This is the drive that you want to move based on the VuMark.
         // There's a method up above where you can do that.
-//        driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
-//
-//        turnRad((Math.PI / 2.0));
-//
-//        throwGlyph();
-//        robot.release();
-//        driveDirectionTiles(0, .5, .75);
-//        driveDirectionTiles(Math.PI, .5, .5);
-//
-//        // MORE GLYPHZ?
-//        turnRad(Math.PI);
-//        robot.collect();
-//        driveDirectionTiles(0, 1.2, .75);
-//        sleep(1000);
-//        driveDirectionTiles(Math.PI, .5, 1);
-//        turnRad(Math.PI);
-//        robot.stoparms();
-//        driveDirectionTiles(0, .5, 1);
-//        throwGlyph();
-//        robot.release();
-//        driveDirectionTiles(0, .5, .75);
-//        driveDirectionTiles(Math.PI, .3, .5);
+        driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+        turnRad((Math.PI / 2.0));
+
+        throwGlyph();
+        robot.release();
+        driveDirectionTiles(0, .5, .75, 3.5);
+        driveDirectionTiles(Math.PI, .5, .5);
+        turnRad(Math.PI);
 
         robot.stopDriveMotors();
     }
 
     private void throwGlyph() {
-        throwGlyph(300, 0, 1);
+        throwGlyph(500, .5, -.5);
     }
 
     private void throwGlyph(final long time, final double leftPower, final double rightPower) {
