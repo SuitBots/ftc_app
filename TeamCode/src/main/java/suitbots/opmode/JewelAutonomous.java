@@ -66,12 +66,12 @@ public class JewelAutonomous extends AutoBase {
 
         robot.putDownSoas();
         //robot.grabBlock();
-        sleep(1000);
+        sleep(3000);
 
         int identifier = robot.detectJewelColour();
         final boolean jewelIsRed = 1 == identifier;
 
-        if (jewelIsRed == redAlliance) {
+        if (jewelIsRed  == redAlliance) {
             knockForward();
         }else{
             knockBackward();
@@ -84,7 +84,7 @@ public class JewelAutonomous extends AutoBase {
 
         turnRad((Math.PI / 2.0));
 
-        throwGlyph(300, 0, 1);
+        throwGlyph();
         robot.release();
         driveDirectionTiles(0, .5, .75);
         driveDirectionTiles(Math.PI, .5, .5);
@@ -93,18 +93,21 @@ public class JewelAutonomous extends AutoBase {
         turnRad(Math.PI);
         robot.collect();
         driveDirectionTiles(0, 1.2, .75);
-        turnRad(Math.PI / 8.0);
-        turnRad(- Math.PI  / 4.0);
-        turnRad(Math.PI / 8.0);
-        robot.stoparms();
+        sleep(1000);
+        driveDirectionTiles(Math.PI, .5, 1);
         turnRad(Math.PI);
-        driveDirectionTiles(0, 1.0, 1);
-        throwGlyph(300, 0, 1);
+        robot.stoparms();
+        driveDirectionTiles(0, .5, 1);
+        throwGlyph();
         robot.release();
-        driveDirectionTiles(0, .75, .75);
+        driveDirectionTiles(0, .5, .75);
         driveDirectionTiles(Math.PI, .3, .5);
 
         robot.stopDriveMotors();
+    }
+
+    private void throwGlyph() {
+        throwGlyph(300, 0, 1);
     }
 
     private void throwGlyph(final long time, final double leftPower, final double rightPower) {
