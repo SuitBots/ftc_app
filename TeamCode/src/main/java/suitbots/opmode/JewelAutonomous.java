@@ -64,6 +64,9 @@ public class JewelAutonomous extends AutoBase {
         final RelicRecoveryVuMark target = vt.getCurrentVuMark();
         vt.close();
 
+        robot.setSwing();
+        sleep(500);
+
         robot.putDownSoas();
         //robot.grabBlock();
         sleep(3000);
@@ -71,37 +74,43 @@ public class JewelAutonomous extends AutoBase {
         int identifier = robot.detectJewelColour();
         final boolean jewelIsRed = 1 == identifier;
 
+        debug("Jewel Color: " + identifier+", " + jewelIsRed + ", alliace " + (redAlliance ? "red" : "blue"));
+
         if (jewelIsRed  == redAlliance) {
-            knockForward();
+            debug("swing forward");
+            robot.swingForward();
         }else{
-            knockBackward();
+            debug("swing back");
+            robot.swingBack();
         }
+
+        sleep(500);
 
         robot.putUpSoas();
         // This is the drive that you want to move based on the VuMark.
         // There's a method up above where you can do that.
-        driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
-
-        turnRad((Math.PI / 2.0));
-
-        throwGlyph();
-        robot.release();
-        driveDirectionTiles(0, .5, .75);
-        driveDirectionTiles(Math.PI, .5, .5);
-
-        // MORE GLYPHZ?
-        turnRad(Math.PI);
-        robot.collect();
-        driveDirectionTiles(0, 1.2, .75);
-        sleep(1000);
-        driveDirectionTiles(Math.PI, .5, 1);
-        turnRad(Math.PI);
-        robot.stoparms();
-        driveDirectionTiles(0, .5, 1);
-        throwGlyph();
-        robot.release();
-        driveDirectionTiles(0, .5, .75);
-        driveDirectionTiles(Math.PI, .3, .5);
+//        driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+//
+//        turnRad((Math.PI / 2.0));
+//
+//        throwGlyph();
+//        robot.release();
+//        driveDirectionTiles(0, .5, .75);
+//        driveDirectionTiles(Math.PI, .5, .5);
+//
+//        // MORE GLYPHZ?
+//        turnRad(Math.PI);
+//        robot.collect();
+//        driveDirectionTiles(0, 1.2, .75);
+//        sleep(1000);
+//        driveDirectionTiles(Math.PI, .5, 1);
+//        turnRad(Math.PI);
+//        robot.stoparms();
+//        driveDirectionTiles(0, .5, 1);
+//        throwGlyph();
+//        robot.release();
+//        driveDirectionTiles(0, .5, .75);
+//        driveDirectionTiles(Math.PI, .3, .5);
 
         robot.stopDriveMotors();
     }

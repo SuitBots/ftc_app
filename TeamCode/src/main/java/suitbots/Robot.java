@@ -33,7 +33,7 @@ public class Robot {
     private DcMotor lf, lr, rf, rr, lift;
     private DcMotor armr, arml, relicarm;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
-    private Servo soas;
+    private Servo soas, swing;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
         telemetry = _telemetry;
@@ -52,6 +52,7 @@ public class Robot {
         // relicarm = h.dcMotor.get("relicarm");
 
         soas = h.servo.get("soas");
+        swing = h.servo.get("swing");
 
         arml.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -339,6 +340,20 @@ public class Robot {
         soas.setPosition(UP_SOAS);
     }
 
+    public static final double SWING_FORWARD = .35;
+    public static final double SWING_BACK = .75;
+    public static final double SET_SWING = .50;
+
+    public void swingForward() {
+        swing.setPosition(SWING_FORWARD);
+    }
+    public void swingBack() {
+        swing.setPosition(SWING_BACK);
+    }
+    public void setSwing() {
+        swing.setPosition(SET_SWING);
+    }
+
     public boolean jewelIsRed() {
         return jewelColorDetector.red() > jewelColorDetector.blue();
     }
@@ -435,5 +450,7 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
+
+
 
 }
