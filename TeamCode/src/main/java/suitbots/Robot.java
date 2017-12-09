@@ -342,7 +342,7 @@ public class Robot {
 
     public static final double SWING_FORWARD = .35;
     public static final double SWING_BACK = .75;
-    public static final double SET_SWING = .50;
+    public static final double SET_SWING = .47;
 
     public void swingForward() {
         swing.setPosition(SWING_FORWARD);

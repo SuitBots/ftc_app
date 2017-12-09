@@ -69,18 +69,15 @@ public class JewelAutonomous extends AutoBase {
 
         robot.putDownSoas();
         //robot.grabBlock();
-        sleep(3000);
+        sleep(2000);
 
         int identifier = robot.detectJewelColour();
         final boolean jewelIsRed = 1 == identifier;
 
-        debug("Jewel Color: " + identifier+", " + jewelIsRed + ", alliace " + (redAlliance ? "red" : "blue"));
 
         if (jewelIsRed  == redAlliance) {
-            debug("swing forward");
             robot.swingForward();
         }else{
-            debug("swing back");
             robot.swingBack();
         }
 
