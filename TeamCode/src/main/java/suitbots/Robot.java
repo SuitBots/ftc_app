@@ -10,6 +10,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -71,6 +72,10 @@ public class Robot {
         rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lift);
+        setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, lift);
+        insureIndexMode(true);
     }
 
     public void resetGyro() {
@@ -151,24 +156,10 @@ public class Robot {
         }
     }
 
-    public void setEncoderTargets(int lfs, int lrs, int rfs, int rrs) {
-        setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rr, rf);
-        lf.setTargetPosition(lfs);
-        lr.setTargetPosition(lrs);
-        rf.setTargetPosition(rfs);
-        rr.setTargetPosition(rrs);
-        setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, lf, lr, rr, rf);
-    }
-
     public void resetDriveMotorModes() {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, lr, rf, rr);
         setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
-//    private void setTargetPosition(int pos, DcMotor... ms) { //we probably don't need this
-//        for (DcMotor m : ms) {
-//            m.setTargetPosition(pos);
-//        }
-//    }
 
     private void setMode(DcMotor.RunMode mode, DcMotor... ms) {
         for (DcMotor m : ms) {
@@ -238,35 +229,6 @@ public class Robot {
         encoder_drive_power = ENCODER_DRIVE_POWER;
     }
 
-    private int averageRemainingTicks(DcMotor... ms) {
-        int total = 0;
-        int count = 0;
-        for (DcMotor m : ms) {
-            if (m.getMode() == DcMotor.RunMode.RUN_TO_POSITION && 100 < Math.abs(m.getTargetPosition())) {
-                total += Math.abs(m.getTargetPosition() - m.getCurrentPosition());
-                count += 1;
-            }
-        }
-        return 0 == count ? 0 : total / count;
-    }
-
-    private static int SLOW_DOWN_HERE = 1120;
-    private static double ARBITRARY_SLOW_SPEED = .3;
-    private boolean slowedDown = false;
-
-    private void encoderDriveSlowdown() {
-        if (!slowedDown) {
-            if (lf.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
-                int remaining = averageRemainingTicks(lf, lr, rf, rr);
-                if (remaining < SLOW_DOWN_HERE) {
-                    slowedDown = true;
-                    setPower(ARBITRARY_SLOW_SPEED, lf, lr, rf, rr);
-                }
-            }
-        }
-    }
-
-
     private static class Wheels {
         public double lf, lr, rf, rr;
 
@@ -315,20 +277,56 @@ public class Robot {
         rf.setPower(w.rf);
         lr.setPower(w.lr);
         rr.setPower(w.rr);
-
-        telemetry.addData("Powers", String.format(Locale.US, "%.2f %.2f %.2f %.2f", w.lf, w.rf, w.lr, w.rr));
     }
 
-    public static final double OPEN_RIGHT = 0.90;
-    public static final double OPEN_LEFT = 0.00;
-    public static final double OPEN_LITTLE_RIGHT = 0.55;
-    public static final double OPEN_LITTLE_LEFT = 0.35;
-    public static final double CLOSED_RIGHT = 0.70;
-    public static final double CLOSED_LEFT = 0.20;
+    private boolean indexMode = true;
+    private static final int LIFT_TICKS_PER_INCH = (int)(1120 / (Math.PI * 2.0));
+    private static final int[] LIFT_INDEX = new int[] {
+            0,
+            2 * LIFT_TICKS_PER_INCH,
+            8 * LIFT_TICKS_PER_INCH,
+            14 * LIFT_TICKS_PER_INCH,
+            20 * LIFT_TICKS_PER_INCH
+    };
+    private int indexPosition = 0;
+    public int getLiftIndex() { return indexPosition; }
+    public int DEBUGgetLiftTarget() { return lift.getTargetPosition(); }
+    public int DEBUGgetLiftCurrent() { return lift.getCurrentPosition(); }
+    public DcMotor.RunMode DEBUGgetLiftMode() { return lift.getMode(); }
 
+    private void insureIndexMode(final boolean mode) {
+        if (mode != indexMode) {
+            indexMode = mode;
+            if (indexMode) {
+                setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, lift);
+            } else {
+                setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lift);
+            }
+        }
+    }
 
+    public void indexLiftUp() {
+        insureIndexMode(true);
+        indexPosition = Range.clip(indexPosition + 1, 0, LIFT_INDEX.length - 1);
+        lift.setTargetPosition(LIFT_INDEX[indexPosition]);
+        lift.setPower(1.0);
+    }
+    public void indexLiftDown() {
+        insureIndexMode(true);
+        indexPosition = Range.clip(indexPosition - 1, 0, LIFT_INDEX.length - 1);
+        lift.setTargetPosition(LIFT_INDEX[indexPosition]);
+        lift.setPower(1.0);
+    }
+
+    private static final double MIN_LIFT_POWER = 0.1;
     public void moveLift(double x) {
-        lift.setPower(x);
+        // break out of index mode when user input occurs.
+        if (indexMode && MIN_LIFT_POWER < Math.abs(x)) {
+            insureIndexMode(false);
+        }
+        if (! indexMode){
+            lift.setPower(x);
+        }
     }
 
     public static final double DOWN_SOAS = 1; // 0.66;
@@ -354,10 +352,6 @@ public class Robot {
         swing.setPosition(SET_SWING);
     }
 
-    public boolean jewelIsRed() {
-        return jewelColorDetector.red() > jewelColorDetector.blue();
-    }
-
     public void encoderDriveTiles(double direction, double tiles) {
         encoderDriveInches(direction, 24.0 * tiles);
     }
@@ -367,14 +361,6 @@ public class Robot {
         final int ticks = (int) (inches * TICKS_PER_INCH);
         encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
     }
-
-    public void encoderDriveCM(double direction, double cm) {
-        direction %= Math.PI * 2.0;
-        final Wheels w = getWheels(direction, 1.0, 0.0);
-        final int ticks = (int) (cm * TICKS_PER_CM);
-        encoderDrive(ticks * w.lf, ticks * w.rf, ticks * w.lr, ticks * w.rr);
-    }
-
     private void encoderDrive(double lft, double rft, double lrt, double rrt) {
         encoderDrive((int) lft, (int) rft, (int) lrt, (int) rrt);
     }
@@ -388,7 +374,6 @@ public class Robot {
         setTargetPosition(rrt, rr);
         setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lr, rr);
         setPower(encoder_drive_power, lf, lr, rf, rr);
-        slowedDown = false;
     }
 
     private static Brain brain = BrainBuilder.makeBrain();
@@ -410,10 +395,6 @@ public class Robot {
         }
     }
 
-    public boolean failSafeColourDetectIsRed() {        //here -----------
-        return jewelColorDetector.red() > jewelColorDetector.blue();
-    }
-
     public void collect() {
         arml.setPower(-0.75);
         armr.setPower(-0.75);
@@ -422,11 +403,6 @@ public class Robot {
     public void release() {
         arml.setPower(0.75);
         armr.setPower(0.75);
-    }
-
-    public void diagonalRelease() {
-        arml.setPower(.5);
-        armr.setPower(-.5);
     }
 
     public void stoparms() {

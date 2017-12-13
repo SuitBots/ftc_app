@@ -1,11 +1,13 @@
 package suitbots.opmode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
 import suitbots.AutoBase;
 import suitbots.DriverHelper;
 
+@Disabled
 @TeleOp(name = "Velocity Drive")
 public class VelocityDriveTest extends AutoBase {
     @Override

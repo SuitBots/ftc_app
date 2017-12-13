@@ -77,7 +77,19 @@ public class MecanumTeleop extends OpMode {
 
     private void g2Loop(Controller g) {
         runCollector(g);
-        robot.moveLift(g.right_trigger - g.left_trigger);
+        if (g.rightBumperOnce()) {
+            robot.indexLiftUp();
+        } else if (g.leftBumperOnce()) {
+            robot.indexLiftDown();
+        }
+
+        if (g.dpadUpOnce()) {
+            robot.indexLiftUp();
+        } else if (g.dpadDownOnce()) {
+            robot.indexLiftDown();
+        } else {
+            robot.moveLift(g.right_trigger - g.left_trigger);
+        }
         robot.setRelicarmPower(- g.right_stick_x);
     }
 

@@ -1,14 +1,9 @@
 package suitbots;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.suitbots.util.Controller;
-import com.vuforia.VuMarkTarget;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-
-import suitbots.AutoBase;
-
+@Disabled
 @Autonomous(name = "Velocity ThAng", group = "Tournament")
 public class VelocityDrive extends AutoBase {
     @Override

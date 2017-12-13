@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
 import suitbots.AutoBase;
-
+@Disabled
 @TeleOp(name = "Glyph Placing Test")
 public class GlyphPlacingTest extends AutoBase {
     @Override

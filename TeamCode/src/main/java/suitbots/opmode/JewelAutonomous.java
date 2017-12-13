@@ -1,9 +1,6 @@
 package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.suitbots.util.Controller;
-import com.vuforia.VuMarkTarget;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
