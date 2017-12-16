@@ -329,8 +329,8 @@ public class Robot {
         }
     }
 
-    public static final double DOWN_SOAS = 1; // 0.66;
-    public static final double UP_SOAS = 0;   // 0.20;
+    public static final double DOWN_SOAS = .65; // 0.66;
+    public static final double UP_SOAS = 0.25;   // 0.20;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
     }
@@ -338,9 +338,9 @@ public class Robot {
         soas.setPosition(UP_SOAS);
     }
 
-    public static final double SWING_FORWARD = .35;
-    public static final double SWING_BACK = .75;
-    public static final double SET_SWING = .47;
+    public static final double SWING_FORWARD = .30;
+    public static final double SWING_BACK = .5;
+    public static final double SET_SWING = .4;
 
     public void swingForward() {
         swing.setPosition(SWING_FORWARD);
@@ -350,6 +350,11 @@ public class Robot {
     }
     public void setSwing() {
         swing.setPosition(SET_SWING);
+    }
+
+    public void DEBUG_setSwing(double x, double y) {
+        swing.setPosition(x);
+        soas.setPosition(y);
     }
 
     public void encoderDriveTiles(double direction, double tiles) {

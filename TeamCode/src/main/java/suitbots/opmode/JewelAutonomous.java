@@ -13,7 +13,11 @@ import suitbots.VisionTargets;
 
 @Autonomous(name = "AUTONOMOUS", group = "Tournament")
 public class JewelAutonomous extends AutoBase {
-    boolean redAlliance = true;
+    private boolean redAlliance = true;
+    private boolean nearPlatform = true;
+    private int doubleMajorMode = 0;
+
+    private static final int DOUBLE_MAJOR_MODE_THRESHOLD = 5;
 
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
@@ -41,6 +45,7 @@ public class JewelAutonomous extends AutoBase {
         return 0.0;
     }
 
+
     @Override
     public void runOpMode() throws InterruptedException {
         initialize(hardwareMap, telemetry);
@@ -51,9 +56,16 @@ public class JewelAutonomous extends AutoBase {
             vt.loop();
             c.update();
             if (c.AOnce()) redAlliance = ! redAlliance;
+            // ¢if (c.BOnce()) nearPlatform = ! nearPlatform;
+            if (c.dpadUpOnce()) doubleMajorMode++;
+            if (c.dpadDownOnce()) doubleMajorMode--;
+
             telemetry.addData("Alliance (a)", redAlliance ? "RED" : "BLUE");
+            // telemetry.addData("POSITION (b)", nearPlatform ? "CLOSE" : "FAR");
             telemetry.addData("Time", getRuntime());
             telemetry.addData("Vision", vt.getCurrentVuMark());
+            telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
+                    ? String.format("%d", doubleMajorMode) : "HOLY CRAP");
             telemetry.update();
         }
 
@@ -72,9 +84,9 @@ public class JewelAutonomous extends AutoBase {
         final boolean jewelIsRed = 1 == identifier;
 
 
-        if (jewelIsRed  == redAlliance) {
+        if (jewelIsRed == redAlliance) {
             robot.swingForward();
-        }else{
+        } else {
             robot.swingBack();
         }
 
@@ -83,23 +95,63 @@ public class JewelAutonomous extends AutoBase {
         robot.putUpSoas();
         robot.setSwing();
 
-        driveDirectionTiles(forwardDir(),1.0,.35);
+        driveDirectionTiles(forwardDir(), 1.0, .35);
 
         // make sure we're still aligned coming off the balancing stone
         turnToAngleRad(0);
 
-        // This is the drive that you want to move based on the VuMark.
-        // There's a method up above where you can do that.
-        driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
-        turnRad((Math.PI / 2.0));
+        if (nearPlatform) {
+            // This is the drive that you want to move based on the VuMark.
+            // There's a method up above where you can do that.
+            driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+            turnRad((Math.PI / 2.0));
+        } else {
+            // This is the drive that you want to move based on the VuMark.
+            // There's a method up above where you can do that.
+            if (redAlliance) {
+                turnRad(Math.PI);
+                driveDirectionTiles(Math.PI / 2, BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+            } else {
+                turnRad(0);
+                driveDirectionTiles((Math.PI * 3) / 2, BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+            }
+        }
 
+
+        robot.resetGyro();
         throwGlyph();
         robot.release();
-        driveDirectionTiles(0, .5, .75, 3.5);
-        driveDirectionTiles(Math.PI, .5, .5);
-        turnRad(Math.PI);
+        driveDirectionTiles(0, .5, 1.0, 1.5);
+        driveDirectionTiles(Math.PI, .5, 1.0);
+        turnToAngleRad(Math.PI);
 
+        if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
+            robot.collect();
+            driveDirectionTiles(0.0, 1.0, 1.0, 2.5);
+            sleep(1000);
+            driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
+            extraGlyphStrafe(target);
+            turnToAngleRad(0.0);
+            driveDirectionTiles(0, .75, 1., 1.0);
+            throwGlyph();
+            robot.release();
+            driveDirectionTiles(0, .25, 1.0, 1.5);
+            driveDirectionTiles(Math.PI, .5, .5);
+            turnRad(Math.PI);
+        }
         robot.stopDriveMotors();
+
+    }
+
+
+
+    public static final double EXTRA_STRAFE = 1.0;
+    protected void extraGlyphStrafe(final RelicRecoveryVuMark v) throws InterruptedException {
+        if (RelicRecoveryVuMark.LEFT == v) {
+            driveDirectionTiles(3.0 * Math.PI/2.0, EXTRA_STRAFE, 1.0, 1.0);
+        } else {
+            driveDirectionTiles(Math.PI/2.0, EXTRA_STRAFE, 1.0, 1.0);
+        }
     }
 
     private void throwGlyph() {
