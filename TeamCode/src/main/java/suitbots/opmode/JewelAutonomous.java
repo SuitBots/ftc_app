@@ -73,11 +73,11 @@ public class JewelAutonomous extends AutoBase {
             if (c.dpadDownOnce()) doubleMajorMode--;
 
             telemetry.addData("Alliance (a)", redAlliance ? "RED" : "BLUE");
-            telemetry.addData("POSITION (b)", nearPlatform ? "CLOSE" : "FAR");
+            telemetry.addData("POSITION (b)", nearPlatform ? "NEAR" : "FAR");
             telemetry.addData("Time", getRuntime());
             telemetry.addData("Vision", vt.getCurrentVuMark());
             telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
-                    ? String.format("%d", doubleMajorMode) : "HOLY CRAP");
+                    ? String.format("%d", DOUBLE_MAJOR_MODE_THRESHOLD - doubleMajorMode) : "HOLY CRAP");
             telemetry.update();
         }
 
