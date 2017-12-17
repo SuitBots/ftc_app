@@ -22,29 +22,41 @@ public class JewelAutonomous extends AutoBase {
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
     // is way off from the rest of them.
-    public static final double BASE_DISTANCE = .75;
+    public static final double NEAR_PLATFORM_BASE_DISTANCE = .75;
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
     // change this if you're wide on both left and right (decrease it)
     // or if you always hit center (increase)
-    public static final double COLUMN_ADJUST = .35;
-    protected double adjustDriveDistance(final RelicRecoveryVuMark v) {
+    public static final double NEAR_PLATFORM_COLUMN_ADJUST = .35;
+    protected double nearPlatformAdjustDriveDistance(final RelicRecoveryVuMark v) {
         if (RelicRecoveryVuMark.LEFT == v) {
             if(redAlliance){
-                return COLUMN_ADJUST;
+                return NEAR_PLATFORM_COLUMN_ADJUST;
             }
-            return -COLUMN_ADJUST;
+            return -NEAR_PLATFORM_COLUMN_ADJUST;
 
         } else if (RelicRecoveryVuMark.RIGHT == v) {
             if(redAlliance){
-                return -COLUMN_ADJUST;
+                return -NEAR_PLATFORM_COLUMN_ADJUST;
             }
-            return COLUMN_ADJUST;
+            return NEAR_PLATFORM_COLUMN_ADJUST;
         }
         return 0.0;
     }
 
+    // @todo: Find the right value for this
+    public static final double FAR_PLATFORM_BASE_DISTANCE = .75;
+
+    // @todo: Implement!
+    public static final double FAR_PLATFORM_COLUMN_ADJUST = .35;
+    protected double farPlatformAdjustDriveDistance(final RelicRecoveryVuMark v) {
+        if (RelicRecoveryVuMark.LEFT == v) {
+        } else if (RelicRecoveryVuMark.RIGHT == v) {
+        } else { // center
+        }
+        return 0.0;
+    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -103,17 +115,19 @@ public class JewelAutonomous extends AutoBase {
         if (nearPlatform) {
             // This is the drive that you want to move based on the VuMark.
             // There's a method up above where you can do that.
-            driveDirectionTiles(forwardDir(), BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+            driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5);
             turnRad((Math.PI / 2.0));
         } else {
             // This is the drive that you want to move based on the VuMark.
             // There's a method up above where you can do that.
+            // @todo Should there be another drive forward before strafing to minimize post-strafe error?
+            // @todo TEST!!
             if (redAlliance) {
                 turnRad(Math.PI);
-                driveDirectionTiles(Math.PI / 2, BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+                driveDirectionTiles(Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), 0.5);
             } else {
                 turnRad(0);
-                driveDirectionTiles((Math.PI * 3) / 2, BASE_DISTANCE + adjustDriveDistance(target), 0.5);
+                driveDirectionTiles((Math.PI * 3) / 2, FAR_PLATFORM_BASE_DISTANCE+ farPlatformAdjustDriveDistance(target), 0.5);
             }
         }
 
@@ -121,13 +135,17 @@ public class JewelAutonomous extends AutoBase {
         robot.resetGyro();
         throwGlyph();
         robot.release();
+        // @todo is this the same for near and far?
         driveDirectionTiles(0, .5, 1.0, 1.5);
         driveDirectionTiles(Math.PI, .5, 1.0);
         turnToAngleRad(Math.PI);
 
+        // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
             robot.collect();
+            // @todo: Farther, faster
             driveDirectionTiles(0.0, 1.0, 1.0, 2.5);
+            // @todo: Could be shorter
             sleep(1000);
             driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
             extraGlyphStrafe(target);
