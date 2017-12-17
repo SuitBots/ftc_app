@@ -56,12 +56,12 @@ public class JewelAutonomous extends AutoBase {
             vt.loop();
             c.update();
             if (c.AOnce()) redAlliance = ! redAlliance;
-            // ¢if (c.BOnce()) nearPlatform = ! nearPlatform;
+            if (c.BOnce()) nearPlatform = ! nearPlatform;
             if (c.dpadUpOnce()) doubleMajorMode++;
             if (c.dpadDownOnce()) doubleMajorMode--;
 
             telemetry.addData("Alliance (a)", redAlliance ? "RED" : "BLUE");
-            // telemetry.addData("POSITION (b)", nearPlatform ? "CLOSE" : "FAR");
+            telemetry.addData("POSITION (b)", nearPlatform ? "CLOSE" : "FAR");
             telemetry.addData("Time", getRuntime());
             telemetry.addData("Vision", vt.getCurrentVuMark());
             telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
