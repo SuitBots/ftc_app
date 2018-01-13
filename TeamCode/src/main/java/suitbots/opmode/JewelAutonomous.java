@@ -22,7 +22,7 @@ public class JewelAutonomous extends AutoBase {
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
     // is way off from the rest of them.
-    public static final double NEAR_PLATFORM_BASE_DISTANCE = .75;
+    public static final double NEAR_PLATFORM_BASE_DISTANCE = .35;
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
@@ -138,7 +138,7 @@ public class JewelAutonomous extends AutoBase {
         // @todo is this the same for near and far?
         driveDirectionTiles(0, .5, 1.0, 1.5);
         driveDirectionTiles(Math.PI, .5, 1.0);
-        turnToAngleRad(Math.PI);
+        turnRad(Math.PI);
 
         // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {

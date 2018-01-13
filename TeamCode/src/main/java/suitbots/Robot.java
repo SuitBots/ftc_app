@@ -216,8 +216,7 @@ public class Robot {
 
     private static final double ENCODER_DRIVE_POWER = .3; // .35;
     // Assuming 4" wheels
-    private static final double TICKS_PER_INCH = 1120 * (16. / 24.) / (Math.PI * 4.0);
-    private static final double TICKS_PER_CM = TICKS_PER_INCH / 2.54;
+    private static final double TICKS_PER_INCH = 1120 * (18. / 36.) / (Math.PI * 4.0);
 
     void setEncoderDrivePower(double p) {
         encoder_drive_power = p;
