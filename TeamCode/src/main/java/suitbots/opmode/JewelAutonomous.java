@@ -22,7 +22,7 @@ public class JewelAutonomous extends AutoBase {
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
     // is way off from the rest of them.
-    public static final double NEAR_PLATFORM_BASE_DISTANCE = .35;
+    public static final double NEAR_PLATFORM_BASE_DISTANCE = .55;
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
