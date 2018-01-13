@@ -37,7 +37,7 @@ public class JewelAutonomous extends AutoBase {
             return -NEAR_PLATFORM_COLUMN_ADJUST;
 
         } else if (RelicRecoveryVuMark.RIGHT == v) {
-            if(redAlliance){
+            if (redAlliance) {
                 return -NEAR_PLATFORM_COLUMN_ADJUST;
             }
             return NEAR_PLATFORM_COLUMN_ADJUST;
@@ -45,15 +45,20 @@ public class JewelAutonomous extends AutoBase {
         return 0.0;
     }
 
-    // @todo: Find the right value for this
-    public static final double FAR_PLATFORM_BASE_DISTANCE = .75;
+    public static final double FAR_PLATFORM_BASE_DISTANCE = .70;
 
-    // @todo: Implement!
     public static final double FAR_PLATFORM_COLUMN_ADJUST = .35;
     protected double farPlatformAdjustDriveDistance(final RelicRecoveryVuMark v) {
-        if (RelicRecoveryVuMark.LEFT == v) {
-        } else if (RelicRecoveryVuMark.RIGHT == v) {
-        } else { // center
+        if(RelicRecoveryVuMark.LEFT == v){
+            if(redAlliance){
+                return FAR_PLATFORM_COLUMN_ADJUST;
+            }
+            return -FAR_PLATFORM_COLUMN_ADJUST;
+        }else if(RelicRecoveryVuMark.RIGHT == v){
+            if(redAlliance){
+                return -FAR_PLATFORM_COLUMN_ADJUST;
+            }
+            return FAR_PLATFORM_COLUMN_ADJUST;
         }
         return 0.0;
     }
@@ -107,7 +112,11 @@ public class JewelAutonomous extends AutoBase {
         robot.putUpSoas();
         robot.setSwing();
 
-        driveDirectionTiles(forwardDir(), 1.0, .35);
+        if(nearPlatform) {
+            driveDirectionTiles(forwardDir(), 1.0, .35);
+        }else{
+            driveDirectionTiles(forwardDir(), 1.15, .25);
+        }
 
         // make sure we're still aligned coming off the balancing stone
         turnToAngleRad(0);
@@ -120,14 +129,12 @@ public class JewelAutonomous extends AutoBase {
         } else {
             // This is the drive that you want to move based on the VuMark.
             // There's a method up above where you can do that.
-            // @todo Should there be another drive forward before strafing to minimize post-strafe error?
-            // @todo TEST!!
             if (redAlliance) {
                 turnRad(Math.PI);
-                driveDirectionTiles(Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), 0.5);
+                driveDirectionTiles(3.0 * Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), 0.5);
             } else {
                 turnRad(0);
-                driveDirectionTiles((Math.PI * 3) / 2, FAR_PLATFORM_BASE_DISTANCE+ farPlatformAdjustDriveDistance(target), 0.5);
+                driveDirectionTiles(Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE+ farPlatformAdjustDriveDistance(target), 0.5);
             }
         }
 
@@ -136,9 +143,16 @@ public class JewelAutonomous extends AutoBase {
         throwGlyph();
         robot.release();
         // @todo is this the same for near and far?
-        driveDirectionTiles(0, .5, 1.0, 1.5);
-        driveDirectionTiles(Math.PI, .5, 1.0);
-        turnRad(Math.PI);
+        driveDirectionTiles(0, .5, 0.7, 1.5);
+        driveDirectionTiles(Math.PI, .5, 0.7);
+        if(nearPlatform){
+            turnRad(Math.PI);
+        }else if(redAlliance){
+            turnRad((Math.PI)/2);
+        }else{
+            turnRad((3*Math.PI)/2);
+        }
+
 
         // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
