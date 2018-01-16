@@ -34,6 +34,7 @@ public class Robot {
     private DcMotor lf, lr, rf, rr, lift;
     private DcMotor armr, arml, relicarm;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
+    private ColorSensor glyphDetector;
     private Servo soas, swing;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
@@ -216,7 +217,7 @@ public class Robot {
 
     private static final double ENCODER_DRIVE_POWER = .3; // .35;
     // Assuming 4" wheels
-    private static final double TICKS_PER_INCH = 1120 * (18. / 36.) / (Math.PI * 4.0);
+    private static final double TICKS_PER_INCH = 1120 * (18. / 24.) / (Math.PI * 4.0);
 
     void setEncoderDrivePower(double p) {
         encoder_drive_power = p;
@@ -317,6 +318,11 @@ public class Robot {
         lift.setPower(1.0);
     }
 
+    public void resetLiftEncoder() {
+        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
     private static final double MIN_LIFT_POWER = 0.1;
     public void moveLift(double x) {
         // break out of index mode when user input occurs.
@@ -409,6 +415,11 @@ public class Robot {
         armr.setPower(0.75);
     }
 
+    public void releaseSlow() {
+        arml.setPower(.5);
+        armr.setPower(.5);
+    }
+
     public void stoparms() {
         arml.setPower(0.0);
         armr.setPower(0.0);
@@ -432,5 +443,18 @@ public class Robot {
     }
 
 
+    private static final double GLYPH_HAS_THRESHOLD = .5;
+    public boolean hasGlyph() {
+        if (null == glyphDetector) {
+            return false;
+        }
+        return glyphDetector.alpha() > GLYPH_HAS_THRESHOLD;
+    }
 
+    public double glyphAlpha() {
+        if (null == glyphDetector) {
+            return -1.0;
+        }
+        return glyphDetector.alpha();
+    }
 }

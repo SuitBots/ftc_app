@@ -45,8 +45,7 @@ public class JewelAutonomous extends AutoBase {
         return 0.0;
     }
 
-    public static final double FAR_PLATFORM_BASE_DISTANCE = .70;
-
+    public static final double FAR_PLATFORM_BASE_DISTANCE = .60;
     public static final double FAR_PLATFORM_COLUMN_ADJUST = .35;
     protected double farPlatformAdjustDriveDistance(final RelicRecoveryVuMark v) {
         if(RelicRecoveryVuMark.LEFT == v){
@@ -81,10 +80,13 @@ public class JewelAutonomous extends AutoBase {
             telemetry.addData("POSITION (b)", nearPlatform ? "NEAR" : "FAR");
             telemetry.addData("Time", getRuntime());
             telemetry.addData("Vision", vt.getCurrentVuMark());
+            telemetry.addData("Alignment", Math.toDegrees(vt.getRotationZ()));
             telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
                     ? String.format("%d", DOUBLE_MAJOR_MODE_THRESHOLD - doubleMajorMode) : "HOLY CRAP");
             telemetry.update();
         }
+
+        robot.resetEncoders();
 
         // Here's the VuMark itself
         final RelicRecoveryVuMark target = vt.getCurrentVuMark();
@@ -112,14 +114,13 @@ public class JewelAutonomous extends AutoBase {
         robot.putUpSoas();
         robot.setSwing();
 
-        if(nearPlatform) {
-            driveDirectionTiles(forwardDir(), 1.0, .35);
-        }else{
+        if (nearPlatform) {
+            driveDirectionTiles(forwardDir(), 1.0, .25);
+        } else {
             driveDirectionTiles(forwardDir(), 1.15, .25);
         }
 
-        // make sure we're still aligned coming off the balancing stone
-        turnToAngleRad(0);
+        turnToAngleRad(0.0);
 
         if (nearPlatform) {
             // This is the drive that you want to move based on the VuMark.
@@ -127,6 +128,7 @@ public class JewelAutonomous extends AutoBase {
             driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5);
             turnRad((Math.PI / 2.0));
         } else {
+
             // This is the drive that you want to move based on the VuMark.
             // There's a method up above where you can do that.
             if (redAlliance) {
@@ -141,13 +143,16 @@ public class JewelAutonomous extends AutoBase {
 
         robot.resetGyro();
         throwGlyph();
-        robot.release();
         // @todo is this the same for near and far?
-        driveDirectionTiles(0, .5, 0.7, 1.5);
-        driveDirectionTiles(Math.PI, .5, 0.7);
-        if(nearPlatform){
+        driveDirectionTiles(0, .5, 0.5, 1.5);
+        sleep(500);
+        robot.releaseSlow();
+        driveDirectionTiles(Math.PI, .4, 0.7);
+        robot.stoparms();
+
+        if (nearPlatform) {
             turnRad(Math.PI);
-        }else if(redAlliance){
+        } else if(redAlliance) {
             turnRad((Math.PI)/2);
         }else{
             turnRad((3*Math.PI)/2);
@@ -157,19 +162,20 @@ public class JewelAutonomous extends AutoBase {
         // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
             robot.collect();
-            // @todo: Farther, faster
-            driveDirectionTiles(0.0, 1.0, 1.0, 2.5);
+            driveDirectionTiles(0.0, 1.5, 1.0, 2.5);
             // @todo: Could be shorter
             sleep(1000);
             driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
-            extraGlyphStrafe(target);
-            turnToAngleRad(0.0);
-            driveDirectionTiles(0, .75, 1., 1.0);
-            throwGlyph();
-            robot.release();
-            driveDirectionTiles(0, .25, 1.0, 1.5);
-            driveDirectionTiles(Math.PI, .5, .5);
-            turnRad(Math.PI);
+            if (robot.hasGlyph()) {
+                robot.indexLiftUp();
+                robot.indexLiftUp();
+                turnToAngleRad(0.0);
+                driveDirectionTiles(0, .75, .5, 1.0);
+                throwGlyph();
+                robot.stoparms();
+                driveDirectionTiles(Math.PI, .5, .5);
+                turnRad(Math.PI);
+            }
         }
         robot.stopDriveMotors();
 

@@ -29,6 +29,7 @@ public abstract class AutoBase extends LinearOpMode  {
 
     public void initialize(HardwareMap hm, Telemetry telemetry) {
         robot = new Robot(hm, telemetry);
+        robot.resetEncoders();
         c = new Controller(gamepad1);
     }
 
@@ -38,9 +39,9 @@ public abstract class AutoBase extends LinearOpMode  {
         }
     }
 
-    private static final double SAFE_TURN_SPEED = .2;
-    private static final double FAST_TURN_SPEED = .5;
-    private static final double LUCDACRIS_TURN_SPEED = .7;
+    private static final double SAFE_TURN_SPEED = .3;
+    private static final double FAST_TURN_SPEED = .35;
+    private static final double LUCDACRIS_TURN_SPEED = .35;
     private static final double FAST_TURN_THRESHOLD = Math.PI / 6.0;
     private static final double LUDACRIS_TURN_THRESHOLD = Math.PI / 3.0;
 
@@ -60,6 +61,7 @@ public abstract class AutoBase extends LinearOpMode  {
     }
 
     private static double speedForTurnDistance(double angle) {
+        /*
         angle = Math.abs(angle);
         if (angle > LUDACRIS_TURN_THRESHOLD) {
             return LUCDACRIS_TURN_SPEED;
@@ -67,10 +69,11 @@ public abstract class AutoBase extends LinearOpMode  {
         if (angle > FAST_TURN_THRESHOLD) {
             return FAST_TURN_SPEED;
         }
+        */
         return SAFE_TURN_SPEED;
     }
 
-    private static final double MAX_HEADING_SLOP = Math.PI / 60.0;
+    private static final double MAX_HEADING_SLOP = Math.PI / 40.0;
 
     protected void turnToAngleRad(double radians) throws InterruptedException {
         while(opModeIsActive()) {
