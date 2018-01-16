@@ -60,37 +60,39 @@ public class MecanumTeleop extends OpMode {
     }
 
     private void g1Loop(Controller g) {
-        if (g.YOnce()) {
-            robot.putUpSoas();
-        }
-        if (g.XOnce()){
-            robot.putDownSoas();
-        }
 
-        if(g.AOnce()){
-            robot.swingForward();
-        }
-        if(g.BOnce()){
-            robot.swingBack();
+        if (g.A()) {
+            robot.release();
+            robot.drive(Math.PI, .3, 0.0);
+        } else {
+            DriverHelper.drive(g1, robot);
+            if (g.leftBumper()) {
+                robot.collect();
+            } else if (g.rightBumper()) {
+                robot.release();
+            } else {
+                robot.stoparms();
+            }
         }
     }
 
     private void g2Loop(Controller g) {
-        runCollector(g);
+        if (g.YOnce()) {
+            robot.putUpSoas();
+        }
+        if (g.XOnce()) {
+            robot.resetLiftEncoder();
+        }
+
+        // runCollector(g);
+
         if (g.rightBumperOnce()) {
             robot.indexLiftUp();
         } else if (g.leftBumperOnce()) {
             robot.indexLiftDown();
-        }
-
-        if (g.dpadUpOnce()) {
-            robot.indexLiftUp();
-        } else if (g.dpadDownOnce()) {
-            robot.indexLiftDown();
         } else {
             robot.moveLift(g.right_trigger - g.left_trigger);
         }
-        robot.setRelicarmPower(- g.right_stick_x);
     }
 
     @Override
@@ -98,9 +100,8 @@ public class MecanumTeleop extends OpMode {
         telemetry.addData("Velocity: ", robot.absoluteVelocity());
         g1.update();
         g2.update();
-        g1Loop(g1);
         g2Loop(g2);
-        DriverHelper.drive(g1, robot);
+        g1Loop(g1);
         telemetry.update();
     }
 }

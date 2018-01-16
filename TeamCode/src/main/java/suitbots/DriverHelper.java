@@ -33,10 +33,6 @@ public class DriverHelper {
             v_rotation = g.right_stick_x;
         }
 
-        if (g.leftBumper() || g.rightBumper()) {
-            theta += Math.PI;
-        }
-
         if (0.05 < g.left_trigger) {
             v_theta /= (1.0 + g.left_trigger);
         }
