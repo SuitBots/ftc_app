@@ -20,6 +20,7 @@ public class TESTAUTO extends AutoBase {
         while (opModeIsActive()) {
             telemetry.addData("Count", counter++);
             telemetry.update();
+
         }
     }
 

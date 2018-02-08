@@ -48,6 +48,7 @@ public class Robot {
         rf = h.dcMotor.get("rf");
         rr = h.dcMotor.get("rr");
         lift = h.dcMotor.get("lift");
+        lights = h.dcMotor.get("lights");
 
         armr = h.dcMotor.get("armr");
         arml = h.dcMotor.get("arml");
@@ -469,5 +470,13 @@ public class Robot {
     public void DEBUG_announceLiftStuff() {
         telemetry.addData("Lift Encoder", lift.getCurrentPosition());
         telemetry.addData("Lift Target", lift.getTargetPosition());
+    }
+
+    public void caughtGlyph(double distance) {
+        if(distance <= 1){
+            lights.setPower(100);
+        }else{
+            lights.setPower(0);
+        }
     }
 }
