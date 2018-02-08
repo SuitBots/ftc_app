@@ -2,8 +2,10 @@ package suitbots;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -32,9 +34,9 @@ public class Robot {
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr, lift;
-    private DcMotor armr, arml, relicarm;
+    private DcMotor armr, arml, lights;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
-    private ColorSensor glyphDetector;
+    private AnalogInput glyph;
     private Servo soas, swing;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
@@ -42,6 +44,7 @@ public class Robot {
         imu = h.get(BNO055IMU.class, "imu");
         initilizeGyro();
         jewelColorDetector = h.colorSensor.get("jewelColorDetector");
+        glyph = h.analogInput.get("glyph");
 
         lf = h.dcMotor.get("lf");
         lr = h.dcMotor.get("lr");
@@ -51,13 +54,13 @@ public class Robot {
 
         armr = h.dcMotor.get("armr");
         arml = h.dcMotor.get("arml");
-        // relicarm = h.dcMotor.get("relicarm");
 
         soas = h.servo.get("soas");
         swing = h.servo.get("swing");
 
-        arml.setDirection(DcMotorSimple.Direction.REVERSE);
+        lights = h.dcMotor.get("lights");
 
+        arml.setDirection(DcMotorSimple.Direction.REVERSE);
         lr.setDirection(DcMotorSimple.Direction.REVERSE);
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -217,7 +220,7 @@ public class Robot {
 
     private static final double ENCODER_DRIVE_POWER = .3; // .35;
     // Assuming 4" wheels
-    private static final double TICKS_PER_INCH = 1120 * (18. / 24.) / (Math.PI * 4.0);
+    private static final double TICKS_PER_INCH = 1120 * (18. / 36.) / (Math.PI * 4.0);
 
     void setEncoderDrivePower(double p) {
         encoder_drive_power = p;
@@ -334,7 +337,7 @@ public class Robot {
         }
     }
 
-    public static final double DOWN_SOAS = .8; // 0.66;
+    public static final double DOWN_SOAS = .68; // 0.66;
     public static final double UP_SOAS = 0.25;   // 0.20;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
@@ -442,19 +445,16 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lr, rf, rr);
     }
 
-
-    private static final double GLYPH_HAS_THRESHOLD = .5;
+    private static double GLYPH_VOLTAGE_THRESHOLD = 1.8;
     public boolean hasGlyph() {
-        if (null == glyphDetector) {
-            return false;
-        }
-        return glyphDetector.alpha() > GLYPH_HAS_THRESHOLD;
+        return glyph.getVoltage() < GLYPH_VOLTAGE_THRESHOLD;
+    }
+    public void setLights(final double x) {
+        lights.setPower(x);
     }
 
-    public double glyphAlpha() {
-        if (null == glyphDetector) {
-            return -1.0;
-        }
-        return glyphDetector.alpha();
+    public void DEBUG_announceLiftStuff() {
+        telemetry.addData("Lift Encoder", lift.getCurrentPosition());
+        telemetry.addData("Lift Target", lift.getTargetPosition());
     }
 }

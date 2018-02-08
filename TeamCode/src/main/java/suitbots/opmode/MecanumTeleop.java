@@ -1,8 +1,11 @@
-package suitbots;
+package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
+
+import suitbots.DriverHelper;
+import suitbots.Robot;
 
 /**
  * Created by Samantha on 9/30/2017.
@@ -25,6 +28,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void init_loop() {
+        robot.setLights(.75 + Math.sin(getRuntime()) / 4.0);
         g1.update();
         if (g1.AOnce()) {
             debug_mode = ! debug_mode;
@@ -41,6 +45,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void start() {
+        robot.setLights(0.0);
         robot.onStart();
     }
 
@@ -103,5 +108,7 @@ public class MecanumTeleop extends OpMode {
         g2Loop(g2);
         g1Loop(g1);
         telemetry.update();
+
+        robot.setLights(robot.hasGlyph() ? 1.0 : 0.0);
     }
 }

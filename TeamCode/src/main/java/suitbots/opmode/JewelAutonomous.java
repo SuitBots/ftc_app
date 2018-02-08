@@ -84,19 +84,24 @@ public class JewelAutonomous extends AutoBase {
             telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
                     ? String.format("%d", DOUBLE_MAJOR_MODE_THRESHOLD - doubleMajorMode) : "HOLY CRAP");
             telemetry.update();
+            if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
+                robot.setLights(.75 + Math.sin(getRuntime() * 4.0) / 4.0);
+            } else {
+                robot.setLights(.75 + Math.sin(getRuntime()) / 4.0);
+            }
         }
 
+        robot.setLights(0.0);
         robot.resetEncoders();
+        robot.resetGyro();
 
         // Here's the VuMark itself
         final RelicRecoveryVuMark target = vt.getCurrentVuMark();
         vt.close();
 
         robot.setSwing();
-        sleep(500);
-
         robot.putDownSoas();
-        //robot.grabBlock();
+
         sleep(2000);
 
         int identifier = robot.detectJewelColour();
@@ -115,9 +120,9 @@ public class JewelAutonomous extends AutoBase {
         robot.setSwing();
 
         if (nearPlatform) {
-            driveDirectionTiles(forwardDir(), 1.0, .25);
+            driveDirectionTiles(forwardDir(), 1.0, .25, 2.0);
         } else {
-            driveDirectionTiles(forwardDir(), 1.15, .25);
+            driveDirectionTiles(forwardDir(), 1.15, .25, 2.0);
         }
 
         turnToAngleRad(0.0);
@@ -125,7 +130,7 @@ public class JewelAutonomous extends AutoBase {
         if (nearPlatform) {
             // This is the drive that you want to move based on the VuMark.
             // There's a method up above where you can do that.
-            driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5);
+            driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5, 1.5);
             turnRad((Math.PI / 2.0));
         } else {
 
@@ -133,22 +138,26 @@ public class JewelAutonomous extends AutoBase {
             // There's a method up above where you can do that.
             if (redAlliance) {
                 turnRad(Math.PI);
-                driveDirectionTiles(3.0 * Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), 0.5);
+                driveDirectionTiles(3.0 * Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target),
+                        0.5, 2.5);
             } else {
                 turnRad(0);
-                driveDirectionTiles(Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE+ farPlatformAdjustDriveDistance(target), 0.5);
+                driveDirectionTiles(Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE+ farPlatformAdjustDriveDistance(target),
+                        0.5, 2.5);
             }
         }
 
 
         robot.resetGyro();
-        throwGlyph();
         // @todo is this the same for near and far?
         driveDirectionTiles(0, .5, 0.5, 1.5);
+        throwGlyph();
         sleep(500);
         robot.releaseSlow();
-        driveDirectionTiles(Math.PI, .4, 0.7);
+        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
         robot.stoparms();
+        driveDirectionTiles(0, .4, 0.7,1.0);
+        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
 
         if (nearPlatform) {
             turnRad(Math.PI);
@@ -158,42 +167,31 @@ public class JewelAutonomous extends AutoBase {
             turnRad((3*Math.PI)/2);
         }
 
-
         // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
             robot.collect();
             driveDirectionTiles(0.0, 1.5, 1.0, 2.5);
-            // @todo: Could be shorter
-            sleep(1000);
+            sleep(500);
+            robot.stoparms();
             driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
-            if (robot.hasGlyph()) {
-                robot.indexLiftUp();
-                robot.indexLiftUp();
-                turnToAngleRad(0.0);
-                driveDirectionTiles(0, .75, .5, 1.0);
-                throwGlyph();
-                robot.stoparms();
-                driveDirectionTiles(Math.PI, .5, .5);
-                turnRad(Math.PI);
-            }
+            robot.indexLiftUp();
+            robot.indexLiftUp();
+            robot.indexLiftUp();
+            turnToAngleRad(0.0);
+            driveDirectionTiles(0, 1.5, .5, 2.0);
+            throwGlyph();
+            robot.stoparms();
+            robot.releaseSlow();
+            driveDirectionTiles(Math.PI, .4, .5,1.0);
         }
-        robot.stopDriveMotors();
 
-    }
-
-
-
-    public static final double EXTRA_STRAFE = 1.0;
-    protected void extraGlyphStrafe(final RelicRecoveryVuMark v) throws InterruptedException {
-        if (RelicRecoveryVuMark.LEFT == v) {
-            driveDirectionTiles(3.0 * Math.PI/2.0, EXTRA_STRAFE, 1.0, 1.0);
-        } else {
-            driveDirectionTiles(Math.PI/2.0, EXTRA_STRAFE, 1.0, 1.0);
+        for (int i = 0; i < 3; ++i) {
+            robot.indexLiftDown();
         }
     }
 
     private void throwGlyph() {
-        throwGlyph(500, .5, -.5);
+        throwGlyph(500, .25, -.25);
     }
 
     private void throwGlyph(final long time, final double leftPower, final double rightPower) {

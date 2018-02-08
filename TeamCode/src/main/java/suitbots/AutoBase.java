@@ -30,6 +30,7 @@ public abstract class AutoBase extends LinearOpMode  {
     public void initialize(HardwareMap hm, Telemetry telemetry) {
         robot = new Robot(hm, telemetry);
         robot.resetEncoders();
+        robot.setLights(1.0);
         c = new Controller(gamepad1);
     }
 
@@ -39,7 +40,7 @@ public abstract class AutoBase extends LinearOpMode  {
         }
     }
 
-    private static final double SAFE_TURN_SPEED = .3;
+    private static final double SAFE_TURN_SPEED = .2;
     private static final double FAST_TURN_SPEED = .35;
     private static final double LUCDACRIS_TURN_SPEED = .35;
     private static final double FAST_TURN_THRESHOLD = Math.PI / 6.0;
