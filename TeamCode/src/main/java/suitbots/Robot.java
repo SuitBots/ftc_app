@@ -5,7 +5,6 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -20,8 +19,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-
-import java.util.Locale;
 
 /**
  * Created by Samantha on 9/2/2017.
@@ -283,13 +280,15 @@ public class Robot {
     }
 
     private boolean indexMode = true;
-    private static final int LIFT_TICKS_PER_INCH = (int)(1120 / (Math.PI * 2.0));
+    private static final int ENCODER_TICKS_PER_MOTOR_REV = 1680;
+    private static final double WHEEL_CIRCUMFERENCE = 1.43 * Math.PI;
+    private static final int LIFT_TICKS_PER_INCH = (int)(ENCODER_TICKS_PER_MOTOR_REV / WHEEL_CIRCUMFERENCE);
     private static final int[] LIFT_INDEX = new int[] {
             0,
             2 * LIFT_TICKS_PER_INCH,
             8 * LIFT_TICKS_PER_INCH,
             14 * LIFT_TICKS_PER_INCH,
-            20 * LIFT_TICKS_PER_INCH
+            19 * LIFT_TICKS_PER_INCH
     };
     private int indexPosition = 0;
     public int getLiftIndex() { return indexPosition; }
@@ -318,6 +317,12 @@ public class Robot {
         insureIndexMode(true);
         indexPosition = Range.clip(indexPosition - 1, 0, LIFT_INDEX.length - 1);
         lift.setTargetPosition(LIFT_INDEX[indexPosition]);
+        lift.setPower(1.0);
+    }
+
+    public void setLiftIndex(int index) {
+        insureIndexMode(true);
+        lift.setTargetPosition(LIFT_INDEX[indexPosition = index]);
         lift.setPower(1.0);
     }
 
