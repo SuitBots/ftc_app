@@ -22,7 +22,7 @@ public class JewelAutonomous extends AutoBase {
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
     // is way off from the rest of them.
-    public static final double NEAR_PLATFORM_BASE_DISTANCE = .55;
+    public static final double NEAR_PLATFORM_BASE_DISTANCE = 1.55;
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
@@ -68,6 +68,119 @@ public class JewelAutonomous extends AutoBase {
         final VisionTargets vt = new VisionTargets();
         vt.initFrontCamera(this);
 
+        whileNotStarted(vt);
+        final RelicRecoveryVuMark target = doSensorOnAStickStuff(vt);
+        depositGlyph(target);
+        doubleMajorPenaltyMode();
+    }
+
+    private void lowerLift() {
+        robot.setLiftIndex(0);
+    }
+
+    private void depositGlyph(RelicRecoveryVuMark target) throws InterruptedException {
+        driveToCryptoboxColumn(target);
+        dumpGlyph();
+        rotateAfterDumpingGlyph();
+    }
+
+    private void driveToCryptoboxColumn(RelicRecoveryVuMark target) throws InterruptedException {
+        if (nearPlatform) {
+            nearPlatformCryptoboxDrive(target);
+        } else {
+            farPlatformCryptoboxDrive(target);
+        }
+        robot.resetGyro();
+    }
+
+    private void farPlatformCryptoboxDrive(RelicRecoveryVuMark target) throws InterruptedException {
+        driveDirectionTiles(forwardDir(), 1.15, .25, 2.0);
+        turnToAngleRad(0.0);
+        // This is the drive that you want to move based on the VuMark.
+        // There's a method up above where you can do that.
+        turnRad(redAlliance ? Math.PI : 0.0);
+        driveDirectionTiles(redAlliance ? (3.0 * Math.PI / 2.0) : Math.PI / 2.0,
+                FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), .5, 2.5);
+    }
+
+    private void nearPlatformCryptoboxDrive(RelicRecoveryVuMark target) throws InterruptedException {
+        driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5, 2.5);
+        turnToAngleRad(0.0);
+        turnRad((Math.PI / 2.0));
+    }
+
+    private void rotateAfterDumpingGlyph() throws InterruptedException {
+        if (nearPlatform) {
+            turnRad(Math.PI);
+        } else if(redAlliance) {
+            turnRad((Math.PI)/2);
+        } else {
+            turnRad((3*Math.PI)/2);
+        }
+    }
+
+    private void dumpGlyph() throws InterruptedException {
+        // @todo is this the same for near and far?
+        driveDirectionTiles(0, .25, 0.5, 1.5);
+        throwGlyph();
+        sleep(500);
+        robot.releaseSlow();
+        driveDirectionTiles(0, .25, .5, 1.0);
+        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
+        robot.stoparms();
+        driveDirectionTiles(0, .4, 0.7,1.0);
+        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
+    }
+
+    private RelicRecoveryVuMark doSensorOnAStickStuff(VisionTargets vt) {
+        // Here's the VuMark itself
+        final RelicRecoveryVuMark target = vt.getCurrentVuMark();
+        vt.close();
+
+        robot.setSwing();
+        robot.putDownSoas();
+
+        sleep(2000);
+
+        int identifier = robot.detectJewelColour();
+        final boolean jewelIsRed = 1 == identifier;
+
+
+        if (jewelIsRed == redAlliance) {
+            robot.swingForward();
+        } else {
+            robot.swingBack();
+        }
+
+        sleep(500);
+
+        robot.putUpSoas();
+        robot.setSwing();
+        return target;
+    }
+
+    private void doubleMajorPenaltyMode() throws InterruptedException {
+        // @todo What needs to change here for the far platform?
+        if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
+            if (nearPlatform) {
+                robot.collect();
+                driveDirectionTiles(0.0, 1.5, 1.0, 2.5);
+                sleep(500);
+                robot.stoparms();
+                driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
+                robot.setLiftIndex(3);
+                turnToAngleRad(0.0);
+                driveDirectionTiles(0, 1.35, .5, 2.0);
+                throwGlyph();
+                robot.stoparms();
+                robot.releaseSlow();
+                driveDirectionTiles(Math.PI, .4, .5, 1.0);
+            }
+        }
+        lowerLift();
+    }
+
+    private void whileNotStarted(VisionTargets vt) {
         while (! isStarted()) {
             vt.loop();
             c.update();
@@ -96,101 +209,6 @@ public class JewelAutonomous extends AutoBase {
         robot.setLights(0.0);
         robot.resetEncoders();
         robot.resetGyro();
-
-        // Here's the VuMark itself
-        final RelicRecoveryVuMark target = vt.getCurrentVuMark();
-        vt.close();
-
-        robot.setSwing();
-        robot.putDownSoas();
-
-        sleep(2000);
-
-        int identifier = robot.detectJewelColour();
-        final boolean jewelIsRed = 1 == identifier;
-
-
-        if (jewelIsRed == redAlliance) {
-            robot.swingForward();
-        } else {
-            robot.swingBack();
-        }
-
-        sleep(500);
-
-        robot.putUpSoas();
-        robot.setSwing();
-
-        if (nearPlatform) {
-            driveDirectionTiles(forwardDir(), 1.0, .25, 2.0);
-        } else {
-            driveDirectionTiles(forwardDir(), 1.15, .25, 2.0);
-        }
-
-        turnToAngleRad(0.0);
-
-        if (nearPlatform) {
-            // This is the drive that you want to move based on the VuMark.
-            // There's a method up above where you can do that.
-            driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5, 1.5);
-            turnRad((Math.PI / 2.0));
-        } else {
-
-            // This is the drive that you want to move based on the VuMark.
-            // There's a method up above where you can do that.
-            if (redAlliance) {
-                turnRad(Math.PI);
-                driveDirectionTiles(3.0 * Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target),
-                        0.5, 2.5);
-            } else {
-                turnRad(0);
-                driveDirectionTiles(Math.PI / 2, FAR_PLATFORM_BASE_DISTANCE+ farPlatformAdjustDriveDistance(target),
-                        0.5, 2.5);
-            }
-        }
-
-
-        robot.resetGyro();
-        // @todo is this the same for near and far?
-        driveDirectionTiles(0, .25, 0.5, 1.5);
-        throwGlyph();
-        sleep(500);
-        robot.releaseSlow();
-        driveDirectionTiles(0, .25, .5, 1.0);
-        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
-        robot.stoparms();
-        driveDirectionTiles(0, .4, 0.7,1.0);
-        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
-
-        if (nearPlatform) {
-            turnRad(Math.PI);
-        } else if(redAlliance) {
-            turnRad((Math.PI)/2);
-        }else{
-            turnRad((3*Math.PI)/2);
-        }
-
-        // @todo What needs to change here for the far platform?
-        if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
-            robot.collect();
-            driveDirectionTiles(0.0, 1.5, 1.0, 2.5);
-            sleep(500);
-            robot.stoparms();
-            driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
-            robot.indexLiftUp();
-            robot.indexLiftUp();
-            robot.indexLiftUp();
-            turnToAngleRad(0.0);
-            driveDirectionTiles(0, 1.35, .5, 2.0);
-            throwGlyph();
-            robot.stoparms();
-            robot.releaseSlow();
-            driveDirectionTiles(Math.PI, .4, .5,1.0);
-        }
-
-        for (int i = 0; i < 3; ++i) {
-            robot.indexLiftDown();
-        }
     }
 
     private void throwGlyph() {
