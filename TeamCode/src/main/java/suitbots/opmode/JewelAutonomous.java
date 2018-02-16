@@ -1,6 +1,7 @@
 package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.vuforia.EyewearUserCalibrator;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
@@ -13,16 +14,23 @@ import suitbots.VisionTargets;
 
 @Autonomous(name = "AUTONOMOUS", group = "Tournament")
 public class JewelAutonomous extends AutoBase {
+
+    private enum Column {
+        LEFT, CENTER, RIGHT, WHATEVER
+    }
+
     private boolean redAlliance = true;
     private boolean nearPlatform = true;
     private int doubleMajorMode = 0;
+    private Column targetColumn = Column.CENTER;
+    private RelicRecoveryVuMark target;
 
     private static final int DOUBLE_MAJOR_MODE_THRESHOLD = 5;
 
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
     // is way off from the rest of them.
-    public static final double NEAR_PLATFORM_BASE_DISTANCE = 1.55;
+    public static final double NEAR_PLATFORM_BASE_DISTANCE = 1.6;
 
     // Make sure you take alliance in to account! If you're blue, "left"
     // is the close column. If you're red it's the other way around.
@@ -69,8 +77,8 @@ public class JewelAutonomous extends AutoBase {
         vt.initFrontCamera(this);
 
         whileNotStarted(vt);
-        final RelicRecoveryVuMark target = doSensorOnAStickStuff(vt);
-        depositGlyph(target);
+        target = doSensorOnAStickStuff(vt);
+        depositGlyph();
         doubleMajorPenaltyMode();
     }
 
@@ -78,23 +86,23 @@ public class JewelAutonomous extends AutoBase {
         robot.setLiftIndex(0);
     }
 
-    private void depositGlyph(RelicRecoveryVuMark target) throws InterruptedException {
-        driveToCryptoboxColumn(target);
+    private void depositGlyph() throws InterruptedException {
+        driveToCryptoboxColumn();
         dumpGlyph();
         rotateAfterDumpingGlyph();
     }
 
-    private void driveToCryptoboxColumn(RelicRecoveryVuMark target) throws InterruptedException {
+    private void driveToCryptoboxColumn() throws InterruptedException {
         if (nearPlatform) {
-            nearPlatformCryptoboxDrive(target);
+            nearPlatformCryptoboxDrive();
         } else {
-            farPlatformCryptoboxDrive(target);
+            farPlatformCryptoboxDrive();
         }
         robot.resetGyro();
     }
 
-    private void farPlatformCryptoboxDrive(RelicRecoveryVuMark target) throws InterruptedException {
-        driveDirectionTiles(forwardDir(), 1.15, .25, 2.0);
+    private void farPlatformCryptoboxDrive() throws InterruptedException {
+        driveDirectionTiles(forwardDir(), 1.2, .25, 2.0);
         turnToAngleRad(0.0);
         // This is the drive that you want to move based on the VuMark.
         // There's a method up above where you can do that.
@@ -103,15 +111,16 @@ public class JewelAutonomous extends AutoBase {
                 FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), .5, 2.5);
     }
 
-    private void nearPlatformCryptoboxDrive(RelicRecoveryVuMark target) throws InterruptedException {
-        driveDirectionTiles(forwardDir(), NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target), 0.5, 2.5);
-        turnToAngleRad(0.0);
-        turnRad((Math.PI / 2.0));
+    private void nearPlatformCryptoboxDrive() throws InterruptedException {
+        driveDirectionTiles(forwardDir(),
+                NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target),
+                0.5, 2.5);
+        turnToAngleRad(Math.PI / 2.0);
     }
 
     private void rotateAfterDumpingGlyph() throws InterruptedException {
         if (nearPlatform) {
-            turnRad(Math.PI);
+            turnToAngleRad(Math.PI);
         } else if(redAlliance) {
             turnRad((Math.PI)/2);
         } else {
@@ -128,8 +137,6 @@ public class JewelAutonomous extends AutoBase {
         driveDirectionTiles(0, .25, .5, 1.0);
         driveDirectionTiles(Math.PI, .4, 0.7,1.0);
         robot.stoparms();
-        driveDirectionTiles(0, .4, 0.7,1.0);
-        driveDirectionTiles(Math.PI, .4, 0.7,1.0);
     }
 
     private RelicRecoveryVuMark doSensorOnAStickStuff(VisionTargets vt) {
@@ -152,23 +159,79 @@ public class JewelAutonomous extends AutoBase {
             robot.swingBack();
         }
 
-        sleep(500);
+        sleep(750);
 
         robot.putUpSoas();
         robot.setSwing();
         return target;
     }
 
+    private Column fromVuMark(RelicRecoveryVuMark vm) {
+        if (RelicRecoveryVuMark.LEFT.equals(vm)) {
+            return Column.LEFT;
+        } else if (RelicRecoveryVuMark.RIGHT.equals(vm)) {
+            return Column.RIGHT;
+        } else {
+            return Column.CENTER;
+        }
+    }
+
+    private int fromColumn(final Column c) {
+        switch (c) {
+            case LEFT:
+                return 2;
+            case CENTER:
+                return 1;
+            case RIGHT:
+                return 0;
+        }
+        return 0;
+    }
+
+    private int traverse() {
+        int dest = fromColumn(targetColumn);
+        int src = fromColumn(fromVuMark(target));
+        return dest - src;
+    }
+
+    private double happyGlyphMagnitude() {
+        final int t = Math.abs(traverse());
+        switch (t) {
+            case 2:
+                return .7;
+            case 1:
+                return .35;
+            default:
+                return 0;
+        }
+    }
+
+    private double happyGlyphDirection() {
+        if (traverse() > 0) {
+            return 3 * Math.PI / 2.0;
+        } else {
+            return Math.PI / 2.0;
+        }
+    }
+
+
     private void doubleMajorPenaltyMode() throws InterruptedException {
         // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
             if (nearPlatform) {
                 robot.collect();
-                driveDirectionTiles(0.0, 1.5, 1.0, 2.5);
+                telemetry.addData("DMM Direction", happyGlyphDirection());
+                telemetry.addData("DMM Magnitude", happyGlyphMagnitude());
+                telemetry.addData("DMM Traverse", traverse());
+                telemetry.update();
+                driveDirectionTiles(happyGlyphDirection(),
+                        happyGlyphMagnitude(),
+                        .25, 2.0);
+                driveDirectionTiles(0.0, 1.5, .75, 2);
                 sleep(500);
                 robot.stoparms();
-                driveDirectionTiles(Math.PI, 1.0, 1.0, 1.5);
-                robot.setLiftIndex(3);
+                robot.setLiftIndex(2);
+                driveDirectionTiles(Math.PI, 1.0, .5, 1.5);
                 turnToAngleRad(0.0);
                 driveDirectionTiles(0, 1.35, .5, 2.0);
                 throwGlyph();
@@ -180,6 +243,30 @@ public class JewelAutonomous extends AutoBase {
         lowerLift();
     }
 
+    private void adjustGlyphTarget(int direction) {
+        if (0 < direction) {
+            if (Column.WHATEVER == targetColumn) {
+                targetColumn = Column.LEFT;
+            } else if (Column.LEFT == targetColumn) {
+                targetColumn = Column.CENTER;
+            } else if (Column.CENTER == targetColumn) {
+                targetColumn = Column.RIGHT;
+            } else {
+                targetColumn = Column.WHATEVER;
+            }
+        } else if (0 > direction){
+            if (Column.WHATEVER == targetColumn) {
+                targetColumn = Column.RIGHT;
+            } else if (Column.LEFT == targetColumn) {
+                targetColumn = Column.WHATEVER;
+            } else if (Column.CENTER == targetColumn) {
+                targetColumn = Column.LEFT;
+            } else {
+                targetColumn = Column.CENTER;
+            }
+        }
+    }
+
     private void whileNotStarted(VisionTargets vt) {
         while (! isStarted()) {
             vt.loop();
@@ -188,14 +275,19 @@ public class JewelAutonomous extends AutoBase {
             if (c.BOnce()) nearPlatform = ! nearPlatform;
             if (c.dpadUpOnce()) doubleMajorMode++;
             if (c.dpadDownOnce()) doubleMajorMode--;
+            if (c.dpadLeftOnce()) adjustGlyphTarget(-1);
+            if (c.dpadRightOnce()) adjustGlyphTarget(1);
 
             telemetry.addData("Alliance (a)", redAlliance ? "RED" : "BLUE");
             telemetry.addData("POSITION (b)", nearPlatform ? "NEAR" : "FAR");
             telemetry.addData("Time", getRuntime());
             telemetry.addData("Vision", vt.getCurrentVuMark());
             telemetry.addData("Alignment", Math.toDegrees(vt.getRotationZ()));
-            telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
-                    ? String.format("%d", DOUBLE_MAJOR_MODE_THRESHOLD - doubleMajorMode) : "HOLY CRAP");
+            if (nearPlatform) {
+                telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
+                        ? String.format("%d", DOUBLE_MAJOR_MODE_THRESHOLD - doubleMajorMode) : "HOLY CRAP");
+                telemetry.addData("Target (l/r)", targetColumn);
+            }
             telemetry.update();
 
 
@@ -206,7 +298,7 @@ public class JewelAutonomous extends AutoBase {
             }
         }
 
-        robot.setLights(0.0);
+        robot.setLights(1.0);
         robot.resetEncoders();
         robot.resetGyro();
     }

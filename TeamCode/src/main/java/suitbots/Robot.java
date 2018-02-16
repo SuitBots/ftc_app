@@ -352,8 +352,8 @@ public class Robot {
         }
     }
 
-    public static final double DOWN_SOAS = .68; // 0.66;
-    public static final double UP_SOAS = 0.25;   // 0.20;
+    public static final double DOWN_SOAS = .68;
+    public static final double UP_SOAS = 0.0;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
     }
@@ -361,9 +361,9 @@ public class Robot {
         soas.setPosition(UP_SOAS);
     }
 
-    public static final double SWING_FORWARD = .32;
-    public static final double SWING_BACK = .52;
-    public static final double SET_SWING = .42;
+    public static final double SWING_FORWARD = 0.1;
+    public static final double SWING_BACK = .7;
+    public static final double SET_SWING = 0.4;
 
     public void swingForward() {
         swing.setPosition(SWING_FORWARD);
