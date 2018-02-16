@@ -62,10 +62,10 @@ public class Robot {
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
-        lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -77,6 +77,14 @@ public class Robot {
         setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lift);
         setMotorMode(DcMotor.RunMode.RUN_TO_POSITION, lift);
         insureIndexMode(true);
+    }
+
+    public void disableDriveEncoders() {
+        lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     public void resetGyro() {
@@ -281,7 +289,7 @@ public class Robot {
 
     private boolean indexMode = true;
     private static final int ENCODER_TICKS_PER_MOTOR_REV = 1680;
-    private static final double WHEEL_CIRCUMFERENCE = 1.43 * Math.PI;
+    private static final double WHEEL_CIRCUMFERENCE = 1.9 * Math.PI;
     private static final int LIFT_TICKS_PER_INCH = (int)(ENCODER_TICKS_PER_MOTOR_REV / WHEEL_CIRCUMFERENCE);
     private static final int[] LIFT_INDEX = new int[] {
             0,

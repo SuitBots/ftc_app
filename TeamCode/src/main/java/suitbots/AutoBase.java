@@ -40,7 +40,7 @@ public abstract class AutoBase extends LinearOpMode  {
         }
     }
 
-    private static final double SAFE_TURN_SPEED = .2;
+    private static final double SAFE_TURN_SPEED = .1;
     private static final double FAST_TURN_SPEED = .35;
     private static final double LUCDACRIS_TURN_SPEED = .35;
     private static final double FAST_TURN_THRESHOLD = Math.PI / 6.0;
@@ -62,7 +62,6 @@ public abstract class AutoBase extends LinearOpMode  {
     }
 
     private static double speedForTurnDistance(double angle) {
-        /*
         angle = Math.abs(angle);
         if (angle > LUDACRIS_TURN_THRESHOLD) {
             return LUCDACRIS_TURN_SPEED;
@@ -70,7 +69,6 @@ public abstract class AutoBase extends LinearOpMode  {
         if (angle > FAST_TURN_THRESHOLD) {
             return FAST_TURN_SPEED;
         }
-        */
         return SAFE_TURN_SPEED;
     }
 

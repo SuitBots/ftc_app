@@ -84,10 +84,12 @@ public class JewelAutonomous extends AutoBase {
             telemetry.addData("Double Major (u/d)", DOUBLE_MAJOR_MODE_THRESHOLD > doubleMajorMode
                     ? String.format("%d", DOUBLE_MAJOR_MODE_THRESHOLD - doubleMajorMode) : "HOLY CRAP");
             telemetry.update();
+
+
             if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
-                robot.setLights(.75 + Math.sin(getRuntime() * 4.0) / 4.0);
+                robot.setLights(.5 + Math.sin(getRuntime() * 4.0) / 2.0);
             } else {
-                robot.setLights(.75 + Math.sin(getRuntime()) / 4.0);
+                robot.setLights(.5 + Math.sin(getRuntime()) / 2.0);
             }
         }
 
@@ -150,10 +152,11 @@ public class JewelAutonomous extends AutoBase {
 
         robot.resetGyro();
         // @todo is this the same for near and far?
-        driveDirectionTiles(0, .5, 0.5, 1.5);
+        driveDirectionTiles(0, .25, 0.5, 1.5);
         throwGlyph();
         sleep(500);
         robot.releaseSlow();
+        driveDirectionTiles(0, .25, .5, 1.0);
         driveDirectionTiles(Math.PI, .4, 0.7,1.0);
         robot.stoparms();
         driveDirectionTiles(0, .4, 0.7,1.0);
@@ -178,7 +181,7 @@ public class JewelAutonomous extends AutoBase {
             robot.indexLiftUp();
             robot.indexLiftUp();
             turnToAngleRad(0.0);
-            driveDirectionTiles(0, 1.5, .5, 2.0);
+            driveDirectionTiles(0, 1.35, .5, 2.0);
             throwGlyph();
             robot.stoparms();
             robot.releaseSlow();

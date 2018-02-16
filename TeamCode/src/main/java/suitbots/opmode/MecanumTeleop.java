@@ -22,6 +22,7 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void init() {
         robot = new Robot(hardwareMap, telemetry);
+        robot.disableDriveEncoders();
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
     }
@@ -68,7 +69,7 @@ public class MecanumTeleop extends OpMode {
 
         if (g.A()) {
             robot.release();
-            robot.drive(Math.PI, .3, 0.0);
+            robot.drive(Math.PI, .2, 0.0);
         } else {
             DriverHelper.drive(g1, robot);
             if (g.leftBumper()) {
