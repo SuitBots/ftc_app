@@ -53,8 +53,8 @@ public class JewelAutonomous extends AutoBase {
         return 0.0;
     }
 
-    public static final double FAR_PLATFORM_BASE_DISTANCE = .60;
-    public static final double FAR_PLATFORM_COLUMN_ADJUST = .35;
+    public static final double FAR_PLATFORM_BASE_DISTANCE = 0.8;
+    public static final double FAR_PLATFORM_COLUMN_ADJUST = .5;
     protected double farPlatformAdjustDriveDistance(final RelicRecoveryVuMark v) {
         if(RelicRecoveryVuMark.LEFT == v){
             if(redAlliance){
@@ -114,7 +114,7 @@ public class JewelAutonomous extends AutoBase {
     private void nearPlatformCryptoboxDrive() throws InterruptedException {
         driveDirectionTiles(forwardDir(),
                 NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target),
-                0.5, 2.5);
+                0.4, 2.5);
         turnToAngleRad(Math.PI / 2.0);
     }
 
@@ -159,6 +159,7 @@ public class JewelAutonomous extends AutoBase {
             robot.swingBack();
         }
 
+
         sleep(750);
 
         robot.putUpSoas();
@@ -198,9 +199,9 @@ public class JewelAutonomous extends AutoBase {
         final int t = Math.abs(traverse());
         switch (t) {
             case 2:
-                return .7;
+                return .6;
             case 1:
-                return .35;
+                return .4;
             default:
                 return 0;
         }
@@ -208,9 +209,9 @@ public class JewelAutonomous extends AutoBase {
 
     private double happyGlyphDirection() {
         if (traverse() > 0) {
-            return 3 * Math.PI / 2.0;
-        } else {
             return Math.PI / 2.0;
+        } else {
+            return 3.0 * Math.PI / 2.0;
         }
     }
 
@@ -227,17 +228,19 @@ public class JewelAutonomous extends AutoBase {
                 driveDirectionTiles(happyGlyphDirection(),
                         happyGlyphMagnitude(),
                         .25, 2.0);
-                driveDirectionTiles(0.0, 1.5, .75, 2);
+                driveDirectionTiles(0.0, 1.5, .5, 2);
                 sleep(500);
                 robot.stoparms();
                 robot.setLiftIndex(2);
                 driveDirectionTiles(Math.PI, 1.0, .5, 1.5);
                 turnToAngleRad(0.0);
-                driveDirectionTiles(0, 1.35, .5, 2.0);
+                driveDirectionTiles(0, .6, .45, 2.0);
                 throwGlyph();
                 robot.stoparms();
                 robot.releaseSlow();
-                driveDirectionTiles(Math.PI, .4, .5, 1.0);
+                driveDirectionTiles(Math.PI, .3, .4, 1.0);
+                driveDirectionTiles(0, .3, .4, 1.0);
+                driveDirectionTiles(Math.PI, .3, .4, 1.0);
             }
         }
         lowerLift();
