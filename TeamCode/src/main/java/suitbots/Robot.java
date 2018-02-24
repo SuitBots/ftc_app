@@ -33,7 +33,7 @@ public class Robot {
     private DcMotor lf, lr, rf, rr, lift;
     private DcMotor armr, arml, lights;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
-    private AnalogInput glyph;
+    private AnalogInput glyphR, glyphL;
     private Servo soas, swing;
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
@@ -41,7 +41,8 @@ public class Robot {
         imu = h.get(BNO055IMU.class, "imu");
         initilizeGyro();
         jewelColorDetector = h.colorSensor.get("jewelColorDetector");
-        glyph = h.analogInput.get("glyph");
+        glyphR = h.analogInput.get("glyphR");
+        glyphL = h.analogInput.get("glyphL");
 
         lf = h.dcMotor.get("lf");
         lr = h.dcMotor.get("lr");
@@ -352,7 +353,7 @@ public class Robot {
         }
     }
 
-    public static final double DOWN_SOAS = .68;
+    public static final double DOWN_SOAS = .7;
     public static final double UP_SOAS = 0.0;
     public void putDownSoas() {
         soas.setPosition(DOWN_SOAS);
@@ -462,10 +463,18 @@ public class Robot {
 
     private static double GLYPH_VOLTAGE_THRESHOLD = 1.8;
     public boolean hasGlyph() {
-        return glyph.getVoltage() < GLYPH_VOLTAGE_THRESHOLD;
+        return (glyphL.getVoltage() < GLYPH_VOLTAGE_THRESHOLD)
+                || (glyphR.getVoltage() > GLYPH_VOLTAGE_THRESHOLD);
     }
     public void setLights(final double x) {
         lights.setPower(x);
+    }
+
+    public double glyphLeftVolt(){
+      return glyphL.getVoltage();
+    }
+    public double glyphRightVolt(){
+        return glyphR.getVoltage();
     }
 
     public void DEBUG_announceLiftStuff() {

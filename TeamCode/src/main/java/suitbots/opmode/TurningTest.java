@@ -7,6 +7,7 @@ import com.suitbots.util.Controller;
 import suitbots.AutoBase;
 import suitbots.Robot;
 
+@Disabled
 @TeleOp(name = "Turning Test")
 public class TurningTest extends AutoBase {
     @Override

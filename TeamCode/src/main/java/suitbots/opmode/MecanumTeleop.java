@@ -104,6 +104,10 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void loop() {
         telemetry.addData("Velocity: ", robot.absoluteVelocity());
+        telemetry.addData("Left glyph:", robot.glyphLeftVolt());
+        telemetry.addData("Right glyph:", robot.glyphRightVolt());
+        telemetry.addData("Has Glyph?", robot.hasGlyph());
+
         g1.update();
         g2.update();
         g2Loop(g2);

@@ -1,11 +1,13 @@
 package suitbots.opmode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
 import suitbots.Robot;
 
+@Disabled
 @TeleOp(name = "Lift Test")
 public class LiftTest extends OpMode {
     private Robot robot;

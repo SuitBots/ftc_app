@@ -1,6 +1,7 @@
 package suitbots.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
@@ -11,6 +12,7 @@ import suitbots.Robot;
  * Created by Jonah on 2/19/18.
  */
 
+@Disabled
 @TeleOp(name = "Strafe Test", group = "Tournament")
 public class StrafeTest extends AutoBase{
     @Override

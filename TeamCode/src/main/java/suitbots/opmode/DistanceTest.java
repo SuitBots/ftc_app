@@ -1,9 +1,11 @@
 package suitbots.opmode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 
+@Disabled
 @TeleOp(name = "Distance Test")
 public class DistanceTest extends OpMode {
     private AnalogInput a1;
