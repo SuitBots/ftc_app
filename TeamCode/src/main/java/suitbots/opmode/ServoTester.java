@@ -22,8 +22,8 @@ public class ServoTester extends OpMode {
     public void loop() {
         controller.update();
 
-        if (controller.dpadDownOnce()) { y -= .05; }
-        if (controller.dpadUpOnce()) { y += .05; }
+        if (controller.dpadDownOnce()) { y -= 0.05; }
+        if (controller.dpadUpOnce()) { y += 0.05; }
         if (controller.dpadLeftOnce()) { x -= 0.05; }
         if (controller.dpadRightOnce()) { x += 0.05; }
 
