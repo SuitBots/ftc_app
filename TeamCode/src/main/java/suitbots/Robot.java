@@ -18,7 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;//The
 
 /**
  * Created by Samantha on 9/2/2017.
@@ -36,10 +36,18 @@ public class Robot {
     private AnalogInput glyphR, glyphL;
     private Servo soas, swing;
 
+
     public Robot(HardwareMap h, Telemetry _telemetry) {
+        this(h, _telemetry, true);
+    }
+
+    public Robot(HardwareMap h, Telemetry _telemetry, boolean doInitilize) {
         telemetry = _telemetry;
-        imu = h.get(BNO055IMU.class, "imu");
-        initilizeGyro();
+        if (doInitilize) {
+            imu = h.get(BNO055IMU.class, "imu");
+            initilizeGyro();
+        }
+
         jewelColorDetector = h.colorSensor.get("jewelColorDetector");
         glyphR = h.analogInput.get("glyphR");
         glyphL = h.analogInput.get("glyphL");

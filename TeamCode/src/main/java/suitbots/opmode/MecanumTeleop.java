@@ -21,7 +21,7 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void init() {
-        robot = new Robot(hardwareMap, telemetry);
+        robot = new Robot(hardwareMap, telemetry, false);
         robot.disableDriveEncoders();
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
@@ -36,11 +36,6 @@ public class MecanumTeleop extends OpMode {
         }
 
         telemetry.addData("Debug? (a)", debug_mode ? "on" : "off");
-        if(robot.isGyroCalibrated()){
-            telemetry.addData("Ready?", "YES.");
-        }else {
-            telemetry.addData("Ready?","no");
-        }
         telemetry.update();
     }
 
@@ -103,7 +98,6 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void loop() {
-        telemetry.addData("Velocity: ", robot.absoluteVelocity());
         telemetry.addData("Left glyph:", robot.glyphLeftVolt());
         telemetry.addData("Right glyph:", robot.glyphRightVolt());
         telemetry.addData("Has Glyph?", robot.hasGlyph());
