@@ -35,10 +35,12 @@ public class DriverHelper {
 
         if (0.05 < g.left_trigger) {
             v_theta /= (1.0 + g.left_trigger);
+            v_rotation /= (1.0 + g.left_trigger);
         }
 
         if (0.05 < g.right_trigger) {
             v_theta /= (1.0 + g.right_trigger);
+            v_rotation /= (1.0 + g.right_trigger);
         }
 
         robot.drive(theta, v_theta, v_rotation);
