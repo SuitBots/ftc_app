@@ -241,6 +241,7 @@ public class JewelAutonomous extends AutoBase {
                 driveDirectionTiles(Math.PI, .3, .4, 1.0);
                 driveDirectionTiles(0, .3, .4, 1.0);
                 driveDirectionTiles(Math.PI, .3, .4, 1.0);
+                robot.setLiftIndex(0);
             }
         }
         lowerLift();
