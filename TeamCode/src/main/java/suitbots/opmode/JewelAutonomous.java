@@ -279,8 +279,8 @@ public class JewelAutonomous extends AutoBase {
             if (c.BOnce()) nearPlatform = ! nearPlatform;
             if (c.dpadUpOnce()) doubleMajorMode++;
             if (c.dpadDownOnce()) doubleMajorMode--;
-            if (c.dpadLeftOnce()) adjustGlyphTarget(-1);
-            if (c.dpadRightOnce()) adjustGlyphTarget(1);
+            if (c.dpadLeftOnce()) adjustGlyphTarget(1);
+            if (c.dpadRightOnce()) adjustGlyphTarget(-1);
 
             telemetry.addData("Alliance (a)", redAlliance ? "RED" : "BLUE");
             telemetry.addData("POSITION (b)", nearPlatform ? "NEAR" : "FAR");
