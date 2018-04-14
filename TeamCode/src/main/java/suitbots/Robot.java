@@ -24,7 +24,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;//The
 /**
  * Created by Samantha on 9/2/2017.
  */
-//Hello there Sammy
 
 public class Robot {
     //Yo necesito dormir.

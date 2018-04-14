@@ -25,7 +25,7 @@ public class JewelAutonomous extends AutoBase {
     private Column targetColumn = Column.CENTER;
     private RelicRecoveryVuMark target;
 
-    private static final int DOUBLE_MAJOR_MODE_THRESHOLD = 5;
+    private static final int DOUBLE_MAJOR_MODE_THRESHOLD = 0;
 
     // This is the number of tiles that we drive after the jewel
     // to line up with the center column. Change this if the center column
@@ -53,8 +53,8 @@ public class JewelAutonomous extends AutoBase {
         return 0.0;
     }
 
-    public static final double FAR_PLATFORM_BASE_DISTANCE = 0.8;
-    public static final double FAR_PLATFORM_COLUMN_ADJUST = .5;
+    public static final double FAR_PLATFORM_BASE_DISTANCE = 0.65;
+    public static final double FAR_PLATFORM_COLUMN_ADJUST = .4;
     protected double farPlatformAdjustDriveDistance(final RelicRecoveryVuMark v) {
         if(RelicRecoveryVuMark.LEFT == v){
             if(redAlliance){
@@ -82,9 +82,6 @@ public class JewelAutonomous extends AutoBase {
         doubleMajorPenaltyMode();
     }
 
-    private void lowerLift() {
-        robot.setLiftIndex(0);
-    }
 
     private void depositGlyph() throws InterruptedException {
         driveToCryptoboxColumn();
@@ -111,9 +108,12 @@ public class JewelAutonomous extends AutoBase {
                 FAR_PLATFORM_BASE_DISTANCE + farPlatformAdjustDriveDistance(target), .5, 2.5);
     }
 
+    private static final double ALLIANCE_BALANCE_ADJUST = .1;
     private void nearPlatformCryptoboxDrive() throws InterruptedException {
         driveDirectionTiles(forwardDir(),
-                NEAR_PLATFORM_BASE_DISTANCE + nearPlatformAdjustDriveDistance(target),
+                NEAR_PLATFORM_BASE_DISTANCE
+                        + (redAlliance ? -1 : 1) * ALLIANCE_BALANCE_ADJUST
+                        + nearPlatformAdjustDriveDistance(target),
                 0.4, 2.5);
         turnToAngleRad(Math.PI / 2.0);
     }
@@ -122,9 +122,9 @@ public class JewelAutonomous extends AutoBase {
         if (nearPlatform) {
             turnToAngleRad(Math.PI);
         } else if(redAlliance) {
-            turnRad((Math.PI)/2);
+            turnRad((3*Math.PI)/4);
         } else {
-            turnRad((3*Math.PI)/2);
+            turnRad((-3*Math.PI)/4);
         }
     }
 
@@ -217,7 +217,6 @@ public class JewelAutonomous extends AutoBase {
 
 
     private void doubleMajorPenaltyMode() throws InterruptedException {
-        // @todo What needs to change here for the far platform?
         if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
             if (nearPlatform) {
                 robot.collect();
@@ -230,21 +229,21 @@ public class JewelAutonomous extends AutoBase {
                         .25, 2.0);
                 driveDirectionTiles(0.0, 1.5, .5, 2);
                 sleep(500);
-                robot.stoparms();
-                robot.setLiftIndex(2);
+//                driveDirectionTiles(Math.PI, .3, .4, 1.0);
+//                driveDirectionTiles(0, .3, .4, 1.0);
+//                driveDirectionTiles(Math.PI, .3, .4, 1.0);
                 driveDirectionTiles(Math.PI, 1.0, .5, 1.5);
+                robot.stoparms();
                 turnToAngleRad(0.0);
-                driveDirectionTiles(0, .6, .45, 2.0);
+                driveDirectionTiles(0, .62, .45, 2.0);
                 throwGlyph();
                 robot.stoparms();
                 robot.releaseSlow();
                 driveDirectionTiles(Math.PI, .3, .4, 1.0);
                 driveDirectionTiles(0, .3, .4, 1.0);
-                driveDirectionTiles(Math.PI, .3, .4, 1.0);
-                robot.setLiftIndex(0);
+                driveDirectionTiles(Math.PI, .25, .4, 1.0);
             }
         }
-        lowerLift();
     }
 
     private void adjustGlyphTarget(int direction) {
