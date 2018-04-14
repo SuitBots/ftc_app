@@ -294,15 +294,8 @@ public class JewelAutonomous extends AutoBase {
             }
             telemetry.update();
 
-
-            if (DOUBLE_MAJOR_MODE_THRESHOLD <= doubleMajorMode) {
-                robot.setLights(.5 + Math.sin(getRuntime() * 4.0) / 2.0);
-            } else {
-                robot.setLights(.5 + Math.sin(getRuntime()) / 2.0);
-            }
         }
 
-        robot.setLights(1.0);
         robot.resetEncoders();
         robot.resetGyro();
     }

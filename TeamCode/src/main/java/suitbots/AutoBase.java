@@ -30,7 +30,6 @@ public abstract class AutoBase extends LinearOpMode  {
     public void initialize(HardwareMap hm, Telemetry telemetry) {
         robot = new Robot(hm, telemetry);
         robot.resetEncoders();
-        robot.setLights(1.0);
         c = new Controller(gamepad1);
     }
 

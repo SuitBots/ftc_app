@@ -29,7 +29,6 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void init_loop() {
-        robot.setLights(.75 + Math.sin(getRuntime()) / 4.0);
         g1.update();
         if (g1.AOnce()) {
             debug_mode = ! debug_mode;
@@ -41,7 +40,6 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void start() {
-        robot.setLights(0.0);
         robot.onStart();
     }
 
@@ -85,6 +83,40 @@ public class MecanumTeleop extends OpMode {
             robot.resetLiftEncoder();
         }
 
+
+        /*
+        dpad up = extender out
+        dpad down = extender in
+        a = clamp close
+        b = clamp open
+        dpad left = pivot up
+        dpad right = pivot down
+         */
+
+        if(g.dpadUp()) {
+            robot.moveExtender(-1);
+        }
+        else if (g.dpadDown()){
+            robot.moveExtender(1);
+        } else {
+            robot.moveExtender(0.0);
+        }
+
+        if(g.AOnce()){
+            robot.clampClosed();
+        } else if(g.BOnce()){
+            robot.clampOpen();
+        }
+
+        if(g.dpadLeft()){
+            robot.movePivot(.5);
+        }
+        else if(g.dpadRight()){
+            robot.movePivot(-.5);
+        } else{
+            robot.movePivot(0);
+        }
+
         // runCollector(g);
 
         if (g.rightBumperOnce()) {
@@ -108,6 +140,5 @@ public class MecanumTeleop extends OpMode {
         g1Loop(g1);
         telemetry.update();
 
-        robot.setLights(robot.hasGlyph() ? 1.0 : 0.0);
     }
 }

@@ -3,6 +3,7 @@ package suitbots;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;//The
 /**
  * Created by Samantha on 9/2/2017.
  */
+//Hello there Sammy
 
 public class Robot {
     //Yo necesito dormir.
@@ -31,10 +33,11 @@ public class Robot {
     private double lastG;
     private BNO055IMU imu;
     private DcMotor lf, lr, rf, rr, lift;
-    private DcMotor armr, arml, lights;
+    private DcMotor armr, arml, extender;
     private ColorSensor jewelColorDetector;//sensor looking backwards!!!! <------------------
     private AnalogInput glyphR, glyphL;
-    private Servo soas, swing;
+    private Servo soas, swing, clamp;
+    private CRServo pivot;
 
 
     public Robot(HardwareMap h, Telemetry _telemetry) {
@@ -57,15 +60,16 @@ public class Robot {
         rf = h.dcMotor.get("rf");
         rr = h.dcMotor.get("rr");
         lift = h.dcMotor.get("lift");
-        lights = h.dcMotor.get("lights");
 
         armr = h.dcMotor.get("armr");
         arml = h.dcMotor.get("arml");
+        extender = h.dcMotor.get("extender");
 
         soas = h.servo.get("soas");
         swing = h.servo.get("swing");
+        clamp = h.servo.get("clamp");
+        pivot = h.crservo.get("pivot");
 
-        lights = h.dcMotor.get("lights");
 
         arml.setDirection(DcMotorSimple.Direction.REVERSE);
         lr.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -77,6 +81,7 @@ public class Robot {
         rf.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        extender.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -304,10 +309,7 @@ public class Robot {
     private static final int LIFT_TICKS_PER_INCH = (int)(ENCODER_TICKS_PER_MOTOR_REV / WHEEL_CIRCUMFERENCE);
     private static final int[] LIFT_INDEX = new int[] {
             0,
-            2 * LIFT_TICKS_PER_INCH,
-            8 * LIFT_TICKS_PER_INCH,
-            14 * LIFT_TICKS_PER_INCH,
-            19 * LIFT_TICKS_PER_INCH
+            12 * LIFT_TICKS_PER_INCH
     };
     private int indexPosition = 0;
     public int getLiftIndex() { return indexPosition; }
@@ -388,6 +390,24 @@ public class Robot {
         swing.setPosition(x);
         soas.setPosition(y);
     }
+
+    public static final double PIVOT_DOWN = 0.00;
+    public static final double PIVOT_UP = 1.00;
+
+    public static final double CLAMP_OPEN = 0.75;
+    public static final double CLAMP_CLOSED = 0.30;
+
+
+    //public void piotDown(){pivot.setPosition(PIVOT_DOWN);}
+    //public void pivotUp(){pivot.setPosition(PIVOT_UP);}
+    public void movePivot(double power){pivot.setPower(power);}
+    //public void pivotStop() { pivot.setPosition(.5);}
+    //public double getPivotPosition
+
+    public void clampOpen(){ clamp.setPosition(CLAMP_OPEN); }
+    public void clampClosed(){ clamp.setPosition(CLAMP_CLOSED); }
+
+    public void moveExtender(double power){extender.setPower(power);}
 
     public void encoderDriveTiles(double direction, double tiles) {
         encoderDriveInches(direction, 24.0 * tiles);
@@ -474,9 +494,7 @@ public class Robot {
         return (glyphL.getVoltage() < GLYPH_VOLTAGE_THRESHOLD)
                 || (glyphR.getVoltage() > GLYPH_VOLTAGE_THRESHOLD);
     }
-    public void setLights(final double x) {
-        lights.setPower(x);
-    }
+
 
     public double glyphLeftVolt(){
       return glyphL.getVoltage();
@@ -488,13 +506,5 @@ public class Robot {
     public void DEBUG_announceLiftStuff() {
         telemetry.addData("Lift Encoder", lift.getCurrentPosition());
         telemetry.addData("Lift Target", lift.getTargetPosition());
-    }
-
-    public void caughtGlyph(double distance) {
-        if(distance <= 1){
-            lights.setPower(100);
-        }else{
-            lights.setPower(0);
-        }
     }
 }
