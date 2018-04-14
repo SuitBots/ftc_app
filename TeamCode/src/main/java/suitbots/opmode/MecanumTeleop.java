@@ -73,38 +73,21 @@ public class MecanumTeleop extends OpMode {
                 robot.stoparms();
             }
         }
-    }
-
-    private void g2Loop(Controller g) {
         if (g.YOnce()) {
             robot.putUpSoas();
         }
-        if (g.XOnce()) {
+    }
+
+    private void g2Loop(Controller g) {
+        if (g.AOnce()) {
             robot.resetLiftEncoder();
         }
 
+        robot.moveExtender(g.left_trigger / 2.0 - g.right_trigger);
 
-        /*
-        dpad up = extender out
-        dpad down = extender in
-        a = clamp close
-        b = clamp open
-        dpad left = pivot up
-        dpad right = pivot down
-         */
-
-        if(g.dpadUp()) {
-            robot.moveExtender(-1);
-        }
-        else if (g.dpadDown()){
-            robot.moveExtender(1);
-        } else {
-            robot.moveExtender(0.0);
-        }
-
-        if(g.AOnce()){
+        if(g.XOnce()){
             robot.clampClosed();
-        } else if(g.BOnce()){
+        } else if(g.YOnce()){
             robot.clampOpen();
         }
 
@@ -124,7 +107,13 @@ public class MecanumTeleop extends OpMode {
         } else if (g.leftBumperOnce()) {
             robot.indexLiftDown();
         } else {
-            robot.moveLift(g.right_trigger - g.left_trigger);
+            if (g.dpadUp()) {
+                robot.moveLift(1.0);
+            } else if (g.dpadDown()) {
+                robot.moveLift(-1.0);
+            } else {
+                robot.moveLift(0.0);
+            }
         }
     }
 

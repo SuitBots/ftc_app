@@ -395,7 +395,7 @@ public class Robot {
     public static final double PIVOT_UP = 1.00;
 
     public static final double CLAMP_OPEN = 0.75;
-    public static final double CLAMP_CLOSED = 0.30;
+    public static final double CLAMP_CLOSED = 0.2;
 
 
     //public void piotDown(){pivot.setPosition(PIVOT_DOWN);}
