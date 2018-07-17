@@ -2,7 +2,6 @@ package soupbox
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DcMotor
 
 data class MecanumWheels(val fl:Double, val fr:Double, val bl:Double, val br:Double)
 
@@ -21,18 +20,13 @@ fun mecanum(theta:Double, velocity:Double, rotation:Double):MecanumWheels {
     return MecanumWheels(v1, v2, v3, v4)
 }
 
-@TeleOp(name = "Simple Mecanum")
+@TeleOp(name = "Simple Mecanum", group = "Preseason")
 class SimpleMecanum : OpMode() {
-    lateinit var fl: DcMotor;
-    lateinit var fr: DcMotor;
-    lateinit var bl: DcMotor;
-    lateinit var br: DcMotor;
+    lateinit var robot: Robot
 
     override fun init() {
-        fl = hardwareMap.dcMotor.get("fl")
-        fr = hardwareMap.dcMotor.get("fr")
-        bl = hardwareMap.dcMotor.get("bl")
-        br = hardwareMap.dcMotor.get("br")
+        robot = Robot(hardwareMap, telemetry)
+
     }
 
     override fun loop() {
@@ -45,9 +39,6 @@ class SimpleMecanum : OpMode() {
 
         val wheels = mecanum(theta, v_theta, v_rotation)
 
-        fl.power = wheels.fl
-        fr.power = wheels.fr
-        bl.power = wheels.bl
-        br.power = wheels.br
+        robot.drive(wheels.fl, wheels.fr, wheels.bl, wheels.br)
     }
 }
