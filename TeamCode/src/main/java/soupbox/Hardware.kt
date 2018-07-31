@@ -19,8 +19,8 @@ class Robot constructor(hardwareMap: HardwareMap, telemetry: Telemetry, debug: B
         bl = hardwareMap.dcMotor.get("bl")
         br = hardwareMap.dcMotor.get("br")
 
+        fl.direction = DcMotorSimple.Direction.REVERSE
         bl.direction = DcMotorSimple.Direction.REVERSE
-        br.direction = DcMotorSimple.Direction.REVERSE
         this.telemetry = telemetry
         this.debug = debug
     }

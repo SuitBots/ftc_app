@@ -35,7 +35,7 @@ class SimpleMecanum : OpMode() {
 
         val theta = Math.atan2(x, y)
         val v_theta = Math.sqrt(x * x + y * y)
-        val v_rotation = gamepad1.right_stick_x.toDouble();
+        val v_rotation = gamepad1.right_stick_x.toDouble()
 
         val wheels = mecanum(theta, v_theta, v_rotation)
 
