@@ -13,3 +13,12 @@
 
 // Include common definitions from above.
 apply from: '../build.common.gradle'
+
+
+dependencies {
+    repositories {
+        mavenCentral();
+    }
+
+    implementation('com.suitbots:libsb:0.0.2')
+}
