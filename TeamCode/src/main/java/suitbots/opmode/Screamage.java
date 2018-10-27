@@ -46,6 +46,8 @@ public class Screamage extends OpMode {
                 return driveDirection;
             }
         });
+
+        setColor();
     }
 
     private static DcMotorSimple.Direction flop(final DcMotorSimple.Direction x) {
@@ -84,6 +86,7 @@ public class Screamage extends OpMode {
         }
         if (g1.AOnce()) {
             flopDirection();
+            setColor();
         }
 
         final double fwd  = gamepad1.left_stick_y;
@@ -104,8 +107,6 @@ public class Screamage extends OpMode {
         lb.setPower(l);
         rf.setPower(r);
         rb.setPower(r);
-
-        setColor();
 
         telemetry.update();
     }
