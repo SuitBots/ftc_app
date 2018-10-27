@@ -17,7 +17,6 @@ import static java.lang.Math.abs;
 public class Screamage extends OpMode {
     private DcMotor lf, lb, rf, rb, lift;
     private CRServo hook;
-    private Blinken blink;
 
     private boolean servoActivated = false;
 
@@ -27,7 +26,6 @@ public class Screamage extends OpMode {
 
     @Override
     public void init() {
-        blink = new Blinken(hardwareMap.servo.get("blink"));
         lf = hardwareMap.dcMotor.get("lf");
         lb = hardwareMap.dcMotor.get("lb");
         rf = hardwareMap.dcMotor.get("rf");
@@ -47,7 +45,6 @@ public class Screamage extends OpMode {
             }
         });
 
-        setColor();
     }
 
     private static DcMotorSimple.Direction flop(final DcMotorSimple.Direction x) {
@@ -66,13 +63,6 @@ public class Screamage extends OpMode {
         driveDirection = flop(driveDirection);
     }
 
-    private void setColor() {
-        if (driveDirection == DcMotorSimple.Direction.FORWARD) {
-            blink.enactSolidGreen();
-        } else {
-            blink.enactSolidRed();
-        }
-    }
 
     @Override
     public void loop() {
@@ -86,7 +76,6 @@ public class Screamage extends OpMode {
         }
         if (g1.AOnce()) {
             flopDirection();
-            setColor();
         }
 
         final double fwd  = gamepad1.left_stick_y;
