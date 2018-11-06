@@ -26,6 +26,7 @@ public class Screamage extends OpMode {
 
     @Override
     public void init() {
+
         lf = hardwareMap.dcMotor.get("lf");
         lb = hardwareMap.dcMotor.get("lb");
         rf = hardwareMap.dcMotor.get("rf");
@@ -83,8 +84,8 @@ public class Screamage extends OpMode {
         final double max = max(1.0, abs(fwd) + abs(turn));
         final double speed = gamepad1.left_stick_button ? 1.0 : 0.35;
 
-        double l = speed * (fwd + turn) / max;
-        double r = speed * (fwd - turn) / max;
+        double l = (speed * fwd + turn) / max;
+        double r = (speed * fwd - turn) / max;
 
         if (driveDirection == DcMotorSimple.Direction.REVERSE) {
             double x = r;
