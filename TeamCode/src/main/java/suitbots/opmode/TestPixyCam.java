@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Func;
+
 import suitbots.sensor.PixyCam;
 
 // From this forum posting: https://ftcforum.usfirst.org/forum/ftc-technology/android-studio/7211-i2c/page2
@@ -26,6 +28,20 @@ public class TestPixyCam extends OpMode
     public void init()
     {
         pixyCam = hardwareMap.get(PixyCam.class, "pixycam");
+
+        telemetry.addData("Gold", new Func<Object>() {
+            @Override
+            public Object value() {
+                return pixyCam.GetBiggestBlock(1).x;
+            }
+        });
+
+        telemetry.addData("Silver", new Func<Object>() {
+            @Override
+            public Object value() {
+                return pixyCam.GetBiggestBlock(2).x;
+            }
+        });
     }
 
     /*
@@ -38,10 +54,7 @@ public class TestPixyCam extends OpMode
         if (elapsedTime.milliseconds() > 100) // Update every tenth of a second.
         {
             elapsedTime.reset();
-            final PixyCam.Block block1 = pixyCam.GetBiggestBlock(1);
-            telemetry.addData("Block 1:", block1.toString());
-            final PixyCam.Block block2 = pixyCam.GetBiggestBlock(2);
-            telemetry.addData("Block 2:", block2.toString());
+            telemetry.update();
         }
     }
 }

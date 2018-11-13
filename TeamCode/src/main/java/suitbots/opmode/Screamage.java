@@ -16,7 +16,6 @@ import static java.lang.Math.abs;
 @TeleOp(name = "SCREAMAGE")
 public class Screamage extends OpMode {
     private DcMotor lf, lb, rf, rb, lift;
-    private CRServo hook;
 
     private boolean servoActivated = false;
 
@@ -32,7 +31,6 @@ public class Screamage extends OpMode {
         rf = hardwareMap.dcMotor.get("rf");
         rb = hardwareMap.dcMotor.get("rb");
         lift = hardwareMap.dcMotor.get("lift");
-        hook = hardwareMap.crservo.get("hook");
 
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -71,10 +69,6 @@ public class Screamage extends OpMode {
 
         lift.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
 
-        if(g1.rightBumperOnce()) {
-            servoActivated = !servoActivated;
-            hook.setPower(servoActivated ? -1.0 : 0.0);
-        }
         if (g1.AOnce()) {
             flopDirection();
         }
