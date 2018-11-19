@@ -56,6 +56,7 @@ public abstract class AutoBase extends LinearOpMode {
 
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        updateOrientation();
     }
 
     protected void announceMinearalPositions() {
@@ -106,17 +107,44 @@ public abstract class AutoBase extends LinearOpMode {
         setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
     }
 
-    private static final double TURN_SPEED = .25;
-    protected void turnDegrees(final double angleDegrees) {
-        resetGyro();
-        setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
-        final double leftSpeed = angleDegrees < 0.0 ? TURN_SPEED : - TURN_SPEED;
-        setPower(leftSpeed, lf, lb);
-        setPower(-leftSpeed, rf, rb);
-        while (Math.abs(angleDegrees) > Math.abs(getRotationZ()) && opModeIsActive()) {
-            sleep(0);
+    private double previousTurnSpeed = Double.NaN;
+    private void setTurnSpeeds(double angleDegrees, double speed) {
+        if (speed != previousTurnSpeed) {
+            final double leftSpeed = angleDegrees < 0.0 ? TURN_SPEED : - TURN_SPEED;
+            setPower(leftSpeed, lf, lb);
+            setPower(-leftSpeed, rf, rb);
         }
-        setPower(0.0, lf, lb, rf, rb);
+    }
+
+    private static final double TURN_SPEED = .25;
+    private static final double SLOW_TURN_SPEED = .1;
+    private static final double SLOW_TURN_ANGLE = 20.0;
+    private static final double FUDGE_FACTOR = 5.0;
+    protected void turnDegrees(final double angleDegrees) {
+
+        if (180.0 < Math.abs(angleDegrees)) {
+            turnDegrees(angleDegrees % 180.0);
+        } else {
+            double speed = 0.0;
+            resetGyro();
+            setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
+            final double leftSpeed = angleDegrees < 0.0 ? TURN_SPEED : -TURN_SPEED;
+            double rot = Math.abs(getRotationZ());
+            double diff = Math.abs(angleDegrees) - Math.abs(getRotationZ());
+            do {
+                if (rot < SLOW_TURN_ANGLE || diff < SLOW_TURN_ANGLE) {
+                    setTurnSpeeds(angleDegrees, SLOW_TURN_SPEED);
+                } else {
+                    setTurnSpeeds(angleDegrees, TURN_SPEED);
+                }
+                updateOrientation();
+                rot = Math.abs(getRotationZ());
+                diff = Math.abs(angleDegrees) - Math.abs(getRotationZ());
+            } while (FUDGE_FACTOR < Math.abs(Math.abs(angleDegrees) - Math.abs(rot)));
+
+            setPower(0.0, lf, lb, rf, rb);
+            previousTurnSpeed = Double.NaN;
+        }
     }
 
     private static final double TICKS_PER_REV = 145.6; // gobilda 5.2:!
@@ -140,30 +168,47 @@ public abstract class AutoBase extends LinearOpMode {
         setPower(right, rf, rb);
 
         while (minTilt < (Math.abs(getRotationX()) + Math.abs(getRotationY()))) {
+            updateOrientation();
             sleep(0);
         }
         setPower(0, lf, lb, rf, rb);
     }
 
     private Orientation getOrientation() {
-        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
     }
     public void resetGyro() {
         final Orientation orientation = getOrientation();
-        lastX = orientation.firstAngle;
+        lastZ = orientation.firstAngle;
         lastY = orientation.secondAngle;
-        lastZ = orientation.thirdAngle;
+        lastX = orientation.thirdAngle;
+    }
+
+    private static boolean negative(final double x) {
+        return 0.0 > x;
+    }
+
+    public static double angleDiff(double a, double b) {
+        return 180.0 - Math.abs(Math.abs(a - b) - 180.0);
+    }
+
+    private Orientation currentOrientation;
+
+    public void updateOrientation() {
+        currentOrientation = getOrientation();
     }
 
     public double getRotationZ() {
-        return getOrientation().thirdAngle - lastZ;
+        return angleDiff(currentOrientation.firstAngle, lastZ);
     }
-
+    public double getRotationZRaw() { return currentOrientation.firstAngle; }
+    public double getRotationZOffset() { return lastZ; }
     public double getRotationX() {
-        return getOrientation().firstAngle - lastX;
+        return angleDiff(currentOrientation.thirdAngle, lastX);
     }
-
-    public double getRotationY() { return getOrientation().secondAngle - lastY; }
+    public double getRotationXRaw() { return currentOrientation.thirdAngle; }
+    public double getRotationY() { return angleDiff(currentOrientation.secondAngle, lastY); }
+    public double getRotationYRaw() { return currentOrientation.secondAngle; }
 
     protected void debugDrive(final Controller c) {
         setPower(c.left_stick_y, lf, lb);
