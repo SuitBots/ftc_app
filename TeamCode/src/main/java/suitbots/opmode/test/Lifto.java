@@ -1,11 +1,13 @@
 package suitbots.opmode.test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
 import suitbots.opmode.AutoBase;
 
 @TeleOp(name = "Lift", group = "Single")
+@Disabled
 public class Lifto extends AutoBase {
     @Override
     public void runOpMode() {

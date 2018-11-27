@@ -1,5 +1,6 @@
-package suitbots.opmode;
+package suitbots.opmode.test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -14,6 +15,7 @@ import suitbots.sensor.PixyCam;
 // Thank you, team 7330!
 
 @TeleOp(name="TestPixyCam")
+@Disabled
 public class TestPixyCam extends OpMode
 {
 

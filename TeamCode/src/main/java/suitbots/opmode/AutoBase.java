@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.suitbots.util.Blinken;
 import com.suitbots.util.Controller;
 
@@ -14,20 +15,26 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+import suitbots.sensor.TensorFlowDetector;
+import suitbots.sensor.VisionTargetNavigaton;
+
 public abstract class AutoBase extends LinearOpMode {
     protected DcMotor lift;
     private DcMotor lf, lb, rf, rb;
     protected Blinken blinken;
     protected BNO055IMU imu;
+    private Servo teamMarkerDumper;
+    private TensorFlowDetector tensorFlowDetector;
+    private VisionTargetNavigaton visionTargetNavigaton;
     private double lastZ, lastX, lastY;
 
     public enum MineralPosition {
-        LEFT, CENTER, RIGHT
+        LEFT, CENTER, RIGHT, UNKNOWN
     }
 
     // @todo
     protected MineralPosition getMineralPosition() {
-        return MineralPosition.CENTER;
+        return null == tensorFlowDetector ? MineralPosition.UNKNOWN : tensorFlowDetector.detect();
     }
 
     private void initilizeGyro() {
@@ -43,9 +50,23 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void initialize() {
+        initialize(true);
+    }
+
+    protected void initialize(boolean withTensorFlow) {
         lift = hardwareMap.dcMotor.get("lift");
         lift.setDirection(DcMotorSimple.Direction.REVERSE);
-        blinken = new Blinken(hardwareMap.servo.get("blinken"));
+
+        if (hardwareMap.servo.contains("blinken")) {
+            blinken = new Blinken(hardwareMap.servo.get("blinken"));
+        } else {
+            blinken = null;
+        }
+
+        tensorFlowDetector = TensorFlowDetector.make(hardwareMap);
+        if (null != tensorFlowDetector) {
+            visionTargetNavigaton = new VisionTargetNavigaton(tensorFlowDetector.getLocalizer());
+        }
 
         initilizeGyro();
 
@@ -57,21 +78,44 @@ public abstract class AutoBase extends LinearOpMode {
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         updateOrientation();
+
+        teamMarkerDumper = hardwareMap.servo.get("dumper");
     }
+
+    public boolean targetIsVisible() {
+        return null != visionTargetNavigaton && visionTargetNavigaton.canSeeTarget();
+    }
+
+    public float distanceToTarget() {
+        return distanceToTarget(Float.NaN);
+    }
+
+    public float distanceToTarget(float defaultValue) {
+        return null == visionTargetNavigaton ? defaultValue : visionTargetNavigaton.distanceFromTargetInches();
+    }
+
+    public float angleToTarget() {
+        return null == visionTargetNavigaton ? Float.NaN : visionTargetNavigaton.angleToTarget();
+    }
+
+
 
     protected void announceMinearalPositions() {
         final MineralPosition pos = getMineralPosition();
-        switch (pos) {
-            case LEFT:
-                blinken.enactSolidRed();
-                break;
-            case RIGHT:
-                blinken.enactSolidGreen();
-                break;
-            case CENTER:
-                blinken.enactSolidBlue();
-                break;
+        if (null != blinken) {
+            switch (pos) {
+                case LEFT:
+                    blinken.enactSolidRed();
+                    break;
+                case RIGHT:
+                    blinken.enactSolidGreen();
+                    break;
+                case CENTER:
+                    blinken.enactSolidBlue();
+                    break;
+            }
         }
+        telemetry.addData("Position", pos);
     }
 
     private void setMode(final DcMotor.RunMode mode, final DcMotor... motors) {
@@ -99,6 +143,7 @@ public abstract class AutoBase extends LinearOpMode {
     protected void driveInches(final double inches) {
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, rf, lb, rb);
         setEncoderTargets((int) Math.floor(TICKS_PER_INCH * inches), lf, lb, rf, rb);
+        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lb, rb);
         setPower(DRIVE_POWER, lf, rf, lb, rb);
         while(opModeIsActive() && (lf.isBusy() && lb.isBusy() && rf.isBusy() && rb.isBusy())) {
             sleep(0);
@@ -215,4 +260,9 @@ public abstract class AutoBase extends LinearOpMode {
         setPower(c.right_stick_y, rf, rb);
     }
 
+    public void dumpTeamMarker() {
+        teamMarkerDumper.setPosition(1.0);
+        sleep(1000);
+        teamMarkerDumper.setPosition(0.0);
+    }
 }
