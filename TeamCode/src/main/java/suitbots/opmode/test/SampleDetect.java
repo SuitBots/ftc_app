@@ -13,6 +13,7 @@ public class SampleDetect extends AutoBase {
 
         while (opModeIsActive()) {
             announceMinearalPositions();
+            telemetry.update();
         }
     }
 }

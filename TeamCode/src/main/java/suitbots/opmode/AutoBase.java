@@ -34,6 +34,7 @@ public abstract class AutoBase extends LinearOpMode {
 
     // @todo
     protected MineralPosition getMineralPosition() {
+        telemetry.addData("TensorFlow", null == tensorFlowDetector ? "No" : "Yes");
         return null == tensorFlowDetector ? MineralPosition.UNKNOWN : tensorFlowDetector.detect();
     }
 
@@ -63,7 +64,7 @@ public abstract class AutoBase extends LinearOpMode {
             blinken = null;
         }
 
-        tensorFlowDetector = TensorFlowDetector.make(hardwareMap);
+        tensorFlowDetector = TensorFlowDetector.make(hardwareMap, telemetry);
         if (null != tensorFlowDetector) {
             visionTargetNavigaton = new VisionTargetNavigaton(tensorFlowDetector.getLocalizer());
         }
@@ -80,6 +81,7 @@ public abstract class AutoBase extends LinearOpMode {
         updateOrientation();
 
         teamMarkerDumper = hardwareMap.servo.get("dumper");
+
     }
 
     public boolean targetIsVisible() {
@@ -117,6 +119,8 @@ public abstract class AutoBase extends LinearOpMode {
         }
         telemetry.addData("Position", pos);
     }
+
+
 
     private void setMode(final DcMotor.RunMode mode, final DcMotor... motors) {
         for (final DcMotor motor : motors) {
@@ -260,9 +264,11 @@ public abstract class AutoBase extends LinearOpMode {
         setPower(c.right_stick_y, rf, rb);
     }
 
-    public void dumpTeamMarker() {
+    public void flingTheTeamMarker() {
         teamMarkerDumper.setPosition(1.0);
         sleep(1000);
         teamMarkerDumper.setPosition(0.0);
     }
+
+
 }

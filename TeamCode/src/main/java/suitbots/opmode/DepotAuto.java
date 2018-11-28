@@ -84,7 +84,7 @@ public class DepotAuto extends AutoBase {
         driveInches(distanceToTarget(12.0f) - 2.0);
         turnDegrees(90.0);
         driveInches(48.0);
-        dumpTeamMarker();
+        flingTheTeamMarker();
 
         // todo: this, if we're feeling brave
         // driveInches(-72.0);

@@ -13,8 +13,8 @@ import org.firstinspires.ftc.robotcore.external.Func;
 import static java.lang.Math.max;
 import static java.lang.Math.abs;
 
-@TeleOp(name = "SCREAMAGE")
-public class Screamage extends OpMode {
+@TeleOp(name = "DriveRoverR")
+public class DriveRoverR extends OpMode {
     private DcMotor lf, lb, rf, rb, lift;
 
     private boolean servoActivated = false;

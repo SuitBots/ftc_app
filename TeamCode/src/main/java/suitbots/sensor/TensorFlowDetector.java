@@ -1,14 +1,17 @@
 package suitbots.sensor;
 
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
+import java.util.Locale;
 
 import suitbots.VuforiaKey;
 import suitbots.opmode.AutoBase;
@@ -23,7 +26,10 @@ public class TensorFlowDetector {
     private VuforiaLocalizer vuforia;
     private TFObjectDetector tfod;
 
-    private TensorFlowDetector(final HardwareMap hardwareMap) {
+    private Telemetry telemetry;
+
+    private TensorFlowDetector(final HardwareMap hardwareMap, final Telemetry _telemetry) {
+        telemetry = _telemetry;
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VuforiaKey.VUFORIA_KEY;
@@ -37,47 +43,64 @@ public class TensorFlowDetector {
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
+
+        tfod.activate();
     }
 
     public VuforiaLocalizer getLocalizer() {
         return vuforia;
     }
 
-    public AutoBase.MineralPosition detect() {
+    private List<Recognition> lastReco;
+
+    private List<Recognition> getRecos() {
         List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+        if (null != updatedRecognitions) {
+            lastReco = updatedRecognitions;
+        }
+        return lastReco;
+    }
+
+    public AutoBase.MineralPosition detect() {
+        List<Recognition> updatedRecognitions = getRecos();
         if (updatedRecognitions != null) {
-            if (updatedRecognitions.size() == 3) {
-                int goldMineralX = -1;
-                int silverMineral1X = -1;
-                int silverMineral2X = -1;
-                for (Recognition recognition : updatedRecognitions) {
-                    if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                        goldMineralX = (int) recognition.getLeft();
-                    } else if (silverMineral1X == -1) {
-                        silverMineral1X = (int) recognition.getLeft();
-                    } else {
-                        silverMineral2X = (int) recognition.getLeft();
-                    }
-                }
-                if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                    if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                        return AutoBase.MineralPosition.LEFT;
-                    } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                        return AutoBase.MineralPosition.RIGHT;
-                    } else {
-                        return AutoBase.MineralPosition.CENTER;
-                    }
+            int goldMineralX = -1;
+            int silverMineral1X = -1;
+            int silverMineral2X = -1;
+            for (Recognition recognition : updatedRecognitions) {
+                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                    goldMineralX = (int) recognition.getLeft();
+                } else if (silverMineral1X == -1) {
+                    silverMineral1X = (int) recognition.getLeft();
+                } else {
+                    silverMineral2X = (int) recognition.getLeft();
                 }
             }
+
+
+            telemetry.addData("G/S/S", String.format(Locale.US, "%d %d %d", goldMineralX, silverMineral1X, silverMineral2X));
+
+            if (-1 == goldMineralX) {
+                return AutoBase.MineralPosition.RIGHT;
+            } else {
+                final int silverMineralX = Math.max(silverMineral1X, silverMineral2X);
+                if (goldMineralX > silverMineralX) {
+                    return AutoBase.MineralPosition.CENTER;
+                } else {
+                    return AutoBase.MineralPosition.LEFT;
+                }
+            }
+        } else {
+            telemetry.addData("TF Data", "Nope");
         }
         return AutoBase.MineralPosition.UNKNOWN;
     }
 
-    public static TensorFlowDetector make(final HardwareMap hardwareMap) {
+    public static TensorFlowDetector make(final HardwareMap hardwareMap, final Telemetry t) {
         if (null == hardwareMap.tryGet(WebcamName.class, WEBCAM_NAME)) {
             return null;
         } else {
-            return new TensorFlowDetector(hardwareMap);
+            return new TensorFlowDetector(hardwareMap, t);
         }
     }
 }
