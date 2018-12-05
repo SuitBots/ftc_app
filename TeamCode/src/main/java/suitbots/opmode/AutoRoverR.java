@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.suitbots.util.Controller;
 
+import java.util.Locale;
+
 @Autonomous(name = "AutoRoverR")
 public class AutoRoverR extends AutoBase {
 
@@ -16,12 +18,6 @@ public class AutoRoverR extends AutoBase {
     private boolean isCraterSide;
 
 
-    //todo test and fix values
-    private int leftAngleAdjust = 45;
-    private int rightAngleAdjust = -45;
-    private int leftDistanceOffset = 12;
-    private int rightDistanceOffset = 12;
-
     @Override
     public void runOpMode() {
 
@@ -29,53 +25,79 @@ public class AutoRoverR extends AutoBase {
 
         final Controller c = new Controller(gamepad1);
 
+        int delay = 0;
         while (! isStarted()) {
             c.update();
             announceMinearalPositions();
             telemetry.addData("Side (a)", isCraterSide ? "Crater" : "Depot");
+            telemetry.addData("Delay (up/down)", String.format(Locale.US, "%d sec", delay));
             telemetry.update();
 
             if (c.AOnce()) isCraterSide = ! isCraterSide;
+            if (c.dpadUpOnce()) {
+                delay = Math.max(15, 0 + delay);
+            } else if (c.dpadDownOnce()) {
+                delay = Math.min(0, delay - 1);
+            }
         }
+        sleep(1000 * delay);
 
         final MineralPosition goldMineralPosition = getMineralPosition();
 
 
         getRuntime();
 
+        runLiftMotor(184);
+        sleep(300);
 
         if(isCraterSide) {
-            runLiftMotor(177);
-            sleep(300);
+
             driveInches(10);
-            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT){
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? -45 : 45);
+
+            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
+                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 35 : -35);
+                sleep(100);
+                driveInches(10);
             }
             else if(goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN){
 
             }
+
             sleep(200);
-            driveInches(20);
-            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT){
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? leftAngleAdjust : rightAngleAdjust);
-            }
-            else if(goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN){
+            driveInches((goldMineralPosition == MineralPosition.RIGHT) ? 43 : 39);
+            sleep(100);
 
+            if (goldMineralPosition == MineralPosition.RIGHT) {
+                driveInches(-23);
+            } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
+                driveInches(-18);
+            } else if (goldMineralPosition == MineralPosition.LEFT) {
+                driveInches(-20);
             }
+
+            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT){
+                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? -35 : 35);
+            }
+            sleep(100);
             turnDegrees(90);
 
-            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT){
-            driveInches((goldMineralPosition == MineralPosition.LEFT) ? leftDistanceOffset : rightDistanceOffset);
+            if (goldMineralPosition == MineralPosition.RIGHT) {
+                driveInches(101);
+            } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
+                driveInches(89);
+            } else if (goldMineralPosition == MineralPosition.LEFT) {
+                driveInches(73);
             }
-            else if(goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN){
 
-            }
-            driveInches(36);
+           turnDegrees(45);
+           driveInches(76);
+           flingTheTeamMarker();
+           sleep(700);
+           //driveInches(-50);
 
-        } else {
-            runLiftMotor(177);
-            sleep(300);
-            driveInches(36*Math.sqrt(2));
+
+        } else /* depot side */{
+            driveInches(90);
             flingTheTeamMarker();
             sleep(700);
             driveInches(-5);
