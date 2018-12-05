@@ -47,46 +47,47 @@ public class AutoRoverR extends AutoBase {
 
         getRuntime();
 
-        runLiftMotor(184);
+        //runLiftMotor(184);
         sleep(300);
+        flingTheTeamMarker();
 
         if(isCraterSide) {
 
             driveInches(10);
 
-            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 35 : -35);
-                sleep(100);
-                driveInches(10);
-            }
-            else if(goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN){
+                if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
+                        turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 35 : -35);
+                        sleep(100);
+                        driveInches(10);
+                    }
+                else if(goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN){
 
-            }
+                }
 
             sleep(200);
-            driveInches((goldMineralPosition == MineralPosition.RIGHT) ? 43 : 39);
+            driveAndIntake((goldMineralPosition == MineralPosition.RIGHT) ? 45 : 41);
             sleep(100);
 
             if (goldMineralPosition == MineralPosition.RIGHT) {
-                driveInches(-23);
-            } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
-                driveInches(-18);
-            } else if (goldMineralPosition == MineralPosition.LEFT) {
-                driveInches(-20);
-            }
+                    driveInches(-25);
+                } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
+                    driveInches(-20);
+                } else if (goldMineralPosition == MineralPosition.LEFT) {
+                    driveInches(-22);
+                }
 
-            if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT){
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? -35 : 35);
-            }
-            sleep(100);
+                if(goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT){
+                        turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? -35 : 35);
+                    }
+                    sleep(100);
             turnDegrees(90);
 
             if (goldMineralPosition == MineralPosition.RIGHT) {
-                driveInches(101);
-            } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
+                    driveInches(101);
+                } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
                 driveInches(89);
             } else if (goldMineralPosition == MineralPosition.LEFT) {
-                driveInches(73);
+                driveInches(70);
             }
 
            turnDegrees(45);
