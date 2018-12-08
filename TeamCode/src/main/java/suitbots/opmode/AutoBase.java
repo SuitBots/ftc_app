@@ -2,9 +2,13 @@ package suitbots.opmode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+
 import com.qualcomm.robotcore.hardware.Servo;
 import com.suitbots.util.Blinken;
 import com.suitbots.util.Controller;
@@ -12,8 +16,11 @@ import com.suitbots.util.Controller;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+import suitbots.ConfigVars;
+import suitbots.PID;
 import suitbots.sensor.TensorFlowDetector;
 import suitbots.sensor.VisionTargetNavigaton;
 
@@ -27,6 +34,18 @@ public abstract class AutoBase extends LinearOpMode {
     private TensorFlowDetector tensorFlowDetector;
     private VisionTargetNavigaton visionTargetNavigaton;
     private double lastZ, lastX, lastY;
+
+    private Controller c;
+
+    public void registerAbortController(final Controller _c) {
+        c = _c;
+    }
+
+    private boolean isActive() {
+        return opModeIsActive() && (null == c || ! (c.X() && c.Y()));
+    }
+
+    private Rev2mDistanceSensor rightDistance;
 
     public enum MineralPosition {
         LEFT, CENTER, RIGHT, UNKNOWN
@@ -63,6 +82,8 @@ public abstract class AutoBase extends LinearOpMode {
         } else {
             blinken = null;
         }
+
+        rightDistance = (Rev2mDistanceSensor) hardwareMap.tryGet(DistanceSensor.class, "rdist");
 
         tensorFlowDetector = TensorFlowDetector.make(hardwareMap, telemetry);
         if (null != tensorFlowDetector) {
@@ -148,7 +169,6 @@ public abstract class AutoBase extends LinearOpMode {
         }
     }
 
-    private static final double DRIVE_POWER = .25;
     private static final double TICKS_PER_DRIVE_MOTOR_REV = 560.0;
     private static final double WHEEL_DIAMETER_INCHES = 4.0;
     private static final double TICKS_PER_INCH = TICKS_PER_DRIVE_MOTOR_REV / (Math.PI * (2.0 * WHEEL_DIAMETER_INCHES));
@@ -156,8 +176,8 @@ public abstract class AutoBase extends LinearOpMode {
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, rf, lb, rb);
         setEncoderTargets((int) Math.floor(TICKS_PER_INCH * inches), lf, lb, rf, rb);
         setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lb, rb);
-        setPower(DRIVE_POWER, lf, rf, lb, rb);
-        while(opModeIsActive() && (lf.isBusy() && lb.isBusy() && rf.isBusy() && rb.isBusy())) {
+        setPower(ConfigVars.ENCODER_DRIVE_POWER, lf, rf, lb, rb);
+        while(isActive() && (lf.isBusy() && lb.isBusy() && rf.isBusy() && rb.isBusy())) {
             sleep(0);
         }
         setPower(0.0, lf, rb, lb, rb);
@@ -168,16 +188,12 @@ public abstract class AutoBase extends LinearOpMode {
     private double previousTurnSpeed = Double.NaN;
     private void setTurnSpeeds(double angleDegrees, double speed) {
         if (speed != previousTurnSpeed) {
-            final double leftSpeed = angleDegrees < 0.0 ? SLOW_TURN_SPEED : - SLOW_TURN_SPEED;
+            final double leftSpeed = angleDegrees < 0.0 ? ConfigVars.TURN_SPEED : - ConfigVars.TURN_SPEED;
             setPower(leftSpeed, lf, lb);
             setPower(-leftSpeed, rf, rb);
         }
     }
 
-    private static final double TURN_SPEED = .25;
-    private static final double SLOW_TURN_SPEED = .1;
-    private static final double SLOW_TURN_ANGLE = 20.0;
-    private static final double FUDGE_FACTOR = 5.0;
     protected void turnDegrees(final double angleDegrees) {
 
         if (180.0 < Math.abs(angleDegrees)) {
@@ -186,19 +202,19 @@ public abstract class AutoBase extends LinearOpMode {
             double speed = 0.0;
             resetGyro();
             setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
-            final double leftSpeed = angleDegrees < 0.0 ? TURN_SPEED : -TURN_SPEED;
+            final double leftSpeed = angleDegrees < 0.0 ? ConfigVars.TURN_SPEED : -ConfigVars.TURN_SPEED;
             double rot = Math.abs(getRotationZ());
             double diff = Math.abs(angleDegrees) - Math.abs(getRotationZ());
             do {
-                if (rot < SLOW_TURN_ANGLE || diff < SLOW_TURN_ANGLE) {
-                    setTurnSpeeds(angleDegrees, SLOW_TURN_SPEED);
+                if (rot < ConfigVars.SLOW_TURN_ANGLE || diff < ConfigVars.SLOW_TURN_ANGLE) {
+                    setTurnSpeeds(angleDegrees, ConfigVars.SLOW_TURN_SPEED);
                 } else {
-                    setTurnSpeeds(angleDegrees, TURN_SPEED);
+                    setTurnSpeeds(angleDegrees, ConfigVars.TURN_SPEED);
                 }
                 updateOrientation();
                 rot = Math.abs(getRotationZ());
                 diff = Math.abs(angleDegrees) - Math.abs(getRotationZ());
-            } while (FUDGE_FACTOR < Math.abs(Math.abs(angleDegrees) - Math.abs(rot)));
+            } while (isActive() && ConfigVars.TURNING_FUDGE_FACTOR < Math.abs(Math.abs(angleDegrees) - Math.abs(rot)));
 
             setPower(0.0, lf, lb, rf, rb);
             previousTurnSpeed = Double.NaN;
@@ -213,7 +229,7 @@ public abstract class AutoBase extends LinearOpMode {
         lift.setTargetPosition(ticksToLand);
         lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift.setPower(1.0);
-        while (opModeIsActive() && lift.isBusy()) {
+        while (isActive() && lift.isBusy()) {
             sleep(0);
         }
         lift.setPower(0.0);
@@ -227,7 +243,7 @@ public abstract class AutoBase extends LinearOpMode {
         setPower(left, lf, lb);
         setPower(right, rf, rb);
 
-        while (minTilt < (Math.abs(getRotationX()) + Math.abs(getRotationY()))) {
+        while (isActive() && minTilt < (Math.abs(getRotationX()) + Math.abs(getRotationY()))) {
             updateOrientation();
             sleep(0);
         }
@@ -281,5 +297,30 @@ public abstract class AutoBase extends LinearOpMode {
         dumper.setPosition(1.0);
     }
 
+    private final PID.RuntimeProvider rp = new PID.RuntimeProvider() {
+        @Override
+        public double getCurrentTime() {
+            return getRuntime();
+        }
+    };
 
+    protected void driveRightWall(final double inchesAwayFromWall, final double inchesDistance) {
+        final PID pid = new PID("rightWallDrive", rp);
+        pid.setTunings(ConfigVars.WALL_DRIVE_KP, ConfigVars.WALL_DRIVE_KI, ConfigVars.WALL_DRIVE_KD);
+        pid.setMinMax(-.25, .25);
+        pid.setSetpoint(inchesAwayFromWall);
+
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, rf, lb, rb);
+        setEncoderTargets((int) Math.floor(TICKS_PER_INCH * inchesDistance), lf, lb, rf, rb);
+        setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lb, rb);
+        setPower(ConfigVars.ENCODER_DRIVE_POWER, lf, rf, lb, rb);
+        while(isActive() && (lf.isBusy() && lb.isBusy() && rf.isBusy() && rb.isBusy())) {
+            final double distanceFromWall = rightDistance.getDistance(DistanceUnit.INCH);
+            final double powerDifference = pid.compute(distanceFromWall);
+            setPower(ConfigVars.ENCODER_DRIVE_POWER + powerDifference, lf, lb);
+            setPower(ConfigVars.ENCODER_DRIVE_POWER - powerDifference, rf, rb);
+        }
+        setPower(0.0, lf, rb, lb, rb);
+        setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
+    }
 }
