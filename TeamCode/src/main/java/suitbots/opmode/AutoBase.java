@@ -5,7 +5,6 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.suitbots.util.Blinken;
 import com.suitbots.util.Controller;
@@ -20,10 +19,11 @@ import suitbots.sensor.VisionTargetNavigaton;
 
 public abstract class AutoBase extends LinearOpMode {
     protected DcMotor lift;
+    protected DcMotor harvester;
     private DcMotor lf, lb, rf, rb;
     protected Blinken blinken;
     protected BNO055IMU imu;
-    private Servo teamMarkerDumper;
+    private Servo dumper;
     private TensorFlowDetector tensorFlowDetector;
     private VisionTargetNavigaton visionTargetNavigaton;
     private double lastZ, lastX, lastY;
@@ -76,11 +76,19 @@ public abstract class AutoBase extends LinearOpMode {
         lb = hardwareMap.dcMotor.get("lb");
         rb = hardwareMap.dcMotor.get("rb");
 
-        rb.setDirection(DcMotorSimple.Direction.REVERSE);
-        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        harvester = hardwareMap.dcMotor.get("harvester");
+
+        lb.setDirection(DcMotorSimple.Direction.REVERSE);
+        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         updateOrientation();
 
-        teamMarkerDumper = hardwareMap.servo.get("dumper");
+        dumper = hardwareMap.servo.get("dumper");
 
     }
 
@@ -122,25 +130,25 @@ public abstract class AutoBase extends LinearOpMode {
 
 
 
-    private void setMode(final DcMotor.RunMode mode, final DcMotor... motors) {
+    protected void setMode(final DcMotor.RunMode mode, final DcMotor... motors) {
         for (final DcMotor motor : motors) {
             motor.setMode(mode);
         }
     }
 
-    private void setEncoderTargets(final int ticks, final DcMotor... motors) {
+    protected void setEncoderTargets(final int ticks, final DcMotor... motors) {
         for (final DcMotor motor : motors) {
             motor.setTargetPosition(ticks);
         }
     }
 
-    private void setPower(final double power, final DcMotor... motors) {
+    protected void setPower(final double power, final DcMotor... motors) {
         for (final DcMotor motor : motors) {
             motor.setPower(power);
         }
     }
 
-    private static final double DRIVE_POWER = .5;
+    private static final double DRIVE_POWER = .25;
     private static final double TICKS_PER_DRIVE_MOTOR_REV = 560.0;
     private static final double WHEEL_DIAMETER_INCHES = 4.0;
     private static final double TICKS_PER_INCH = TICKS_PER_DRIVE_MOTOR_REV / (Math.PI * (2.0 * WHEEL_DIAMETER_INCHES));
@@ -156,10 +164,11 @@ public abstract class AutoBase extends LinearOpMode {
         setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
     }
 
+
     private double previousTurnSpeed = Double.NaN;
     private void setTurnSpeeds(double angleDegrees, double speed) {
         if (speed != previousTurnSpeed) {
-            final double leftSpeed = angleDegrees < 0.0 ? TURN_SPEED : - TURN_SPEED;
+            final double leftSpeed = angleDegrees < 0.0 ? SLOW_TURN_SPEED : - SLOW_TURN_SPEED;
             setPower(leftSpeed, lf, lb);
             setPower(-leftSpeed, rf, rb);
         }
@@ -197,11 +206,12 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     private static final double TICKS_PER_REV = 145.6; // gobilda 5.2:!
-    private static final double MM_PER_REV = 8.0;
-    void runLiftMotor(final double mm) {
+        private static final double MM_PER_REV = 8.0;
+    protected void runLiftMotor(final double mm) {
         final int ticksToLand = (int) Math.floor(TICKS_PER_REV * (mm / MM_PER_REV));
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setTargetPosition(ticksToLand);
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift.setPower(1.0);
         while (opModeIsActive() && lift.isBusy()) {
             sleep(0);
@@ -209,6 +219,7 @@ public abstract class AutoBase extends LinearOpMode {
         lift.setPower(0.0);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
 
     protected void driveWithPowerUntilTilt(final double left, final double right, final double minTilt) {
         resetGyro();
@@ -265,9 +276,9 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     public void flingTheTeamMarker() {
-        teamMarkerDumper.setPosition(1.0);
+        dumper.setPosition(0.5);
         sleep(1000);
-        teamMarkerDumper.setPosition(0.0);
+        dumper.setPosition(1.0);
     }
 
 

@@ -7,14 +7,15 @@ import com.suitbots.util.Controller;
 import suitbots.opmode.AutoBase;
 
 @TeleOp(name = "Lift", group = "Single")
-@Disabled
 public class Lifto extends AutoBase {
     @Override
     public void runOpMode() {
         initialize();
+
         waitForStart();
 
         double distance = 0.0;
+
 
         final Controller c = new Controller(gamepad1);
         while (opModeIsActive()) {
@@ -31,10 +32,10 @@ public class Lifto extends AutoBase {
             }
 
             if (c.dpadUpOnce()) {
-                turnDegrees(distance);
+                runLiftMotor(distance);
                 distance = 0.0;
             } else if (c.dpadDownOnce()) {
-                turnDegrees(- distance);
+                runLiftMotor(-distance);
                 distance = 0.0;
             } else {
                 lift.setPower(gamepad1.left_trigger - gamepad1.right_trigger);
@@ -46,13 +47,16 @@ public class Lifto extends AutoBase {
     }
 
     private void help(final double distance) {
+        int newerDist = (int) Math.floor(145.6 * (distance / 8.0));
         telemetry.addData("A", "50mm");
         telemetry.addData("B", "100mm");
         telemetry.addData("X", "170mm");
         telemetry.addData("Y", "0 mm");
         telemetry.addData("Distance", distance);
+        telemetry.addData("New position", newerDist);
         telemetry.addData("Dup", "up");
         telemetry.addData("Ddown", "down");
+        telemetry.addData("lift position", lift.getCurrentPosition());
         telemetry.update();
     }
 }

@@ -7,7 +7,6 @@ import com.suitbots.util.Controller;
 import suitbots.opmode.AutoBase;
 
 @TeleOp(name = "Drive Straight", group = "Single")
-@Disabled
 public class DriveForward extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {

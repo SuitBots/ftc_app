@@ -1,5 +1,6 @@
 package suitbots.opmode.test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -14,6 +15,7 @@ import suitbots.opmode.AutoBase;
 import suitbots.sensor.VisionTargetNavigaton;
 
 @TeleOp(name = "Distance and Angle", group = "Single")
+@Disabled
 public class DistanceAndAngle extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

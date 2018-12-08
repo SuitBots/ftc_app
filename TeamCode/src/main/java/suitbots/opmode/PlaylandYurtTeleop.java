@@ -4,17 +4,20 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.suitbots.util.Controller;
+
+import suitbots.StatefulServo;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-@TeleOp(name = "Playland Yurt", group = "Tourney")
+@TeleOp(name = "TELEOP", group = "Tourney")
 public class PlaylandYurtTeleop extends OpMode {
     private DcMotor lf, lb, rf, rb;
     private DcMotor harvester;
     private DcMotor lift;
-    private DcMotor dumper;
+    private StatefulServo dumper;
 
     private DcMotorSimple.Direction driveDirection = DcMotorSimple.Direction.FORWARD;
 
@@ -27,7 +30,7 @@ public class PlaylandYurtTeleop extends OpMode {
         rf = hardwareMap.dcMotor.get("rf");
         rb = hardwareMap.dcMotor.get("rb");
         lift = hardwareMap.dcMotor.get("lift");
-        dumper = hardwareMap.dcMotor.get("dumper");
+        dumper = new StatefulServo(hardwareMap.servo.get("dumper"));
         harvester = hardwareMap.dcMotor.get("harvester");
 
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -36,14 +39,9 @@ public class PlaylandYurtTeleop extends OpMode {
         // dumper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        dumper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
-
-        dumper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        dumper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        dumper.setPower(1.0);
     }
 
     private static DcMotorSimple.Direction flop(final DcMotorSimple.Direction x) {
@@ -61,9 +59,7 @@ public class PlaylandYurtTeleop extends OpMode {
         driveDirection = flop(driveDirection);
     }
 
-    private final int DUMPER_UP = 80;
-    private final int DUMPER_DUMP = 125;
-    private final int DUMPER_DOWN = 0;
+
 
     @Override
     public void loop() {
@@ -73,15 +69,10 @@ public class PlaylandYurtTeleop extends OpMode {
         harvester.setPower(g1.right_trigger - g1.left_trigger);
         lift.setPower(g2.right_trigger - g2.left_trigger);
 
-        if (g1.dpadLeftOnce()) {
-            dumper.setTargetPosition(DUMPER_UP);
-            dumper.setPower(1.0);
-        } else if (g1.dpadUpOnce()) {
-            dumper.setTargetPosition(DUMPER_DUMP);
-            dumper.setPower(1.0);
-        } else if (g1.dpadDownOnce()) {
-            dumper.setTargetPosition(DUMPER_DOWN);
-            dumper.setPower(1.0);
+        if (g1.rightBumper()) {
+            dumper.setPosition(.5);
+        } else {
+            dumper.setPosition(1.0);
         }
 
         if (g1.AOnce()) {
@@ -107,10 +98,7 @@ public class PlaylandYurtTeleop extends OpMode {
         rf.setPower(r);
         rb.setPower(r);
 
-        telemetry.addData("Dumper Position", dumper.getCurrentPosition());
-        telemetry.addData("Dumper Target", dumper.getTargetPosition());
-        telemetry.addData("Dumper Mode", dumper.getMode());
-        telemetry.addData("Dumper Power", dumper.getPower());
+        telemetry.addData("Dumper Position", dumper.getPosition());
         telemetry.update();
     }
 }

@@ -1,50 +1,46 @@
-package suitbots.opmode;
+package suitbots.opmode.test;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.suitbots.util.Blinken;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.suitbots.util.Controller;
 
-import org.firstinspires.ftc.robotcore.external.Func;
-
-import static java.lang.Math.max;
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
-@TeleOp(name = "DriveRoverR")
-@Disabled
-public class DriveRoverR extends OpMode {
-    private DcMotor lf, lb, rf, rb, lift;
-
-    private boolean servoActivated = false;
-
-    private Controller g1;
+@TeleOp(name = "EncoderTest")
+public class EncoderTest extends OpMode {
+    private DcMotor lf, lb, rf, rb;
+    private DcMotor harvester;
+    private DcMotor lift;
+    private Servo dumper;
 
     private DcMotorSimple.Direction driveDirection = DcMotorSimple.Direction.FORWARD;
 
+    private Controller g1, g2;
+
     @Override
     public void init() {
-
         lf = hardwareMap.dcMotor.get("lf");
         lb = hardwareMap.dcMotor.get("lb");
         rf = hardwareMap.dcMotor.get("rf");
         rb = hardwareMap.dcMotor.get("rb");
         lift = hardwareMap.dcMotor.get("lift");
+        dumper = hardwareMap.servo.get("dumper");
+        harvester = hardwareMap.dcMotor.get("harvester");
 
-        rf.setDirection(DcMotorSimple.Direction.REVERSE);
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // dumper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
 
         g1 = new Controller(gamepad1);
-
-        telemetry.addData("Direction", new Func<DcMotorSimple.Direction>() {
-            @Override
-            public DcMotorSimple.Direction value() {
-                return driveDirection;
-            }
-        });
+        g2 = new Controller(gamepad2);
 
     }
 
@@ -55,7 +51,6 @@ public class DriveRoverR extends OpMode {
             return DcMotorSimple.Direction.REVERSE;
         }
     }
-
     private void flopDirection() {
         lf.setDirection(flop(lf.getDirection()));
         lb.setDirection(flop(lb.getDirection()));
@@ -64,12 +59,25 @@ public class DriveRoverR extends OpMode {
         driveDirection = flop(driveDirection);
     }
 
+    private final int DUMPER_UP = 80;
+    private final int DUMPER_DUMP = 125;
+    private final int DUMPER_DOWN = 0;
 
     @Override
     public void loop() {
         g1.update();
+        g2.update();
 
-        lift.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+        harvester.setPower(g1.right_trigger - g1.left_trigger);
+        lift.setPower(g2.right_trigger - g2.left_trigger);
+
+        if (g1.dpadLeftOnce()) {
+            dumper.setPosition(DUMPER_UP);
+        } else if (g1.dpadUpOnce()) {
+            dumper.setPosition(DUMPER_DUMP);
+        } else if (g1.dpadDownOnce()) {
+            dumper.setPosition(DUMPER_DOWN);
+        }
 
         if (g1.AOnce()) {
             flopDirection();
@@ -94,6 +102,12 @@ public class DriveRoverR extends OpMode {
         rf.setPower(r);
         rb.setPower(r);
 
+        telemetry.addData("Dumper Position", dumper.getPosition());
+        telemetry.addData("lf position", lf.getCurrentPosition());
+        telemetry.addData("lb position", lb.getCurrentPosition());
+        telemetry.addData("rf position", rf.getCurrentPosition());
+        telemetry.addData("rb position", rb.getCurrentPosition());
+        telemetry.addData("lift position", lift.getCurrentPosition());
         telemetry.update();
     }
 }
