@@ -2,6 +2,7 @@ package suitbots.opmode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.motors.RevRoboticsCoreHexMotor;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -27,10 +28,11 @@ import suitbots.sensor.VisionTargetNavigaton;
 public abstract class AutoBase extends LinearOpMode {
     protected DcMotor lift;
     protected DcMotor harvester;
+    protected DcMotor arm;
     private DcMotor lf, lb, rf, rb;
     protected Blinken blinken;
     protected BNO055IMU imu;
-    private Servo dumper;
+    protected Servo dumper;
     private TensorFlowDetector tensorFlowDetector;
     private VisionTargetNavigaton visionTargetNavigaton;
     private double lastZ, lastX, lastY;
@@ -110,6 +112,7 @@ public abstract class AutoBase extends LinearOpMode {
         updateOrientation();
 
         dumper = hardwareMap.servo.get("dumper");
+        arm = hardwareMap.dcMotor.get("arm");
 
     }
 

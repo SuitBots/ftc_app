@@ -1,10 +1,12 @@
 package suitbots.opmode.test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.suitbots.util.Controller;
 
 import suitbots.opmode.AutoBase;
 
+@Disabled
 @TeleOp(name = "Drive until Tilt", group = "Single")
 public class Tilto extends AutoBase {
     @Override

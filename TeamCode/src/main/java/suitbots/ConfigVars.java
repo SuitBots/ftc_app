@@ -21,13 +21,11 @@ public class ConfigVars {
     public static double TELEOP_SLOW_SPEED = .35;
 
     /// Position of the dump arm before dumping occurs
-    public static int TELEOP_DUMPER_UP = 373;
-    /// Position of the dump arm as dumping occurs
-    public static int TELEOP_DUMPER_DUMP = 583;
+    public static int TELEOP_ARM_UP = -510; //373
     /// Position of the dump arm in the resting position
-    public static int TELEOP_DUMPER_DOWN = 0;
+    public static int TELEOP_ARM_DOWN = 0;
     /// Position of the dump servo when dumping
-    public static double TELEOP_DUMP_SERVO_POSITION = .33;
+    public static double TELEOP_DUMP_SERVO_POSITION = .6;
     /// Proportion of the dump servo's full range with which to move over time
-    public static double TELEOP_DUMP_LIMIT = .75;
+    public static double TELEOP_DUMP_SERVO_LIMIT = 1;
 }

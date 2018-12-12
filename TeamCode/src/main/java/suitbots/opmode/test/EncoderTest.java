@@ -1,5 +1,6 @@
 package suitbots.opmode.test;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +11,8 @@ import com.suitbots.util.Controller;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+
+@Disabled
 @TeleOp(name = "EncoderTest")
 public class EncoderTest extends OpMode {
     private DcMotor lf, lb, rf, rb;

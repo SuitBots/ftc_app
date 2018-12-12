@@ -6,6 +6,7 @@ import com.suitbots.util.Controller;
 
 import suitbots.opmode.AutoBase;
 
+@Disabled
 @TeleOp(name = "Lift", group = "Single")
 public class Lifto extends AutoBase {
     @Override

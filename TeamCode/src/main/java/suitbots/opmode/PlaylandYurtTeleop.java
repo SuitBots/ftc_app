@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.suitbots.util.Controller;
 
 import suitbots.ConfigVars;
@@ -18,7 +17,8 @@ public class PlaylandYurtTeleop extends OpMode {
     private DcMotor lf, lb, rf, rb;
     private DcMotor harvester;
     private DcMotor lift;
-    private DcMotor dumper;
+    private DcMotor arm;
+
     private StatefulServo dumperServo;
 
     private DcMotorSimple.Direction driveDirection = DcMotorSimple.Direction.FORWARD;
@@ -33,15 +33,18 @@ public class PlaylandYurtTeleop extends OpMode {
         rb = hardwareMap.dcMotor.get("rb");
         lift = hardwareMap.dcMotor.get("lift");
         dumperServo = new StatefulServo(hardwareMap.servo.get("dumper"));
-        dumper = hardwareMap.dcMotor.get("scoringArm");
+        arm = hardwareMap.dcMotor.get("arm");
         harvester = hardwareMap.dcMotor.get("harvester");
 
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        dumper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // arm.setDirection(DcMotorSimple.Direction.REVERSE);
+        arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
@@ -54,6 +57,7 @@ public class PlaylandYurtTeleop extends OpMode {
             return DcMotorSimple.Direction.REVERSE;
         }
     }
+
     private void flopDirection() {
         lf.setDirection(flop(lf.getDirection()));
         lb.setDirection(flop(lb.getDirection()));
@@ -63,13 +67,10 @@ public class PlaylandYurtTeleop extends OpMode {
     }
 
     private void adjustDumper() {
-        final double pos = dumper.getCurrentPosition();
+        final double pos = arm.getCurrentPosition();
+        final double percent = Math.abs((double) pos / (double) ConfigVars.TELEOP_ARM_UP);
 
-        if (pos < ConfigVars.TELEOP_DUMPER_UP) {
-            dumperServo.setPosition(ConfigVars.TELEOP_DUMP_LIMIT * pos / ConfigVars.TELEOP_DUMPER_UP);
-        } else {
-            dumperServo.setPosition(ConfigVars.TELEOP_DUMP_LIMIT);
-        }
+        dumperServo.setPosition(1.0 - Math.min(1.0, Math.pow(percent, 2.0)));
     }
 
     @Override
@@ -80,29 +81,36 @@ public class PlaylandYurtTeleop extends OpMode {
         harvester.setPower(g1.right_trigger - g1.left_trigger);
         lift.setPower(g2.right_trigger - g2.left_trigger);
 
-        if (g1.dpadLeftOnce()) {
-            dumper.setTargetPosition(ConfigVars.TELEOP_DUMPER_UP);
-            dumper.setPower(1.0);
-        } else if (g1.dpadUpOnce()) {
-            dumper.setTargetPosition(ConfigVars.TELEOP_DUMPER_DUMP);
-            dumper.setPower(1.0);
+        if (g1.dpadUp()) {
+            arm.setTargetPosition(ConfigVars.TELEOP_ARM_UP);
+            arm.setPower(.3);
         } else if (g1.dpadDownOnce()) {
-            dumper.setTargetPosition(ConfigVars.TELEOP_DUMPER_DOWN);
-            dumper.setPower(1.0);
+            arm.setTargetPosition(ConfigVars.TELEOP_ARM_DOWN);
+            arm.setPower(.3);
+        } else {
+            if (ConfigVars.TELEOP_ARM_UP == arm.getTargetPosition() &&
+                    .7 < Math.abs((float)arm.getCurrentPosition() / (float)ConfigVars.TELEOP_ARM_UP)) {
+                arm.setPower(.1);
+            }
         }
 
         if (g1.AOnce()) {
             flopDirection();
         }
 
-        if (g1.XOnce()) {
+        if (g2.A()) {
+            dumperServo.setPosition(1.0);
+        } else if (g2.B()) {
+            dumperServo.setPosition(0.0);
+        } else
+        if (g1.X()) {
             dumperServo.setPosition(ConfigVars.TELEOP_DUMP_SERVO_POSITION);
         } else {
             adjustDumper();
         }
 
-        final double fwd  = gamepad1.left_stick_y;
-        final double turn = - gamepad1.right_stick_x;
+        final double fwd = gamepad1.left_stick_y;
+        final double turn = -gamepad1.right_stick_x;
         final double max = max(1.0, abs(fwd) + abs(turn));
         final double speed = gamepad1.left_stick_button ? 1.0 : ConfigVars.TELEOP_SLOW_SPEED;
 
@@ -121,6 +129,7 @@ public class PlaylandYurtTeleop extends OpMode {
         rb.setPower(r);
 
         telemetry.addData("Dumper Position", dumperServo.getPosition());
+        telemetry.addData("Arm position", arm.getCurrentPosition());
         telemetry.update();
     }
 }
