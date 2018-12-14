@@ -113,7 +113,6 @@ public abstract class AutoBase extends LinearOpMode {
 
         dumper = hardwareMap.servo.get("dumper");
         arm = hardwareMap.dcMotor.get("arm");
-
     }
 
     public boolean targetIsVisible() {
@@ -296,8 +295,10 @@ public abstract class AutoBase extends LinearOpMode {
 
     public void flingTheTeamMarker() {
         dumper.setPosition(0.5);
+        setPower(0, lf, rf, lb, rb);
         sleep(1000);
         dumper.setPosition(1.0);
+        setPower(0, lf, rf, lb, rb);
     }
 
     private final PID.RuntimeProvider rp = new PID.RuntimeProvider() {
@@ -325,5 +326,26 @@ public abstract class AutoBase extends LinearOpMode {
         }
         setPower(0.0, lf, rb, lb, rb);
         setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
+    }
+
+    protected void driveUntilNearTheWall(final double inchesAwayFromWall, final double maxInchesToDrive) {
+        if (getInchesFromWall() > inchesAwayFromWall) {
+            setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, rf, lb, rb);
+            setEncoderTargets((int) Math.floor(TICKS_PER_INCH * maxInchesToDrive), lf, lb, rf, rb);
+            setMode(DcMotor.RunMode.RUN_TO_POSITION, lf, rf, lb, rb);
+            setPower(ConfigVars.ENCODER_DRIVE_POWER, lf, rf, lb, rb);
+            while (isActive() && (lf.isBusy() && lb.isBusy() && rf.isBusy() && rb.isBusy())) {
+                sleep(0);
+                if (inchesAwayFromWall > getInchesFromWall()) {
+                    break;
+                }
+            }
+            setPower(0.0, lf, rb, lb, rb);
+            setMode(DcMotor.RunMode.RUN_USING_ENCODER, lf, lb, rf, rb);
+        }
+    }
+
+    public double getInchesFromWall() {
+        return rightDistance.getDistance(DistanceUnit.INCH);
     }
 }

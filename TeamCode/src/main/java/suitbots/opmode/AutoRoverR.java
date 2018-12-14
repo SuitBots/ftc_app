@@ -15,7 +15,7 @@ public class AutoRoverR extends AutoBase {
 
     public DcMotor lf, lb, rf, rb;
     public DcMotor lift;
-    private boolean isCraterSide;
+    private boolean isCraterSide = true;
 
     protected void driveAndIntake(int inches) {
         setPower(1.0, harvester);
@@ -78,7 +78,7 @@ public class AutoRoverR extends AutoBase {
             // back up
             switch (goldMineralPosition) {
                 case LEFT:
-                    driveInches(-22);
+                    driveInches(-20);
                     break;
                 case RIGHT:
                     driveInches(-25);
@@ -109,10 +109,10 @@ public class AutoRoverR extends AutoBase {
             }
 
             // turn to face the depot
-            turnDegrees(45);
+            turnDegrees(25);
 
             // ENTER THE DEPOT
-            driveInches(76);
+            driveInches(71);
 
             // exactly what it says on the tin
             flingTheTeamMarker();
@@ -120,7 +120,7 @@ public class AutoRoverR extends AutoBase {
             sleep(100);
 
             // drives backwards to park
-            driveInches(-80);
+            driveInches(-115);
 
 
         } else /* depot side */ {

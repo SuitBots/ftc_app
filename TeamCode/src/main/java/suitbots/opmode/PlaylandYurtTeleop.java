@@ -69,8 +69,7 @@ public class PlaylandYurtTeleop extends OpMode {
     private void adjustDumper() {
         final double pos = arm.getCurrentPosition();
         final double percent = Math.abs((double) pos / (double) ConfigVars.TELEOP_ARM_UP);
-
-        dumperServo.setPosition(1.0 - Math.min(1.0, Math.pow(percent, 2.0)));
+        dumperServo.setPosition(1.0 - ConfigVars.TELEOP_DUMP_SERVO_LIMIT * Math.min(1.0, Math.pow(percent, ConfigVars.SERVO_ANGLE_EXPONENTIAL)));
     }
 
     @Override
@@ -81,12 +80,12 @@ public class PlaylandYurtTeleop extends OpMode {
         harvester.setPower(g1.right_trigger - g1.left_trigger);
         lift.setPower(g2.right_trigger - g2.left_trigger);
 
-        if (g1.dpadUp()) {
+        if (g2.dpadUp()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_UP);
             arm.setPower(.3);
-        } else if (g1.dpadDownOnce()) {
+        } else if (g2.dpadDownOnce()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_DOWN);
-            arm.setPower(.3);
+            arm.setPower(.2);
         } else {
             if (ConfigVars.TELEOP_ARM_UP == arm.getTargetPosition() &&
                     .7 < Math.abs((float)arm.getCurrentPosition() / (float)ConfigVars.TELEOP_ARM_UP)) {
