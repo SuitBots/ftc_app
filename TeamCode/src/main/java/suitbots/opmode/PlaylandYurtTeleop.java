@@ -82,10 +82,10 @@ public class PlaylandYurtTeleop extends OpMode {
 
         if (g2.dpadUp()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_UP);
-            arm.setPower(.3);
+            arm.setPower(.6);
         } else if (g2.dpadDownOnce()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_DOWN);
-            arm.setPower(.2);
+            arm.setPower(.5);
         } else {
             if (ConfigVars.TELEOP_ARM_UP == arm.getTargetPosition() &&
                     .7 < Math.abs((float)arm.getCurrentPosition() / (float)ConfigVars.TELEOP_ARM_UP)) {
@@ -97,11 +97,9 @@ public class PlaylandYurtTeleop extends OpMode {
             flopDirection();
         }
 
-        if (g2.A()) {
-            dumperServo.setPosition(1.0);
-        } else if (g2.B()) {
+        if (g1.B()) {
             dumperServo.setPosition(0.0);
-        } else
+        }
         if (g1.X()) {
             dumperServo.setPosition(ConfigVars.TELEOP_DUMP_SERVO_POSITION);
         } else {

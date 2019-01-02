@@ -18,7 +18,7 @@ public class AutoRoverR extends AutoBase {
     private boolean isCraterSide = true;
 
     protected void driveAndIntake(int inches) {
-        setPower(1.0, harvester);
+        setPower(-1.0, harvester);
         driveInches(inches);
         setPower(0.0, harvester);
     }
@@ -63,7 +63,7 @@ public class AutoRoverR extends AutoBase {
 
             // turn to face the gold mineral
             if (goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 35 : -35);
+                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 25 : -30);
                 sleep(100);
                 driveInches(10);
             } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
@@ -74,6 +74,7 @@ public class AutoRoverR extends AutoBase {
             sleep(200);
             driveAndIntake((goldMineralPosition == MineralPosition.RIGHT) ? 45 : 41);
             sleep(100);
+            setPower(-1.0, harvester);
 
             // back up
             switch (goldMineralPosition) {
@@ -81,46 +82,56 @@ public class AutoRoverR extends AutoBase {
                     driveInches(-20);
                     break;
                 case RIGHT:
-                    driveInches(-25);
+                    driveInches(-22);
                     break;
                 case CENTER:
                 case UNKNOWN:
-                    driveInches(-20);
+                    driveInches(-16);
                     break;
             }
             sleep(100);
 
             // turn to face the wall
             if (goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 55 : 125);
+                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 55 : 115);
             }
             else if(goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN ){
-                turnDegrees(90);
+                turnDegrees(85);
             }
             sleep(100);
 
+            setPower(0.0, harvester);
+
             // drive to the wall
             if (goldMineralPosition == MineralPosition.RIGHT) {
-                driveInches(102);
+                driveInches(105);
+                sleep(10);
             } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
-                driveInches(89);
+                driveInches(93);
             } else if (goldMineralPosition == MineralPosition.LEFT) {
-                driveInches(70);
+                driveInches(72);
+                sleep(100);
             }
 
+
             // turn to face the depot
-            turnDegrees(25);
+            turnDegrees(30);
 
             // ENTER THE DEPOT
             driveInches(71);
 
             // exactly what it says on the tin
             flingTheTeamMarker();
+            sleep(200);
 
-            sleep(100);
+            //drives backwards to park
+            driveInches(-125);
+            sleep(2000);
 
-            // drives backwards to park
-            driveInches(-115);
+            //lower lift
+            runLiftMotor(-95);
+
+
 
 
         } else /* depot side */ {
@@ -129,9 +140,9 @@ public class AutoRoverR extends AutoBase {
             sleep(1000 * delay);
 
             if (goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
-                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 35 : -35);
+                turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 25 : -25);
                 sleep(100);
-                driveInches(10);
+                driveInches(15);
             } else if (goldMineralPosition == MineralPosition.CENTER || goldMineralPosition == MineralPosition.UNKNOWN) {
 
             }
@@ -139,12 +150,14 @@ public class AutoRoverR extends AutoBase {
             sleep(200);
             driveAndIntake((goldMineralPosition == MineralPosition.RIGHT) ? 45 : 41);
             sleep(100);
+            setPower(-1.0, harvester);
 
             if (goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
                 turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? -50 : 55);
             }
 
             driveInches(45);
+            setPower(0.0, harvester);
             flingTheTeamMarker();
             sleep(100);
             driveInches(-5);
