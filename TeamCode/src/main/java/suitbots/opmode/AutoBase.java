@@ -238,6 +238,26 @@ public abstract class AutoBase extends LinearOpMode {
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    protected Thread runLiftMotorAsync(final double mm) {
+        final int ticksToGo = - (int) Math.floor(TICKS_PER_REV * (mm / MM_PER_REV));
+        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift.setTargetPosition(ticksToGo);
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift.setPower(1.0);
+        final Thread th = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (isActive() && lift.isBusy()) {
+                    sleep(100);
+                }
+                lift.setPower(0.0);
+                lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+        });
+        th.run();
+        return th;
+    }
+
 
     protected void driveWithPowerUntilTilt(final double left, final double right, final double minTilt) {
         resetGyro();

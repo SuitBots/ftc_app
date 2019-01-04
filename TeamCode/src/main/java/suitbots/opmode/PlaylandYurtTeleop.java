@@ -3,11 +3,19 @@ package suitbots.opmode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.suitbots.util.Blinken;
 import com.suitbots.util.Controller;
+
+import java.util.Locale;
 
 import suitbots.ConfigVars;
 import suitbots.StatefulServo;
+import suitbots.sensor.DoubleMineralSensor;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -24,6 +32,10 @@ public class PlaylandYurtTeleop extends OpMode {
     private DcMotorSimple.Direction driveDirection = DcMotorSimple.Direction.FORWARD;
 
     private Controller g1, g2;
+
+    private DoubleMineralSensor doubleMineralSensor;
+    private Blinken blinken;
+    private ElapsedTime et = new ElapsedTime();
 
     @Override
     public void init() {
@@ -48,6 +60,10 @@ public class PlaylandYurtTeleop extends OpMode {
 
         g1 = new Controller(gamepad1);
         g2 = new Controller(gamepad2);
+
+        doubleMineralSensor = new DoubleMineralSensor(hardwareMap.analogInput.get("fsr"));
+        blinken = new Blinken(hardwareMap.servo.get("blink"));
+        blinken.off();
     }
 
     private static DcMotorSimple.Direction flop(final DcMotorSimple.Direction x) {
@@ -68,24 +84,82 @@ public class PlaylandYurtTeleop extends OpMode {
 
     private void adjustDumper() {
         final double pos = arm.getCurrentPosition();
-        final double percent = Math.abs((double) pos / (double) ConfigVars.TELEOP_ARM_UP);
-        dumperServo.setPosition(1.0 - ConfigVars.TELEOP_DUMP_SERVO_LIMIT * Math.min(1.0, Math.pow(percent, ConfigVars.SERVO_ANGLE_EXPONENTIAL)));
+        final double armUpScaled = ConfigVars.TELEOP_ARM_UP / ConfigVars.TELEOP_DUMP_SERVO_LIMIT;
+
+        final double percent = Math.abs((double) pos / armUpScaled);
+        if (percent > ConfigVars.ARM_UP_PERCENT_SLOW) {
+            arm.setPower(ConfigVars.ARM_UP_SPEED_FINAL);
+        }
+        dumperServo.setPosition(1.0 - Math.min(1.0, Math.pow(percent, ConfigVars.SERVO_ANGLE_EXPONENTIAL)));
+    }
+
+    @Override
+    public void init_loop() {
+        super.init_loop();
+        doubleMineralSensor.init_loop();
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        doubleMineralSensor.start();
+        et.reset();
+        blinken.off();
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        blinken.off();
+    }
+
+    private static final double ENDGAME_BEGINS = 90.0;
+    private static final double ENDGAME_URGENT = 105.0;
+    private void setBlinkenState() {
+        final boolean hasTwoMinerals = doubleMineralSensor.triggered();
+        final double elapsedTime = et.seconds();
+
+        telemetry.addData("Two Minerals?", hasTwoMinerals ? "YES" : "no.");
+
+        if (elapsedTime > ENDGAME_URGENT) {
+            // Super Endgame. HANG NOW.
+            if (hasTwoMinerals) {
+                blinken.enactSolidRed();
+            } else {
+                blinken.enactFixedPalettePatternStrobeRed();
+            }
+        } else if (elapsedTime > ENDGAME_BEGINS) {
+            // Endgame. Think about hanging.
+            if (hasTwoMinerals) {
+                blinken.enactSolidGold();
+            } else {
+                blinken.enactFixedPalettePatternStrobeGold();
+            }
+        } else {
+            // Teleop. Go nuts.
+            if (hasTwoMinerals) {
+                blinken.enactSolidGreen();
+            } else {
+                blinken.off();
+            }
+        }
     }
 
     @Override
     public void loop() {
         g1.update();
         g2.update();
+        setBlinkenState();
 
         harvester.setPower(g1.right_trigger - g1.left_trigger);
         lift.setPower(g2.right_trigger - g2.left_trigger);
 
-        if (g2.dpadUp()) {
+        if (g2.dpadUp() || g1.dpadUp()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_UP);
-            arm.setPower(.6);
-        } else if (g2.dpadDownOnce()) {
+            arm.setPower(ConfigVars.ARM_UP_SPEED);
+        } else if (g2.dpadDownOnce() || g1.dpadDownOnce()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_DOWN);
-            arm.setPower(.5);
+            arm.setPower(ConfigVars.ARM_DOWN_SPEED);
         } else {
             if (ConfigVars.TELEOP_ARM_UP == arm.getTargetPosition() &&
                     .7 < Math.abs((float)arm.getCurrentPosition() / (float)ConfigVars.TELEOP_ARM_UP)) {
@@ -127,6 +201,13 @@ public class PlaylandYurtTeleop extends OpMode {
 
         telemetry.addData("Dumper Position", dumperServo.getPosition());
         telemetry.addData("Arm position", arm.getCurrentPosition());
+        telemetry.addData("Elapsed Time", et.seconds());
+
+        final DcMotorEx armEx = (DcMotorEx) arm;
+        if (null != armEx) {
+            final PIDCoefficients pid = armEx.getPIDCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+            telemetry.addData("Arm PID", String.format(Locale.US, "%.2f %.2f %.2f", pid.p, pid.i, pid.d));
+        }
         telemetry.update();
     }
 }

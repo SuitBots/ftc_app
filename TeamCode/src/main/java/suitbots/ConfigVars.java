@@ -11,6 +11,11 @@ public class ConfigVars {
     public static double SLOW_TURN_SPEED = .1;
     public static double TURNING_FUDGE_FACTOR = 5.0;
 
+    public static double ARM_UP_SPEED = .6;
+    public static double ARM_DOWN_SPEED = .5;
+    public static double ARM_UP_SPEED_FINAL = .3;
+    public static double ARM_UP_PERCENT_SLOW = .7;
+
     public static double WALL_DRIVE_KP = .01;
     public static double WALL_DRIVE_KI = 0.0;
     public static double WALL_DRIVE_KD = 0.0;
@@ -21,7 +26,7 @@ public class ConfigVars {
     public static double TELEOP_SLOW_SPEED = .35;
 
     /// Position of the dump arm before dumping occurs
-    public static int TELEOP_ARM_UP = -505; //373
+    public static int TELEOP_ARM_UP = -465;
     /// Position of the dump arm in the resting position
     public static int TELEOP_ARM_DOWN = 0;
     /// Position of the dump servo when dumping

@@ -54,13 +54,13 @@ public class AutoRoverR extends AutoBase {
         // drop
         runLiftMotor(184.1);
         sleep(300);
+        // drive away from the lander
+        driveInches(10);
+        // Drop the lift *just a little* so it's ready to go in Teleop.
+        runLiftMotorAsync(-60.0);
+        sleep(1000 * delay);
 
         if (isCraterSide) {
-
-            // drive away from the lander
-            driveInches(10);
-            sleep(1000 * delay);
-
             // turn to face the gold mineral
             if (goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
                 turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 25 : -30);
@@ -135,9 +135,6 @@ public class AutoRoverR extends AutoBase {
 
 
         } else /* depot side */ {
-
-            driveInches(10);
-            sleep(1000 * delay);
 
             if (goldMineralPosition == MineralPosition.LEFT || goldMineralPosition == MineralPosition.RIGHT) {
                 turnDegrees((goldMineralPosition == MineralPosition.LEFT) ? 25 : -25);
