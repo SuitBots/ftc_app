@@ -173,7 +173,7 @@ public abstract class AutoBase extends LinearOpMode {
 
     private static final double TICKS_PER_DRIVE_MOTOR_REV = 560.0;
     private static final double WHEEL_DIAMETER_INCHES = 4.0;
-    private static final double TICKS_PER_INCH = TICKS_PER_DRIVE_MOTOR_REV / (Math.PI * (2.0 * WHEEL_DIAMETER_INCHES));
+    private static final double TICKS_PER_INCH = TICKS_PER_DRIVE_MOTOR_REV / (Math.PI * (WHEEL_DIAMETER_INCHES));
     protected void driveInches(final double inches) {
         setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, lf, rf, lb, rb);
         setEncoderTargets((int) Math.floor(TICKS_PER_INCH * inches), lf, lb, rf, rb);
@@ -197,7 +197,7 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void turnDegrees(final double angleDegrees) {
-
+        double lastDiff = 0.0;
         if (180.0 < Math.abs(angleDegrees)) {
             turnDegrees(angleDegrees % 180.0);
         } else {
@@ -216,6 +216,10 @@ public abstract class AutoBase extends LinearOpMode {
                 updateOrientation();
                 rot = Math.abs(getRotationZ());
                 diff = Math.abs(angleDegrees) - Math.abs(getRotationZ());
+                if (diff > lastDiff) {
+                    break;
+                }
+                diff = lastDiff;
             } while (isActive() && ConfigVars.TURNING_FUDGE_FACTOR < Math.abs(Math.abs(angleDegrees) - Math.abs(rot)));
 
             setPower(0.0, lf, lb, rf, rb);

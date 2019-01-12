@@ -47,6 +47,7 @@ public class PlaylandYurtTeleop extends OpMode {
         dumperServo = new StatefulServo(hardwareMap.servo.get("dumper"));
         arm = hardwareMap.dcMotor.get("arm");
         harvester = hardwareMap.dcMotor.get("harvester");
+        harvester.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -151,13 +152,13 @@ public class PlaylandYurtTeleop extends OpMode {
         g2.update();
         setBlinkenState();
 
-        harvester.setPower(g1.right_trigger - g1.left_trigger);
+        harvester.setPower(ConfigVars.HARVESTER_SCALE_FACTOR * (g1.right_trigger - g1.left_trigger));
         lift.setPower(g2.right_trigger - g2.left_trigger);
 
-        if (g2.dpadUp() || g1.dpadUp()) {
+        if (g2.rightBumperOnce() || g1.rightBumperOnce()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_UP);
             arm.setPower(ConfigVars.ARM_UP_SPEED);
-        } else if (g2.dpadDownOnce() || g1.dpadDownOnce()) {
+        } else if (g2.leftBumperOnce() || g1.leftBumperOnce()) {
             arm.setTargetPosition(ConfigVars.TELEOP_ARM_DOWN);
             arm.setPower(ConfigVars.ARM_DOWN_SPEED);
         } else {
@@ -179,6 +180,7 @@ public class PlaylandYurtTeleop extends OpMode {
         } else {
             adjustDumper();
         }
+
 
         final double fwd = gamepad1.left_stick_y;
         final double turn = -gamepad1.right_stick_x;
